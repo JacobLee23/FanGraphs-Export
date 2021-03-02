@@ -8,6 +8,7 @@
 from urllib.request import urlopen
 
 from lxml import etree
+from selenium.common.exceptions import *
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 
@@ -56,10 +57,9 @@ class MajorLeagueLeaderboards:
             "age1": "//input[@id='LeaderBoard1_cmdAge']",
             "age2": "//input[@id='LeaderBoard1_cmdAge']"
         }
+        self.address = "https://fangraphs.com/leaders.aspx"
 
-        self.__response = urlopen(
-            "https://fangraphs.com/leaders.aspx"
-        )
+        self.__response = urlopen(self.address)
         self.__parser = etree.HTMLParser()
         self.tree = etree.parse(self.__response, self.__parser)
 
@@ -68,8 +68,9 @@ class MajorLeagueLeaderboards:
         self.browser = webdriver.Firefox(
             options=self.__options
         )
+        self.browser.get(self.address)
 
-    class FilterNotFound(Exception):
+    class InvalidFilterQuery(Exception):
 
         def __init__(self, query):
             self.query = query
@@ -87,21 +88,119 @@ class MajorLeagueLeaderboards:
     def list_options(self, query):
         query = query.lower()
         if query in self.__checkboxes:
-            options = [True, False]
+            options = ["True", "False"]
         elif query in self.__dropdown_options:
-            xpath = f"{self.__dropdown_options.get(query)}//div//ul//li"
+            xpath = "{}//div//ul//li".format(
+                self.__dropdown_options.get(query)
+            )
             elems = self.tree.xpath(xpath)
             options = [e.text for e in elems]
         elif query in self.__selections:
-            xpath = f"{self.__selections.get(query)}//div//ul//li//a//span//span//span"
+            xpath = "{}//div//ul//li//a//span//span//span".format(
+                self.__selections.get(query)
+            )
             elems = self.tree.xpath(xpath)
             options = [e.text for e in elems]
         else:
-            raise self.FilterNotFound(query)
+            raise self.InvalidFilterQuery(query)
         return options
+
+    def current_option(self, query):
+        query = query.lower()
+        if query in self.__checkboxes:
+            xpath = self.__checkboxes.get(query)
+            elem = self.tree.xpath(xpath)[0]
+            option = "True" if elem.get("checked") == "checked" else "False"
+        elif query in self.__dropdowns:
+            xpath = "{}//span//input".format(
+                self.__dropdowns.get(query)
+            )
+            elem = self.tree.xpath(xpath)[0]
+            option = elem.get("value")
+        elif query in self.__selections:
+            xpath = "{}//div//ul//li//a[{}]//span//span//span".format(
+                self.__selections.get(query),
+                "@class='rtsLink rtsSelected'"
+            )
+            elem = self.tree.xpath(xpath)[0]
+            option = elem.text
+        else:
+            raise self.InvalidFilterQuery(query)
+        return option
+
+    def configure(self, query, option):
+        query, option = query.lower(), str(option).lower()
+        while True:
+            try:
+                if query in self.__checkboxes:
+                    self.__config_checkbox(query, option)
+                elif query in self.__dropdowns:
+                    self.__config_dropdown(query, option)
+                elif query in self.__selections:
+                    self.__config_selection(query, option)
+                if query in self.__buttons:
+                    self.__submit_form(query)
+            except ElementClickInterceptedException:
+                self.__close_ad()
+                continue
+            break
+        self.__response = urlopen(self.browser.current_url)
+        self.tree = etree.parse(self.__response, self.__parser)
+
+    def __config_checkbox(self, query, option):
+        current = self.current_option(query)
+        if option == current:
+            return
+        elem = self.browser.find_element_by_xpath(
+            self.__checkboxes.get(query)
+        )
+        elem.click()
+
+    def __config_dropdown(self, query, option):
+        options = [o.lower() for o in self.list_options(query)]
+        index = options.index(option)
+        dropdown = self.browser.find_element_by_xpath(
+            "{}//span//input".format(
+                self.__dropdowns.get(query)
+            )
+        )
+        dropdown.click()
+        elem = self.browser.find_elements_by_xpath(
+            "{}//div//ul//li".format(
+                self.__dropdown_options.get(query)
+            )
+        )[index]
+        elem.click()
+
+    def __config_selection(self, query, option):
+        options = [o.lower() for o in self.list_options(query)]
+        index = options.index(option)
+        elem = self.browser.find_elements_by_xpath(
+            "{}//div//ul//li".format(
+                self.__selections.get(query)
+            )
+        )[index]
+        elem.click()
+
+    def __submit_form(self, query):
+        elem = self.browser.find_element_by_xpath(
+            self.__buttons.get(query)
+        )
+        elem.click()
+
+    def __close_ad(self):
+        elem = self.browser.find_element_by_xpath(
+            "//span[@class='ezmob-footer-close']"
+        )
+        elem.click()
 
     def quit(self):
         self.browser.quit()
+
+    def reset(self):
+        self.browser.get(self.address)
+        self.__response = urlopen(self.browser.current_url)
+        self.tree = etree.parse(self.__response, self.__parser)
 
 
 class SplitsLeaderboards:

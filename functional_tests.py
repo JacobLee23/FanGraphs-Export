@@ -1,6 +1,7 @@
 #! python3
 # functional_tests.py
 
+import random
 import unittest
 
 from FanGraphs import leaders
@@ -10,6 +11,7 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
 
     def setUp(self):
         self.parser = leaders.MajorLeagueLeaderboards()
+        self.base_url = self.parser.browser.current_url
 
     def tearDown(self):
         self.parser.quit()
@@ -17,7 +19,7 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
     def test_class(self):
         # Raise MajorLeagueLeaderboards.FilterNotFound
         with self.assertRaises(
-            self.parser.FilterNotFound
+            self.parser.InvalidFilterQuery
         ):
             self.parser.list_options("nonexistent option")
 
@@ -50,8 +52,51 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
             self.assertEqual(
                 len(options),
                 query_count[query],
-                len(options)
+                (query, len(options))
             )
+
+        # Test current_option classmethod
+        query_options = {
+            "group": "Player Stats", "stat": "Batting", "position": "All",
+            "league": "All Leagues", "team": "All Teams", "single_season": "2020",
+            "split": "Full Season", "min_pa": "Qualified", "season1": "2020",
+            "season2": "2020", "age1": "14", "age2": "58", "split_teams": "False",
+            "active_roster": "False", "hof": "False", "split_seasons": "False",
+            "rookies": "False"
+        }
+        for query in query_options:
+            option = self.parser.current_option(query)
+            self.assertEqual(
+                option,
+                query_options[query],
+                (query, option)
+            )
+
+        # Test configure classmethod
+        queries = [
+            "group", "stat", "position", "league", "team", "single_season",
+            "split", "min_pa", "season1", "season2", "age1", "age2",
+            "split_teams", "active_roster", "hof", "split_seasons", "rookies"
+        ]
+        for query in queries:
+            option = random.choice(self.parser.list_options(query))
+            self.parser.configure(query, option)
+            if query not in ["season1", "season2", "age1", "age2"]:
+                current = self.parser.current_option(query)
+                self.assertEqual(
+                    option,
+                    current,
+                    (query, option, current)
+                )
+            self.parser.reset()
+
+        # Test reset classmethod
+        self.parser.browser.get("https://google.com")
+        self.parser.reset()
+        self.assertEqual(
+            self.parser.browser.current_url,
+            self.base_url
+        )
 
 
 if __name__ == "__main__":
