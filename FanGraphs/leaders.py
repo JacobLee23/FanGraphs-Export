@@ -18,12 +18,12 @@ class MajorLeagueLeaderboards:
     def __init__(self):
         self.__selections = {
             "group": "//div[@id='LeaderBoard1_tsGroup']",
-            "stats": "//div[@id='LeaderBoard1_tsStats']",
+            "stat": "//div[@id='LeaderBoard1_tsStats']",
             "position": "//div[@id='LeaderBoard1_tsPosition']",
         }
         self.__dropdowns = {
             "league": "//div[@id='LeaderBoard1_rcbLeague']",
-            "teams": "//div[@id='LeaderBoard1_rcbTeam']",
+            "team": "//div[@id='LeaderBoard1_rcbTeam']",
             "single_season": "//div[@id='LeaderBoard1_rcbSeason']",
             "split": "//div[@id='LeaderBoard1_rcbMonth']",
             "min_pa": "//div[@id='LeaderBoard1_rcbMin']",
@@ -34,7 +34,7 @@ class MajorLeagueLeaderboards:
         }
         self.__dropdown_options = {
             "league": "//div[@id='LeaderBoard1_rcbLeague_DropDown']",
-            "teams": "//div[@id='LeaderBoard1_rcbTeam_DropDown']",
+            "team": "//div[@id='LeaderBoard1_rcbTeam_DropDown']",
             "single_season": "//div[@id='LeaderBoard1_rcbSeason_DropDown']",
             "split": "//div[@id='LeaderBoard1_rcbMonth_DropDown']",
             "min_pa": "//div[@id='LeaderBoard1_rcbMin_DropDown']",
@@ -61,13 +61,36 @@ class MajorLeagueLeaderboards:
             "https://fangraphs.com/leaders.aspx"
         )
         self.__parser = etree.HTMLParser()
-        self.tree = etree.parse(self.__parser, self.__response)
+        self.tree = etree.parse(self.__response, self.__parser)
 
         self.__options = Options()
         self.__options.headless = True
         self.browser = webdriver.Firefox(
             options=self.__options
         )
+
+    class FilterNotFound(Exception):
+
+        def __init__(self, query):
+            self.query = query
+            self.message = f"No filter named '{self.query}' could be found"
+            super().__init__(self.message)
+
+    def listoptions(self, query):
+        query = query.lower()
+        if query in self.__checkboxes:
+            options = [True, False]
+        elif query in self.__dropdown_options:
+            xpath = f"{self.__dropdown_options.get(query)}//div//ul//li"
+            elems = self.tree.xpath(xpath)
+            options = [e.text for e in elems]
+        elif query in self.__selections:
+            xpath = f"{self.__selections.get(query)}//div//ul//li//a//span//span//span"
+            elems = self.tree.xpath(xpath)
+            options = [e.text for e in elems]
+        else:
+            raise self.FilterNotFound(query)
+        return options
 
     def quit(self):
         self.browser.quit()
