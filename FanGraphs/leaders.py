@@ -76,7 +76,15 @@ class MajorLeagueLeaderboards:
             self.message = f"No filter named '{self.query}' could be found"
             super().__init__(self.message)
 
-    def listoptions(self, query):
+    def list_queries(self):
+        queries = {
+            "selection": list(self.__selections),
+            "dropdown": list(self.__dropdowns),
+            "checkbox": list(self.__checkboxes)
+        }
+        return queries
+
+    def list_options(self, query):
         query = query.lower()
         if query in self.__checkboxes:
             options = [True, False]
