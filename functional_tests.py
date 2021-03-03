@@ -2,6 +2,7 @@
 # functional_tests.py
 
 import os
+import random
 import unittest
 from urllib.request import urlopen
 
@@ -19,7 +20,9 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.parser.quit()
-        os.remove("dist")
+        for file in os.listdir("dist"):
+            os.remove(os.path.join("dist", file))
+        os.rmdir("dist")
 
     def test_raise_exceptions(self):
         # Raise MajorLeagueLeaderboard.FilterNotFound
@@ -100,7 +103,7 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
             "split_teams", "active_roster", "hof", "split_seasons", "rookies"
         ]
         for query in queries:
-            option = self.parser.list_options(query)[-1]
+            option = random.choice(self.parser.list_options(query))
             self.parser.configure(query, option)
             if query not in ["season1", "season2", "age1", "age2"]:
                 current = self.parser.current_option(query)

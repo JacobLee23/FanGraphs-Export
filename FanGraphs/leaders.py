@@ -48,6 +48,7 @@ class MajorLeagueLeaderboards:
             "group": "LeaderBoard1_tsGroup",
             "stat": "LeaderBoard1_tsStats",
             "position": "LeaderBoard1_tsPosition",
+            "type": "LeaderBoard1_tsType"
         }
         self.__dropdowns = {
             "league": "LeaderBoard1_rcbLeague_Input",
@@ -91,7 +92,7 @@ class MajorLeagueLeaderboards:
         self.tree = etree.parse(response, parser)
 
         options = Options()
-        options.headless = False
+        options.headless = True
         os.makedirs("dist", exist_ok=True)
         preferences = {
             "browser.download.folderList": 2,
@@ -262,6 +263,11 @@ class MajorLeagueLeaderboards:
         :param query: The selection-class filter query to be configured
         :param option: The option to set the filter query to
         """
+        def open_pitch_type_sublevel():
+            pitch_type_elem = self.browser.find_element_by_css_selector(
+                "div[id='LeaderBoard1_tsType'] div ul li a[href='#']"
+            )
+            pitch_type_elem.click()
         options = [o.lower() for o in self.list_options(query)]
         index = options.index(option)
         elem = self.browser.find_elements_by_css_selector(
@@ -269,7 +275,11 @@ class MajorLeagueLeaderboards:
                 self.__selections.get(query)
             )
         )[index]
-        elem.click()
+        try:
+            elem.click()
+        except exceptions.ElementNotInteractableException:
+            open_pitch_type_sublevel()
+            elem.click()
 
     def __submit_form(self, query):
         """

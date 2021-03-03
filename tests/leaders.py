@@ -20,7 +20,8 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
         ids = [
             "LeaderBoard1_tsGroup",
             "LeaderBoard1_tsStats",
-            "LeaderBoard1_tsPosition"
+            "LeaderBoard1_tsPosition",
+            "LeaderBoard1_tsType"
         ]
         for i in ids:
             elems = self.tree.xpath(
@@ -132,6 +133,7 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
             "LeaderBoard1_tsGroup",
             "LeaderBoard1_tsStats",
             "LeaderBoard1_tsPosition",
+            "LeaderBoard1_tsType"
         ]
         for i in ids:
             elems = self.tree.xpath(
@@ -182,11 +184,12 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
                 elems[0].get("value")
             )
 
-    def test_current_option_selections_xpaths(self):
+    def test_current_option_selections_ids(self):
         ids = [
             "LeaderBoard1_tsGroup",
             "LeaderBoard1_tsStats",
-            "LeaderBoard1_tsPosition"
+            "LeaderBoard1_tsPosition",
+            "LeaderBoard1_tsType"
         ]
         for i in ids:
             elems = self.tree.xpath(
@@ -237,7 +240,8 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
         ids = [
             "LeaderBoard1_tsGroup",
             "LeaderBoard1_tsStats",
-            "LeaderBoard1_tsPosition"
+            "LeaderBoard1_tsPosition",
+            "LeaderBoard1_tsType"
         ]
         for i in ids:
             elems = self.tree.xpath(
