@@ -1,40 +1,61 @@
 #! python3
 # functional_tests.py
 
-import random
+import os
 import unittest
+from urllib.request import urlopen
 
 from FanGraphs import leaders
 
 
 class TestMajorLeagueLeaderboards(unittest.TestCase):
 
-    def setUp(self):
-        self.parser = leaders.MajorLeagueLeaderboards()
-        self.base_url = self.parser.browser.current_url
+    parser = leaders.MajorLeagueLeaderboards()
 
-    def tearDown(self):
-        self.parser.quit()
+    @classmethod
+    def setUpClass(cls):
+        cls.base_url = cls.parser.browser.current_url
 
-    def test_class(self):
-        # Raise MajorLeagueLeaderboards.FilterNotFound
+    @classmethod
+    def tearDownClass(cls):
+        cls.parser.quit()
+        os.remove("dist")
+
+    def test_raise_exceptions(self):
+        # Raise MajorLeagueLeaderboard.FilterNotFound
         with self.assertRaises(
             self.parser.InvalidFilterQuery
         ):
-            self.parser.list_options("nonexistent option")
+            self.parser.list_options("nonexistent query")
+        with self.assertRaises(
+            self.parser.InvalidFilterQuery
+        ):
+            self.parser.current_option("nonexistent query")
+        with self.assertRaises(
+            self.parser.InvalidFilterQuery
+        ):
+            self.parser.configure("nonexistent query", "nonexistent option")
 
-        # Test listquieres classmethod
-        queries = self.parser.list_queries()
-        self.assertIsInstance(queries, dict)
-        self.assertEqual(
-            list(queries),
-            ["selection", "dropdown", "checkbox"]
-        )
+    def test_init(self):
+        res = urlopen(self.parser.address)
+        self.assertEqual(res.getcode(), 200)
+
+        self.assertTrue(self.parser.tree)
+
         self.assertTrue(
-            all([isinstance(q, list) for q in queries.values()])
+            os.path.exists(os.path.join(os.getcwd(), "dist"))
         )
 
-        # Test listoptions classmethod
+        self.assertTrue(self.parser.browser)
+
+    def test_list_queries(self):
+        queries = self.parser.list_queries()
+        self.assertIsInstance(queries, list)
+        self.assertTrue(
+            all([isinstance(q, str) for q in queries])
+        )
+
+    def test_list_options(self):
         query_count = {
             "group": 3, "stat": 3, "position": 13,
             "league": 3, "team": 31, "single_season": 151, "split": 67,
@@ -55,7 +76,7 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
                 (query, len(options))
             )
 
-        # Test current_option classmethod
+    def test_current_option(self):
         query_options = {
             "group": "Player Stats", "stat": "Batting", "position": "All",
             "league": "All Leagues", "team": "All Teams", "single_season": "2020",
@@ -72,14 +93,14 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
                 (query, option)
             )
 
-        # Test configure classmethod
+    def test_configure(self):
         queries = [
             "group", "stat", "position", "league", "team", "single_season",
             "split", "min_pa", "season1", "season2", "age1", "age2",
             "split_teams", "active_roster", "hof", "split_seasons", "rookies"
         ]
         for query in queries:
-            option = random.choice(self.parser.list_options(query))
+            option = self.parser.list_options(query)[-1]
             self.parser.configure(query, option)
             if query not in ["season1", "season2", "age1", "age2"]:
                 current = self.parser.current_option(query)
@@ -90,12 +111,18 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
                 )
             self.parser.reset()
 
-        # Test reset classmethod
+    def test_reset(self):
         self.parser.browser.get("https://google.com")
         self.parser.reset()
         self.assertEqual(
             self.parser.browser.current_url,
             self.base_url
+        )
+
+    def test_export(self):
+        self.parser.export("test.csv")
+        self.assertTrue(
+            os.path.exists(os.path.join("dist", "test.csv"))
         )
 
 

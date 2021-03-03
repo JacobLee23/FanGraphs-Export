@@ -5,98 +5,152 @@
 
 """
 
+import datetime
+import os
 from urllib.request import urlopen
 
 from lxml import etree
-from selenium.common.exceptions import *
+from selenium.common import exceptions
 from selenium import webdriver
+from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.support.ui import WebDriverWait
 
 
 class MajorLeagueLeaderboards:
-    """ Parse FanGraphs >> Leaders >> Major League Leaderboards
-"""
+    """
+    Parses the FanGraphs Major League Leaderboards page.
+    Note that the Splits Leaderboard is not covered.
+    Instead, it is covered by :py:class:`SplitsLeaderboards`
+    """
+
     def __init__(self):
+        """
+        .. py:attribute:: address
+            The base URL address of the Major League Leaderboards page
+
+            :type: str
+            :value: https://fangraphs.com/leaders.aspx
+
+        .. py:attribute:: tree
+            The ``lxml`` element tree for parsing the webpage HTML.
+
+            :type: lxml.etree._ElementTree
+
+        .. py:attribute:: browser
+            The ``selenium`` automated Firefox browser for navigating webpage.
+
+            :type: selenium.webdriver.firefox.webdriver.WebDriver
+
+        """
         self.__selections = {
-            "group": "//div[@id='LeaderBoard1_tsGroup']",
-            "stat": "//div[@id='LeaderBoard1_tsStats']",
-            "position": "//div[@id='LeaderBoard1_tsPosition']",
+            "group": "LeaderBoard1_tsGroup",
+            "stat": "LeaderBoard1_tsStats",
+            "position": "LeaderBoard1_tsPosition",
         }
         self.__dropdowns = {
-            "league": "//div[@id='LeaderBoard1_rcbLeague']",
-            "team": "//div[@id='LeaderBoard1_rcbTeam']",
-            "single_season": "//div[@id='LeaderBoard1_rcbSeason']",
-            "split": "//div[@id='LeaderBoard1_rcbMonth']",
-            "min_pa": "//div[@id='LeaderBoard1_rcbMin']",
-            "season1": "//div[@id='LeaderBoard1_rcbSeason1']",
-            "season2": "//div[@id='LeaderBoard1_rcbSeason2']",
-            "age1": "//div[@id='LeaderBoard1_rcbAge1']",
-            "age2": "//div[@id='LeaderBoard1_rcbAge2']"
+            "league": "LeaderBoard1_rcbLeague_Input",
+            "team": "LeaderBoard1_rcbTeam_Input",
+            "single_season": "LeaderBoard1_rcbSeason_Input",
+            "split": "LeaderBoard1_rcbMonth_Input",
+            "min_pa": "LeaderBoard1_rcbMin_Input",
+            "season1": "LeaderBoard1_rcbSeason1_Input",
+            "season2": "LeaderBoard1_rcbSeason2_Input",
+            "age1": "LeaderBoard1_rcbAge1_Input",
+            "age2": "LeaderBoard1_rcbAge2_Input"
         }
         self.__dropdown_options = {
-            "league": "//div[@id='LeaderBoard1_rcbLeague_DropDown']",
-            "team": "//div[@id='LeaderBoard1_rcbTeam_DropDown']",
-            "single_season": "//div[@id='LeaderBoard1_rcbSeason_DropDown']",
-            "split": "//div[@id='LeaderBoard1_rcbMonth_DropDown']",
-            "min_pa": "//div[@id='LeaderBoard1_rcbMin_DropDown']",
-            "season1": "//div[@id='LeaderBoard1_rcbSeason1_DropDown']",
-            "season2": "//div[@id='LeaderBoard1_rcbSeason2_DropDown']",
-            "age1": "//div[@id='LeaderBoard1_rcbAge1_DropDown']",
-            "age2": "//div[@id='LeaderBoard1_rcbAge2_DropDown']"
+            "league": "LeaderBoard1_rcbLeague_DropDown",
+            "team": "LeaderBoard1_rcbTeam_DropDown",
+            "single_season": "LeaderBoard1_rcbSeason_DropDown",
+            "split": "LeaderBoard1_rcbMonth_DropDown",
+            "min_pa": "LeaderBoard1_rcbMin_DropDown",
+            "season1": "LeaderBoard1_rcbSeason1_DropDown",
+            "season2": "LeaderBoard1_rcbSeason2_DropDown",
+            "age1": "LeaderBoard1_rcbAge1_DropDown",
+            "age2": "LeaderBoard1_rcbAge2_DropDown"
         }
         self.__checkboxes = {
-            "split_teams": "//input[@id='LeaderBoard1_cbTeams']",
-            "active_roster": "//input[@id='LeaderBoard1_cbActive']",
-            "hof": "//input[@id='LeaderBoard1_cbHOF']",
-            "split_seasons": "//input[@id='LeaderBoard1_cbSeason']",
-            "rookies": "//input[@id='LeaderBoard1_cbRookie']"
+            "split_teams": "LeaderBoard1_cbTeams",
+            "active_roster": "LeaderBoard1_cbActive",
+            "hof": "LeaderBoard1_cbHOF",
+            "split_seasons": "LeaderBoard1_cbSeason",
+            "rookies": "LeaderBoard1_cbRookie"
         }
         self.__buttons = {
-            "season1": "//input[@id='LeaderBoard1_btnMSeason']",
-            "season2": "//input[@id='LeaderBoard1_btnMSeason']",
-            "age1": "//input[@id='LeaderBoard1_cmdAge']",
-            "age2": "//input[@id='LeaderBoard1_cmdAge']"
+            "season1": "LeaderBoard1_btnMSeason",
+            "season2": "LeaderBoard1_btnMSeason",
+            "age1": "LeaderBoard1_cmdAge",
+            "age2": "LeaderBoard1_cmdAge"
         }
         self.address = "https://fangraphs.com/leaders.aspx"
 
-        self.__response = urlopen(self.address)
-        self.__parser = etree.HTMLParser()
-        self.tree = etree.parse(self.__response, self.__parser)
+        response = urlopen(self.address)
+        parser = etree.HTMLParser()
+        self.tree = etree.parse(response, parser)
 
-        self.__options = Options()
-        self.__options.headless = True
+        options = Options()
+        options.headless = False
+        os.makedirs("dist", exist_ok=True)
+        preferences = {
+            "browser.download.folderList": 2,
+            "browser.download.manager.showWhenStarting": False,
+            "browser.download.dir": os.path.abspath("dist"),
+            "browser.helperApps.neverAsk.saveToDisk": "text/csv"
+        }
+        for pref in preferences:
+            options.set_preference(pref, preferences[pref])
         self.browser = webdriver.Firefox(
-            options=self.__options
+            options=options
         )
         self.browser.get(self.address)
 
     class InvalidFilterQuery(Exception):
 
         def __init__(self, query):
+            """
+            Raised when an invalid filter query is used.
+
+            :param query: The filter query used
+            """
             self.query = query
             self.message = f"No filter named '{self.query}' could be found"
             super().__init__(self.message)
 
     def list_queries(self):
-        queries = {
-            "selection": list(self.__selections),
-            "dropdown": list(self.__dropdowns),
-            "checkbox": list(self.__checkboxes)
-        }
+        """
+        Lists the possible filter queries which can be used to modify search results.
+
+        :return: Filter queries which can be used to modify search results
+        :type: list
+        """
+        queries = []
+        queries.extend(list(self.__selections))
+        queries.extend(list(self.__dropdowns))
+        queries.extend(list(self.__checkboxes))
         return queries
 
     def list_options(self, query):
+        """
+        Lists the possible options which the filter query can be configured to.
+
+        :param query:
+        :return: Options which the filter query can be configured to
+        :rtype: list
+        :raises MajorLeagueLeaderboards.InvalidFilterQuery: Argument ``query`` is invalid
+        """
         query = query.lower()
         if query in self.__checkboxes:
             options = ["True", "False"]
         elif query in self.__dropdown_options:
-            xpath = "{}//div//ul//li".format(
+            xpath = "//div[@id='{}']//div//ul//li".format(
                 self.__dropdown_options.get(query)
             )
             elems = self.tree.xpath(xpath)
             options = [e.text for e in elems]
         elif query in self.__selections:
-            xpath = "{}//div//ul//li//a//span//span//span".format(
+            xpath = "//div[@id='{}']//div//ul//li//a//span//span//span".format(
                 self.__selections.get(query)
             )
             elems = self.tree.xpath(xpath)
@@ -106,21 +160,31 @@ class MajorLeagueLeaderboards:
         return options
 
     def current_option(self, query):
+        """
+        Retrieves the option which the filter query is currently set to.
+
+        :param query: The filter query being retrieved of its current option
+        :return: The option which the filter query is currently set to
+        :rtype: str
+        :raises MajorLeagueLeaderboards.InvalidFilterQuery: Argument ``query`` is invalid
+        """
         query = query.lower()
         if query in self.__checkboxes:
-            xpath = self.__checkboxes.get(query)
+            xpath = "//input[@id='{}']".format(
+                self.__checkboxes.get(query)
+            )
             elem = self.tree.xpath(xpath)[0]
             option = "True" if elem.get("checked") == "checked" else "False"
         elif query in self.__dropdowns:
-            xpath = "{}//span//input".format(
+            xpath = "//input[@id='{}']".format(
                 self.__dropdowns.get(query)
             )
             elem = self.tree.xpath(xpath)[0]
             option = elem.get("value")
         elif query in self.__selections:
-            xpath = "{}//div//ul//li//a[{}]//span//span//span".format(
+            xpath = "//div[@id='{}']//div//ul//li//a[@class='{}']//span//span//span".format(
                 self.__selections.get(query),
-                "@class='rtsLink rtsSelected'"
+                "rtsLink rtsSelected"
             )
             elem = self.tree.xpath(xpath)[0]
             option = elem.text
@@ -129,7 +193,15 @@ class MajorLeagueLeaderboards:
         return option
 
     def configure(self, query, option):
+        """
+        Sets a filter query to a specified option.
+
+        :param query: The filter query to be configured
+        :param option: The option to set the filter query to
+        """
         query, option = query.lower(), str(option).lower()
+        if query not in self.list_queries():
+            raise self.InvalidFilterQuery(query)
         while True:
             try:
                 if query in self.__checkboxes:
@@ -140,15 +212,22 @@ class MajorLeagueLeaderboards:
                     self.__config_selection(query, option)
                 if query in self.__buttons:
                     self.__submit_form(query)
-            except ElementClickInterceptedException:
+            except exceptions.ElementClickInterceptedException:
                 self.__close_ad()
                 continue
             break
-        self.__response = urlopen(self.browser.current_url)
-        self.tree = etree.parse(self.__response, self.__parser)
+        response = urlopen(self.browser.current_url)
+        parser = etree.HTMLParser()
+        self.tree = etree.parse(response, parser)
 
     def __config_checkbox(self, query, option):
-        current = self.current_option(query)
+        """
+        Sets a checkbox-class filter query to an option
+
+        :param query: The checkbox-class filter query to be configured
+        :param option: The option to set the filter query to
+        """
+        current = self.current_option(query).lower()
         if option == current:
             return
         elem = self.browser.find_element_by_xpath(
@@ -157,50 +236,106 @@ class MajorLeagueLeaderboards:
         elem.click()
 
     def __config_dropdown(self, query, option):
+        """
+        Sets a dropdown-class filter query to an option
+
+        :param query: The dropdown-class filter query to be configured
+        :param option: The option to set the filter query to
+        """
         options = [o.lower() for o in self.list_options(query)]
         index = options.index(option)
-        dropdown = self.browser.find_element_by_xpath(
-            "{}//span//input".format(
-                self.__dropdowns.get(query)
-            )
+        dropdown = self.browser.find_element_by_id(
+            self.__dropdowns.get(query)
         )
         dropdown.click()
-        elem = self.browser.find_elements_by_xpath(
-            "{}//div//ul//li".format(
+        elem = self.browser.find_elements_by_css_selector(
+            "div[id='{}'] div ul li".format(
                 self.__dropdown_options.get(query)
             )
         )[index]
         elem.click()
 
     def __config_selection(self, query, option):
+        """
+        Sets a selection-class filter query to an option
+
+        :param query: The selection-class filter query to be configured
+        :param option: The option to set the filter query to
+        """
         options = [o.lower() for o in self.list_options(query)]
         index = options.index(option)
-        elem = self.browser.find_elements_by_xpath(
-            "{}//div//ul//li".format(
+        elem = self.browser.find_elements_by_css_selector(
+            "div[id='{}'] div ul li".format(
                 self.__selections.get(query)
             )
         )[index]
         elem.click()
 
     def __submit_form(self, query):
-        elem = self.browser.find_element_by_xpath(
+        """
+        Clicks the button element which submits the search query.
+
+        :param query: The filter query which has an attached form submission button
+        """
+        elem = self.browser.find_element_by_id(
             self.__buttons.get(query)
         )
         elem.click()
 
+    def __close_popup(self):
+        pass
+
     def __close_ad(self):
-        elem = self.browser.find_element_by_xpath(
-            "//span[@class='ezmob-footer-close']"
+        """
+        Closes the ad which may interfere with clicking other page elements.
+        """
+        elem = self.browser.find_element_by_class_name(
+            "ezmob-footer-close"
         )
         elem.click()
 
     def quit(self):
+        """
+        Calls the ``quit()`` method of :py:attr:`browser`.
+        """
         self.browser.quit()
 
     def reset(self):
+        """
+        Calls the ``get()`` method of :py:attr:`browser`, passing :py:attr:`address`.
+        """
         self.browser.get(self.address)
-        self.__response = urlopen(self.browser.current_url)
-        self.tree = etree.parse(self.__response, self.__parser)
+        response = urlopen(self.browser.current_url)
+        parser = etree.HTMLParser()
+        self.tree = etree.parse(response, parser)
+
+    def export(self, name=""):
+        """
+        Exports the current leaderboard as a CSV file.
+        The file will be saved to *./dist*.
+        By default, the name of the file is **FanGraphs Leaderboard.csv**.
+        If ``name`` is not specified, the file will be the formatted ``datetime.datetime.now()``.
+
+        :param name: The filename to rename the saved file to
+        """
+        if not name or os.path.splitext(name)[1] != ".csv":
+            name = "{}.csv".format(
+                datetime.datetime.now().strftime("%d.%m.%y %H.%M.%S")
+            )
+        while True:
+            try:
+                WebDriverWait(self.browser, 20).until(
+                    expected_conditions.element_to_be_clickable(
+                        (By.ID, "LeaderBoard1_cmdCSV")
+                    )
+                ).click()
+                break
+            except exceptions.ElementClickInterceptedException:
+                self.__close_ad()
+        os.rename(
+            os.path.join("dist", "FanGraphs Leaderboard.csv"),
+            os.path.join("dist", name)
+        )
 
 
 class SplitsLeaderboards:

@@ -2,3 +2,4 @@ __pycache__/
 virtualenv/
 .idea/
 geckodriver.log
+dist/
