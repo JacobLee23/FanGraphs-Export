@@ -7,6 +7,7 @@ from urllib.request import urlopen
 from lxml import etree
 
 
+@unittest.SkipTest
 class TestMajorLeagueLeaderboards(unittest.TestCase):
 
     @classmethod
@@ -265,6 +266,21 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
         self.assertIn(
             "LeaderBoard1_cmdCSV",
             self.tree.xpath("//@id")
+        )
+
+
+class TestSeasonStatGrid(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.address = "https://www.fangraphs.com/leaders/season-stat-grid"
+        parser = etree.HTMLParser()
+        response = urlopen(cls.address)
+        cls.tree = etree.parse(response, parser)
+
+    def test_base_address(self):
+        self.assertEqual(
+            urlopen(self.address).getcode(), 200
         )
 
 
