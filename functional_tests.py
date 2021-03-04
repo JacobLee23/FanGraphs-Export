@@ -9,6 +9,7 @@ from urllib.request import urlopen
 from FanGraphs import leaders
 
 
+@unittest.SkipTest
 class TestMajorLeagueLeaderboards(unittest.TestCase):
 
     parser = leaders.MajorLeagueLeaderboards()
@@ -127,6 +128,27 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
         self.assertTrue(
             os.path.exists(os.path.join("dist", "test.csv"))
         )
+
+
+class TestSplitsLeaderboards(unittest.TestCase):
+
+    parser = leaders.SplitsLeaderboards()
+
+    @classmethod
+    def setUpClass(cls):
+        cls.base_url = cls.parser.browser.current_url
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.parser.quit()
+        for file in os.listdir("dist"):
+            os.remove(os.path.join("dist", file))
+        os.rmdir("dist")
+
+    def test_init(self):
+        self.assertTrue(self.parser.tree)
+        self.assertTrue(self.parser.browser)
+        self.assertTrue(os.path.exists("dist"))
 
 
 if __name__ == "__main__":

@@ -351,7 +351,39 @@ class MajorLeagueLeaderboards:
 class SplitsLeaderboards:
 
     def __init__(self):
-        pass
+        self.__splits = {}
+        self.address = "https://www.fangraphs.com/leaders/splits-leaderboards"
+
+        response = urlopen(self.address)
+        parser = etree.HTMLParser()
+        self.tree = etree.parse(response, parser)
+
+        options = Options()
+        options.headless = True
+        os.makedirs("dist", exist_ok=True)
+        preferences = {
+            "browser.download.folderList": 2,
+            "browser.download.manager.showWhenStarting": False,
+            "browser.download.dir": os.path.abspath("dist"),
+            "browser.helperApps.neverAsk.saveToDisk": "text/csv"
+        }
+        for pref in preferences:
+            options.set_preference(pref, preferences[pref])
+        self.browser = webdriver.Firefox(
+            options=options
+        )
+        self.browser.get(self.address)
+
+        self.reset_filters()
+
+    def reset_filters(self):
+        elem = self.browser.find_element_by_css_selector(
+            "div[class='fgButton small']"
+        )
+        elem.click()
+
+    def quit(self):
+        self.browser.quit()
 
 
 class SeasonStatGrid:
