@@ -382,6 +382,37 @@ class TestSeasonStatGrid(unittest.TestCase):
                 all([e.get_attribute("data-value") for e in elems])
             )
 
+    def test_current_option_selections(self):
+        selector = "div[class='fgButton button-green active isActive']"
+        elems = self.browser.find_elements_by_css_selector(
+            selector
+        )
+        self.assertEqual(
+            len(elems), 2
+        )
+
+    def test_current_options_dropdowns(self):
+        selectors = {
+            "start_season": ".row-season > div:nth-child(2)",
+            "end_season": ".row-season > div:nth-child(4)",
+            "popular": ".season-grid-controls-dropdown-row-stats > div:nth-child(1)",
+            "standard": ".season-grid-controls-dropdown-row-stats > div:nth-child(2)",
+            "advanced": ".season-grid-controls-dropdown-row-stats > div:nth-child(3)",
+            "statcast": ".season-grid-controls-dropdown-row-stats > div:nth-child(4)",
+            "batted_ball": ".season-grid-controls-dropdown-row-stats > div:nth-child(5)",
+            "win_probability": ".season-grid-controls-dropdown-row-stats > div:nth-child(6)",
+            "pitch_type": ".season-grid-controls-dropdown-row-stats > div:nth-child(7)",
+            "plate_discipline": ".season-grid-controls-dropdown-row-stats > div:nth-child(8)",
+            "value": ".season-grid-controls-dropdown-row-stats > div:nth-child(9)"
+        }
+        for cat in selectors:
+            elems = self.browser.find_elements_by_css_selector(
+                f"{selectors[cat]} ul li[class*='highlight-selection']"
+            )
+            self.assertTrue(
+                len(elems) in [0, 1], cat
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
