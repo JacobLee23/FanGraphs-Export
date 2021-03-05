@@ -275,7 +275,7 @@ class TestSeasonStatGrid(unittest.TestCase):
 
     options = Options()
     options.headless = True
-    browser = webdriver.Firefox()
+    browser = webdriver.Firefox(options=options)
 
     @classmethod
     def setUpClass(cls):
@@ -407,11 +407,19 @@ class TestSeasonStatGrid(unittest.TestCase):
         }
         for cat in selectors:
             elems = self.browser.find_elements_by_css_selector(
-                f"{selectors[cat]} ul li[class*='highlight-selection']"
+                f"{selectors[cat]} ul li[class$='highlight-selection']"
             )
-            self.assertTrue(
-                len(elems) in [0, 1], cat
-            )
+            if cat in ["start_season", "end_season", "popular", "value"]:
+                self.assertEqual(
+                    len(elems), 1, cat
+                )
+                self.assertIsNotNone(
+                    elems[0].get_attribute("data-value")
+                )
+            else:
+                self.assertEqual(
+                    len(elems), 0, cat
+                )
 
 
 if __name__ == "__main__":

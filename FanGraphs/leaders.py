@@ -415,7 +415,7 @@ class SeasonStatGrid:
     def current_option(self, query):
         query = query.lower()
         if query in self.__selections:
-            selector = "div[class='fgButton button-green active isActive']"
+            selector = "div[class$='fgButton button-green active isActive']"
             elems = self.browser.find_elements_by_css_selector(
                 selector
             )
@@ -424,10 +424,13 @@ class SeasonStatGrid:
                 "type": elems[1].text
             }[query]
         elif query in self.__dropdowns:
-            elem = self.browser.find_element_by_css_selector(
-                f"{self.__dropdowns[query]} ul li[class*='highlight-selection']"
-            )
-            option = elem.text if elem else "None"
+            try:
+                elem = self.browser.find_element_by_css_selector(
+                    f"{self.__dropdowns[query]} ul li[class$='highlight-selection']"
+                )
+                option = elem.get_attribute("data-value")
+            except exceptions.NoSuchElementException:
+                option = "None"
         else:
             raise FanGraphs.exceptions.InvalidFilterQuery(query)
         return option

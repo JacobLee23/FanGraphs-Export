@@ -191,7 +191,7 @@ class TestSeasonStatGrid(unittest.TestCase):
             "end_season": "2020", "popular": "WAR", "standard": "None",
             "advanced": "None", "statcast": "None", "batted_ball": "None",
             "win_probability": "None", "pitch_type": "None",
-            "plate_discipline": "None", "value": "None"
+            "plate_discipline": "None", "value": "WAR"
         }
         for query in current_options:
             option = self.parser.current_option(query)
