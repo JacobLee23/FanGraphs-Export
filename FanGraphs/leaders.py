@@ -17,6 +17,8 @@ from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.ui import WebDriverWait
 
+import FanGraphs.exceptions
+
 
 class MajorLeagueLeaderboards:
     """
@@ -107,18 +109,6 @@ class MajorLeagueLeaderboards:
         )
         self.browser.get(self.address)
 
-    class InvalidFilterQuery(Exception):
-
-        def __init__(self, query):
-            """
-            Raised when an invalid filter query is used.
-
-            :param query: The filter query used
-            """
-            self.query = query
-            self.message = f"No filter named '{self.query}' could be found"
-            super().__init__(self.message)
-
     def list_queries(self):
         """
         Lists the possible filter queries which can be used to modify search results.
@@ -157,7 +147,7 @@ class MajorLeagueLeaderboards:
             elems = self.tree.xpath(xpath)
             options = [e.text for e in elems]
         else:
-            raise self.InvalidFilterQuery(query)
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
         return options
 
     def current_option(self, query):
@@ -190,7 +180,7 @@ class MajorLeagueLeaderboards:
             elem = self.tree.xpath(xpath)[0]
             option = elem.text
         else:
-            raise self.InvalidFilterQuery(query)
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
         return option
 
     def configure(self, query, option):
@@ -202,7 +192,7 @@ class MajorLeagueLeaderboards:
         """
         query, option = query.lower(), str(option).lower()
         if query not in self.list_queries():
-            raise self.InvalidFilterQuery(query)
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
         while True:
             try:
                 if query in self.__checkboxes:
@@ -397,6 +387,9 @@ class SeasonStatGrid:
         self.browser = webdriver.Firefox(
             options=options
         )
+        self.browser.get(self.address)
+
+    def reset(self):
         self.browser.get(self.address)
 
     def quit(self):

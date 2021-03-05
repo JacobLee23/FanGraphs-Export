@@ -6,7 +6,32 @@ import random
 import unittest
 from urllib.request import urlopen
 
+from FanGraphs import exceptions
 from FanGraphs import leaders
+
+
+@unittest.SkipTest
+class TestExceptionsModule(unittest.TestCase):
+
+    def test_major_league_leaderboards(self):
+        parser = leaders.MajorLeagueLeaderboards()
+
+        with self.assertRaises(
+            exceptions.InvalidFilterQuery
+        ):
+            parser.list_options("nonexistent query")
+
+        with self.assertRaises(
+            exceptions.InvalidFilterQuery
+        ):
+            parser.current_option("nonexistent query")
+
+        with self.assertRaises(
+            exceptions.InvalidFilterQuery
+        ):
+            parser.configure("nonexistent query", "nonexistent option")
+
+        parser.quit()
 
 
 @unittest.SkipTest
@@ -24,21 +49,6 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
         for file in os.listdir("dist"):
             os.remove(os.path.join("dist", file))
         os.rmdir("dist")
-
-    def test_raise_exceptions(self):
-        # Raise MajorLeagueLeaderboard.FilterNotFound
-        with self.assertRaises(
-            self.parser.InvalidFilterQuery
-        ):
-            self.parser.list_options("nonexistent query")
-        with self.assertRaises(
-            self.parser.InvalidFilterQuery
-        ):
-            self.parser.current_option("nonexistent query")
-        with self.assertRaises(
-            self.parser.InvalidFilterQuery
-        ):
-            self.parser.configure("nonexistent query", "nonexistent option")
 
     def test_init(self):
         res = urlopen(self.parser.address)
