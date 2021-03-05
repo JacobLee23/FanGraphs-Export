@@ -172,6 +172,19 @@ class TestSeasonStatGrid(unittest.TestCase):
             self.parser.list_queries(), queries
         )
 
+    def test_list_options(self):
+        option_count = {
+            "stat": 2, "type": 3, "start_season": 71, "end_season": 71,
+            "popular": 6, "standard": 20, "advanced": 17, "statcast": 8,
+            "batted_ball": 24, "win_probability": 10, "pitch_type": 25,
+            "plate_discipline": 25, "value": 11
+        }
+        for query in option_count:
+            options = self.parser.list_options(query)
+            self.assertEqual(
+                len(options), option_count[query], query
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

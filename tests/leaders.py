@@ -330,7 +330,28 @@ class TestSeasonStatGrid(unittest.TestCase):
                 len(elems), 1, cat
             )
 
-    def test_dropdown_options_selectors(self):
+    def test_list_options_selections(self):
+        selectors = {
+            "stat": [
+                "div[class*='fgButton button-green']:nth-child(1)",
+                "div[class*='fgButton button-green']:nth-child(2)"
+            ],
+            "type": [
+                "div[class*='fgButton button-green']:nth-child(4)",
+                "div[class*='fgButton button-green']:nth-child(5)",
+                "div[class*='fgButton button-green']:nth-child(6)"
+            ]
+        }
+        for cat in selectors:
+            options = []
+            for sel in selectors[cat]:
+                elem = self.browser.find_element_by_css_selector(sel)
+                options.append(elem.text)
+            self.assertEqual(
+                len(options), len(selectors[cat])
+            )
+
+    def test_list_options_dropdowns(self):
         selectors = {
             "start_season": ".row-season > div:nth-child(2)",
             "end_season": ".row-season > div:nth-child(4)",
@@ -355,7 +376,10 @@ class TestSeasonStatGrid(unittest.TestCase):
                 f"{selectors[cat]} ul li"
             )
             self.assertEqual(
-                len(elems), elem_count[cat], cat
+                len(elems), elem_count[cat]
+            )
+            self.assertTrue(
+                all([e.get_attribute("data-value") for e in elems])
             )
 
 

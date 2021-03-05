@@ -395,6 +395,24 @@ class SeasonStatGrid:
         queries.extend(list(self.__dropdowns))
         return queries
 
+    def list_options(self, query):
+        query = query.lower()
+        if query not in [q.lower() for q in self.list_queries()]:
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+        options = []
+        if query in self.__selections:
+            elems = [
+                self.browser.find_element_by_css_selector(s)
+                for s in self.__selections[query]
+            ]
+            options = [e.text for e in elems]
+        elif query in self.__dropdowns:
+            elems = self.browser.find_elements_by_css_selector(
+                f"{self.__dropdowns[query]} ul li"
+            )
+            options = [e.get_attribute("data-value") for e in elems]
+        return options
+
     def reset(self):
         self.browser.get(self.address)
 
