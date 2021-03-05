@@ -46,9 +46,9 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.parser.quit()
-        for file in os.listdir("dist"):
-            os.remove(os.path.join("dist", file))
-        os.rmdir("dist")
+        for file in os.listdir("out"):
+            os.remove(os.path.join("out", file))
+        os.rmdir("out")
 
     def test_init(self):
         res = urlopen(self.parser.address)
@@ -57,7 +57,7 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
         self.assertTrue(self.parser.tree)
 
         self.assertTrue(
-            os.path.exists(os.path.join(os.getcwd(), "dist"))
+            os.path.exists(os.path.join(os.getcwd(), "out"))
         )
 
         self.assertTrue(self.parser.browser)
@@ -136,7 +136,7 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
     def test_export(self):
         self.parser.export("test.csv")
         self.assertTrue(
-            os.path.exists(os.path.join("dist", "test.csv"))
+            os.path.exists(os.path.join("out", "test.csv"))
         )
 
 
@@ -150,17 +150,27 @@ class TestSeasonStatGrid(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        for file in os.listdir("dist"):
-            os.remove(os.path.join("dist", file))
-        os.rmdir("dist")
+        for file in os.listdir("out"):
+            os.remove(os.path.join("out", file))
+        os.rmdir("out")
         cls.parser.quit()
 
     def test_init(self):
         self.assertEqual(
             urlopen(self.parser.address).getcode(), 200
         )
-        self.assertTrue(os.path.exists("dist"))
+        self.assertTrue(os.path.exists("out"))
         self.assertTrue(self.parser.browser)
+
+    def test_list_queries(self):
+        queries = [
+            "stat", "type", "start_season", "end_season", "popular",
+            "standard", "advanced", "statcast", "batted_ball",
+            "win_probability", "pitch_type", "plate_discipline", "value"
+        ]
+        self.assertEqual(
+            self.parser.list_queries(), queries
+        )
 
 
 if __name__ == "__main__":

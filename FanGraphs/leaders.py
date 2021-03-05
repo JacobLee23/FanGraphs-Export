@@ -95,11 +95,11 @@ class MajorLeagueLeaderboards:
 
         options = Options()
         options.headless = True
-        os.makedirs("dist", exist_ok=True)
+        os.makedirs("out", exist_ok=True)
         preferences = {
             "browser.download.folderList": 2,
             "browser.download.manager.showWhenStarting": False,
-            "browser.download.dir": os.path.abspath("dist"),
+            "browser.download.dir": os.path.abspath("out"),
             "browser.helperApps.neverAsk.saveToDisk": "text/csv"
         }
         for pref in preferences:
@@ -312,7 +312,7 @@ class MajorLeagueLeaderboards:
     def export(self, name=""):
         """
         Exports the current leaderboard as a CSV file.
-        The file will be saved to *./dist*.
+        The file will be saved to *./out*.
         By default, the name of the file is **FanGraphs Leaderboard.csv**.
         If ``name`` is not specified, the file will be the formatted ``datetime.datetime.now()``.
 
@@ -333,8 +333,8 @@ class MajorLeagueLeaderboards:
             except exceptions.ElementClickInterceptedException:
                 self.__close_ad()
         os.rename(
-            os.path.join("dist", "FanGraphs Leaderboard.csv"),
-            os.path.join("dist", name)
+            os.path.join("out", "FanGraphs Leaderboard.csv"),
+            os.path.join("out", name)
         )
 
 
@@ -375,11 +375,11 @@ class SeasonStatGrid:
 
         options = Options()
         options.headless = True
-        os.makedirs("dist", exist_ok=True)
+        os.makedirs("out", exist_ok=True)
         preferences = {
             "browser.download.folderList": 2,
             "browser.download.manager.showWhenStarting": False,
-            "browser.download.dir": os.path.abspath("dist"),
+            "browser.download.dir": os.path.abspath("out"),
             "browser.helperApps.neverAsk.saveToDisk": "text/csv"
         }
         for pref in preferences:
@@ -388,6 +388,12 @@ class SeasonStatGrid:
             options=options
         )
         self.browser.get(self.address)
+
+    def list_queries(self):
+        queries = []
+        queries.extend(list(self.__selections))
+        queries.extend(list(self.__dropdowns))
+        return queries
 
     def reset(self):
         self.browser.get(self.address)

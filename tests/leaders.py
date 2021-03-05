@@ -273,6 +273,8 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
 
 class TestSeasonStatGrid(unittest.TestCase):
 
+    options = Options()
+    options.headless = True
     browser = webdriver.Firefox()
 
     @classmethod
