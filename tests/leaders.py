@@ -310,8 +310,17 @@ class TestSeasonStatGrid(unittest.TestCase):
 
     def test_dropdown_selectors(self):
         selectors = {
-            "start_season": "div.row-season div:nth-child(2)",
-            "end_season": "div.row-season div:nth-child(4)"
+            "start_season": ".row-season > div:nth-child(2)",
+            "end_season": ".row-season > div:nth-child(4)",
+            "popular": ".season-grid-controls-dropdown-row-stats > div:nth-child(1)",
+            "standard": ".season-grid-controls-dropdown-row-stats > div:nth-child(2)",
+            "advanced": ".season-grid-controls-dropdown-row-stats > div:nth-child(3)",
+            "statcast": ".season-grid-controls-dropdown-row-stats > div:nth-child(4)",
+            "batted_ball": ".season-grid-controls-dropdown-row-stats > div:nth-child(5)",
+            "win_probability": ".season-grid-controls-dropdown-row-stats > div:nth-child(6)",
+            "pitch_type": ".season-grid-controls-dropdown-row-stats > div:nth-child(7)",
+            "plate_discipline": ".season-grid-controls-dropdown-row-stats > div:nth-child(8)",
+            "value": ".season-grid-controls-dropdown-row-stats > div:nth-child(9)"
         }
         for cat in selectors:
             elems = self.browser.find_elements_by_css_selector(selectors[cat])
@@ -321,15 +330,30 @@ class TestSeasonStatGrid(unittest.TestCase):
 
     def test_dropdown_options_selectors(self):
         selectors = {
-            "start_season": "div.row-season div:nth-child(2) ul li",
-            "end_season": "div.row-season div:nth-child(4) ul li"
+            "start_season": ".row-season > div:nth-child(2)",
+            "end_season": ".row-season > div:nth-child(4)",
+            "popular": ".season-grid-controls-dropdown-row-stats > div:nth-child(1)",
+            "standard": ".season-grid-controls-dropdown-row-stats > div:nth-child(2)",
+            "advanced": ".season-grid-controls-dropdown-row-stats > div:nth-child(3)",
+            "statcast": ".season-grid-controls-dropdown-row-stats > div:nth-child(4)",
+            "batted_ball": ".season-grid-controls-dropdown-row-stats > div:nth-child(5)",
+            "win_probability": ".season-grid-controls-dropdown-row-stats > div:nth-child(6)",
+            "pitch_type": ".season-grid-controls-dropdown-row-stats > div:nth-child(7)",
+            "plate_discipline": ".season-grid-controls-dropdown-row-stats > div:nth-child(8)",
+            "value": ".season-grid-controls-dropdown-row-stats > div:nth-child(9)"
+        }
+        elem_count = {
+            "start_season": 71, "end_season": 71, "popular": 6,
+            "standard": 20, "advanced": 17, "statcast": 8, "batted_ball": 24,
+            "win_probability": 10, "pitch_type": 25, "plate_discipline": 25,
+            "value": 11
         }
         for cat in selectors:
             elems = self.browser.find_elements_by_css_selector(
-                selectors[cat]
+                f"{selectors[cat]} ul li"
             )
             self.assertEqual(
-                len(elems), 71, cat
+                len(elems), elem_count[cat], cat
             )
 
 

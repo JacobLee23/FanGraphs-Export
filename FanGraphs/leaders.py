@@ -369,12 +369,17 @@ class SeasonStatGrid:
             ]
         }
         self.__dropdowns = {
-            "start_season": "div.row-season div:nth-child(2)",
-            "end_season": "div.row-season div:nth-child(4)"
-        }
-        self.__dropdown_options = {
-            "start_season": "div.row-season div:nth-child(2) ul li",
-            "end_season": "div.row-season div:nth-child(4) ul li"
+            "start_season": ".row-season > div:nth-child(2)",
+            "end_season": ".row-season > div:nth-child(4)",
+            "popular": ".season-grid-controls-dropdown-row-stats > div:nth-child(1)",
+            "standard": ".season-grid-controls-dropdown-row-stats > div:nth-child(2)",
+            "advanced": ".season-grid-controls-dropdown-row-stats > div:nth-child(3)",
+            "statcast": ".season-grid-controls-dropdown-row-stats > div:nth-child(4)",
+            "batted_ball": ".season-grid-controls-dropdown-row-stats > div:nth-child(5)",
+            "win_probability": ".season-grid-controls-dropdown-row-stats > div:nth-child(6)",
+            "pitch_type": ".season-grid-controls-dropdown-row-stats > div:nth-child(7)",
+            "plate_discipline": ".season-grid-controls-dropdown-row-stats > div:nth-child(8)",
+            "value": ".season-grid-controls-dropdown-row-stats > div:nth-child(9)"
         }
         self.address = "https://fangraphs.com/leaders/season-stat-grid"
 
