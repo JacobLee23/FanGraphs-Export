@@ -150,7 +150,6 @@ class TestSeasonStatGrid(unittest.TestCase):
             urlopen(self.parser.address).getcode(), 200
         )
         self.assertTrue(os.path.exists("dist"))
-        self.assertTrue(self.parser.tree)
         self.assertTrue(self.parser.browser)
 
 

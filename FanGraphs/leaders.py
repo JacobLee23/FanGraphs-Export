@@ -357,11 +357,26 @@ class SplitsLeaderboards:
 class SeasonStatGrid:
 
     def __init__(self):
+        self.__selections = {
+            "stat": [
+                "div[class*='fgButton button-green']:nth-child(1)",
+                "div[class*='fgButton button-green']:nth-child(2)"
+            ],
+            "type": [
+                "div[class*='fgButton button-green']:nth-child(4)",
+                "div[class*='fgButton button-green']:nth-child(5)",
+                "div[class*='fgButton button-green']:nth-child(6)"
+            ]
+        }
+        self.__dropdowns = {
+            "start_season": "div.row-season div:nth-child(2)",
+            "end_season": "div.row-season div:nth-child(4)"
+        }
+        self.__dropdown_options = {
+            "start_season": "div.row-season div:nth-child(2) ul li",
+            "end_season": "div.row-season div:nth-child(4) ul li"
+        }
         self.address = "https://fangraphs.com/leaders/season-stat-grid"
-
-        response = urlopen(self.address)
-        parser = etree.HTMLParser()
-        self.tree = etree.parse(response, parser)
 
         options = Options()
         options.headless = True

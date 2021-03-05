@@ -5,6 +5,8 @@ import unittest
 from urllib.request import urlopen
 
 from lxml import etree
+from selenium import webdriver
+from selenium.webdriver.firefox.options import Options
 
 
 @unittest.SkipTest
@@ -271,17 +273,64 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
 
 class TestSeasonStatGrid(unittest.TestCase):
 
+    browser = webdriver.Firefox()
+
     @classmethod
     def setUpClass(cls):
         cls.address = "https://www.fangraphs.com/leaders/season-stat-grid"
-        parser = etree.HTMLParser()
-        response = urlopen(cls.address)
-        cls.tree = etree.parse(response, parser)
+        cls.browser.get(cls.address)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.browser.quit()
 
     def test_base_address(self):
         self.assertEqual(
             urlopen(self.address).getcode(), 200
         )
+
+    def test_selections_selectors(self):
+        selectors = {
+            "stat": [
+                "div[class*='fgButton button-green']:nth-child(1)",
+                "div[class*='fgButton button-green']:nth-child(2)"
+            ],
+            "type": [
+                "div[class*='fgButton button-green']:nth-child(4)",
+                "div[class*='fgButton button-green']:nth-child(5)",
+                "div[class*='fgButton button-green']:nth-child(6)"
+            ]
+        }
+        for cat in selectors:
+            for sel in selectors[cat]:
+                elems = self.browser.find_elements_by_css_selector(sel)
+                self.assertEqual(
+                    len(elems), 1, (cat, sel)
+                )
+
+    def test_dropdown_selectors(self):
+        selectors = {
+            "start_season": "div.row-season div:nth-child(2)",
+            "end_season": "div.row-season div:nth-child(4)"
+        }
+        for cat in selectors:
+            elems = self.browser.find_elements_by_css_selector(selectors[cat])
+            self.assertEqual(
+                len(elems), 1, cat
+            )
+
+    def test_dropdown_options_selectors(self):
+        selectors = {
+            "start_season": "div.row-season div:nth-child(2) ul li",
+            "end_season": "div.row-season div:nth-child(4) ul li"
+        }
+        for cat in selectors:
+            elems = self.browser.find_elements_by_css_selector(
+                selectors[cat]
+            )
+            self.assertEqual(
+                len(elems), 71, cat
+            )
 
 
 if __name__ == "__main__":
