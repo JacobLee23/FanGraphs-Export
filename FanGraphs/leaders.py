@@ -420,8 +420,7 @@ class SeasonStatGrid:
                 selector
             )
             option = {
-                "stat": elems[0].text,
-                "type": elems[1].text
+                "stat": elems[0].text, "type": elems[1].text
             }[query]
         elif query in self.__dropdowns:
             try:
@@ -434,6 +433,35 @@ class SeasonStatGrid:
         else:
             raise FanGraphs.exceptions.InvalidFilterQuery(query)
         return option
+
+    def configure(self, query, option):
+        query = query.lower()
+        if query in self.__selections:
+            self.__configure_selection(query, option)
+        elif query in self.__dropdowns:
+            self.__configure_dropdown(query, option)
+        else:
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+
+    def __configure_selection(self, query, option):
+        options = self.list_options(query)
+        if option not in options:
+            raise FanGraphs.exceptions.InvalidFilterOption(query, option)
+        index = options.index(option)
+        elem = self.browser.find_element_by_css_selector(
+            self.__selections[query][index]
+        )
+        elem.click()
+
+    def __configure_dropdown(self, query, option):
+        options = self.list_options(query)
+        if option not in options:
+            raise FanGraphs.exceptions.InvalidFilterOption(query, option)
+        index = options.index(option)
+        elem = self.browser.find_elements_by_css_selector(
+            f"{self.__dropdowns[query]} ul li"
+        )[index]
+        elem.click()
 
     def reset(self):
         self.browser.get(self.address)

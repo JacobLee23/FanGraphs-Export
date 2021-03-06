@@ -10,6 +10,9 @@ from FanGraphs import exceptions
 from FanGraphs import leaders
 
 
+unittest.TestLoader.sortTestMethodsUsing = None
+
+
 @unittest.SkipTest
 class TestExceptionsModule(unittest.TestCase):
 
@@ -198,6 +201,17 @@ class TestSeasonStatGrid(unittest.TestCase):
             self.assertEqual(
                 option, current_options[query], query
             )
+
+    def test_configure(self):
+        queries = self.parser.list_queries()
+        for query in queries:
+            options = self.parser.list_options(query)
+            self.parser.configure(query, options[-1])
+            self.assertNotEqual(
+                self.parser.browser.current_url, self.base_url,
+                query
+            )
+            self.parser.reset()
 
 
 if __name__ == "__main__":
