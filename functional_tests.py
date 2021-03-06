@@ -209,10 +209,13 @@ class TestSeasonStatGrid(unittest.TestCase):
     def test_configure(self):
         queries = self.parser.list_queries()
         for query in queries:
+            orig_option = self.parser.current_option(query)
             option = self.parser.list_options(query)[-1]
             self.parser.configure(query, option)
-            self.assertEqual(
-                self.parser.current_option(query), option, (query, self.parser.browser.current_url)
+            self.assertNotEqual(
+                self.parser.current_option(query),
+                orig_option,
+                query
             )
             self.parser.reset()
 

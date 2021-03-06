@@ -13,6 +13,7 @@ import bs4
 from lxml import etree
 import requests
 from selenium.common import exceptions
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
@@ -376,7 +377,7 @@ class SeasonStatGrid:
         self.address = "https://fangraphs.com/leaders/season-stat-grid"
 
         options = Options()
-        options.headless = False
+        options.headless = True
         os.makedirs("out", exist_ok=True)
         preferences = {
             "browser.download.folderList": 2,
@@ -478,7 +479,16 @@ class SeasonStatGrid:
         elem = self.browser.find_elements_by_css_selector(
             f"{self.__dropdowns[query]} li"
         )[index]
-        elem.click()
+        try:
+            elem.click()
+        except exceptions.ElementNotInteractableException:
+            actions = ActionChains(self.browser)
+            actions.move_to_element(elem).perform()
+            WebDriverWait(self.browser, 5).until(
+                expected_conditions.visibility_of_element_located(
+                    (By.CSS_SELECTOR, f"{self.__dropdowns[query]} li")
+                )
+            ).click()
 
     def __close_ad(self):
         elem = self.browser.find_element_by_class_name(
