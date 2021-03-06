@@ -23,6 +23,21 @@ from selenium.webdriver.support.ui import WebDriverWait
 import FanGraphs.exceptions
 
 
+def compile_options():
+    options = Options()
+    options.headless = True
+    os.makedirs("out", exist_ok=True)
+    preferences = {
+        "browser.download.folderList": 2,
+        "browser.download.manager.showWhenStarting": False,
+        "browser.download.dir": os.path.abspath("out"),
+        "browser.helperApps.neverAsk.saveToDisk": "text/csv"
+    }
+    for pref in preferences:
+        options.set_preference(pref, preferences[pref])
+    return options
+
+
 class MajorLeagueLeaderboards:
     """
     Parses the FanGraphs Major League Leaderboards page.
@@ -96,19 +111,8 @@ class MajorLeagueLeaderboards:
         parser = etree.HTMLParser()
         self.tree = etree.parse(response, parser)
 
-        options = Options()
-        options.headless = True
-        os.makedirs("out", exist_ok=True)
-        preferences = {
-            "browser.download.folderList": 2,
-            "browser.download.manager.showWhenStarting": False,
-            "browser.download.dir": os.path.abspath("out"),
-            "browser.helperApps.neverAsk.saveToDisk": "text/csv"
-        }
-        for pref in preferences:
-            options.set_preference(pref, preferences[pref])
         self.browser = webdriver.Firefox(
-            options=options
+            options=compile_options()
         )
         self.browser.get(self.address)
 
@@ -376,19 +380,8 @@ class SeasonStatGrid:
         }
         self.address = "https://fangraphs.com/leaders/season-stat-grid"
 
-        options = Options()
-        options.headless = True
-        os.makedirs("out", exist_ok=True)
-        preferences = {
-            "browser.download.folderList": 2,
-            "browser.download.manager.showWhenStarting": False,
-            "browser.download.dir": os.path.abspath("out"),
-            "browser.helperApps.neverAsk.saveToDisk": "text/csv"
-        }
-        for pref in preferences:
-            options.set_preference(pref, preferences[pref])
         self.browser = webdriver.Firefox(
-            options=options
+            options=compile_options()
         )
         self.browser.get(self.address)
 
@@ -396,11 +389,9 @@ class SeasonStatGrid:
         self.__refresh_parsers()
 
     def __refresh_parsers(self):
-        self.soup = bs4.BeautifulSoup(
-            self.browser.find_element_by_css_selector("*").get_attribute(
-                "innerHTML"
-            ), "lxml"
-        )
+        html_elem = self.browser.find_element_by_css_selector("*")
+        inner_html = html_elem.get_attribute("innerHTML")
+        self.soup = bs4.BeautifulSoup(inner_html, "lxml")
 
     def list_queries(self):
         queries = []

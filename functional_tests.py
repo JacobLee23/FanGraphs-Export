@@ -10,9 +10,6 @@ from FanGraphs import exceptions
 from FanGraphs import leaders
 
 
-unittest.TestLoader.sortTestMethodsUsing = None
-
-
 @unittest.SkipTest
 class TestExceptionsModule(unittest.TestCase):
 
@@ -158,9 +155,6 @@ class TestSeasonStatGrid(unittest.TestCase):
         os.rmdir("out")
         cls.parser.quit()
 
-    def tearDown(self):
-        self.parser.reset()
-
     def test_init(self):
         self.assertEqual(
             urlopen(self.parser.address).getcode(), 200
@@ -170,13 +164,8 @@ class TestSeasonStatGrid(unittest.TestCase):
         self.assertTrue(self.parser.soup)
 
     def test_list_queries(self):
-        queries = [
-            "stat", "type", "start_season", "end_season", "popular",
-            "standard", "advanced", "statcast", "batted_ball",
-            "win_probability", "pitch_type", "plate_discipline", "value"
-        ]
         self.assertEqual(
-            self.parser.list_queries(), queries
+            len(self.parser.list_queries()), 13
         )
 
     def test_list_options(self):
@@ -187,9 +176,9 @@ class TestSeasonStatGrid(unittest.TestCase):
             "plate_discipline": 25, "value": 11
         }
         for query in option_count:
-            options = self.parser.list_options(query)
             self.assertEqual(
-                len(options), option_count[query], query
+                len(self.parser.list_options(query)), option_count[query],
+                query
             )
 
     def test_current_option(self):
@@ -201,22 +190,22 @@ class TestSeasonStatGrid(unittest.TestCase):
             "plate_discipline": "None", "value": "WAR"
         }
         for query in current_options:
-            option = self.parser.current_option(query)
             self.assertEqual(
-                option, current_options[query], query
+                self.parser.current_option(query), current_options[query],
+                query
             )
 
     def test_configure(self):
+        self.parser.reset()
         queries = self.parser.list_queries()
         for query in queries:
-            orig_option = self.parser.current_option(query)
             option = self.parser.list_options(query)[-1]
             self.parser.configure(query, option)
-            self.assertNotEqual(
-                self.parser.current_option(query),
-                orig_option,
-                query
-            )
+            if query not in ["end_season"]:
+                self.assertEqual(
+                    self.parser.current_option(query), option,
+                    query
+                )
             self.parser.reset()
 
 
