@@ -9,7 +9,9 @@ import datetime
 import os
 from urllib.request import urlopen
 
+import bs4
 from lxml import etree
+import requests
 from selenium.common import exceptions
 from selenium import webdriver
 from selenium.webdriver.common.by import By
