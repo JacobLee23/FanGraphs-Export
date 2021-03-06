@@ -158,12 +158,16 @@ class TestSeasonStatGrid(unittest.TestCase):
         os.rmdir("out")
         cls.parser.quit()
 
+    def tearDown(self):
+        self.parser.reset()
+
     def test_init(self):
         self.assertEqual(
             urlopen(self.parser.address).getcode(), 200
         )
         self.assertTrue(os.path.exists("out"))
         self.assertTrue(self.parser.browser)
+        self.assertTrue(self.parser.soup)
 
     def test_list_queries(self):
         queries = [
@@ -205,11 +209,10 @@ class TestSeasonStatGrid(unittest.TestCase):
     def test_configure(self):
         queries = self.parser.list_queries()
         for query in queries:
-            options = self.parser.list_options(query)
-            self.parser.configure(query, options[-1])
-            self.assertNotEqual(
-                self.parser.browser.current_url, self.base_url,
-                query
+            option = self.parser.list_options(query)[-1]
+            self.parser.configure(query, option)
+            self.assertEqual(
+                self.parser.current_option(query), option, (query, self.parser.browser.current_url)
             )
             self.parser.reset()
 

@@ -4,6 +4,7 @@
 import unittest
 from urllib.request import urlopen
 
+import bs4
 from lxml import etree
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
@@ -281,6 +282,11 @@ class TestSeasonStatGrid(unittest.TestCase):
     def setUpClass(cls):
         cls.address = "https://www.fangraphs.com/leaders/season-stat-grid"
         cls.browser.get(cls.address)
+        cls.soup = bs4.BeautifulSoup(
+            cls.browser.find_element_by_css_selector("*").get_attribute(
+                "innerHTML"
+            ), "lxml"
+        )
 
     @classmethod
     def tearDownClass(cls):
@@ -305,7 +311,7 @@ class TestSeasonStatGrid(unittest.TestCase):
         }
         for cat in selectors:
             for sel in selectors[cat]:
-                elems = self.browser.find_elements_by_css_selector(sel)
+                elems = self.soup.select(sel)
                 self.assertEqual(
                     len(elems), 1, (cat, sel)
                 )
@@ -325,7 +331,7 @@ class TestSeasonStatGrid(unittest.TestCase):
             "value": ".season-grid-controls-dropdown-row-stats > div:nth-child(9)"
         }
         for cat in selectors:
-            elems = self.browser.find_elements_by_css_selector(selectors[cat])
+            elems = self.soup.select(selectors[cat])
             self.assertEqual(
                 len(elems), 1, cat
             )
@@ -343,10 +349,11 @@ class TestSeasonStatGrid(unittest.TestCase):
             ]
         }
         for cat in selectors:
-            options = []
-            for sel in selectors[cat]:
-                elem = self.browser.find_element_by_css_selector(sel)
-                options.append(elem.text)
+            elems = [
+                self.soup.select(sel)
+                for sel in selectors[cat]
+            ]
+            options = [e.getText() for e in elems]
             self.assertEqual(
                 len(options), len(selectors[cat])
             )
@@ -372,21 +379,19 @@ class TestSeasonStatGrid(unittest.TestCase):
             "value": 11
         }
         for cat in selectors:
-            elems = self.browser.find_elements_by_css_selector(
-                f"{selectors[cat]} ul li"
+            elems = self.soup.select(
+                f"{selectors[cat]} li"
             )
             self.assertEqual(
                 len(elems), elem_count[cat]
             )
             self.assertTrue(
-                all([e.get_attribute("data-value") for e in elems])
+                all([e.getText() for e in elems])
             )
 
     def test_current_option_selections(self):
         selector = "div[class='fgButton button-green active isActive']"
-        elems = self.browser.find_elements_by_css_selector(
-            selector
-        )
+        elems = self.soup.select(selector)
         self.assertEqual(
             len(elems), 2
         )
@@ -406,15 +411,15 @@ class TestSeasonStatGrid(unittest.TestCase):
             "value": ".season-grid-controls-dropdown-row-stats > div:nth-child(9)"
         }
         for cat in selectors:
-            elems = self.browser.find_elements_by_css_selector(
-                f"{selectors[cat]} ul li[class$='highlight-selection']"
+            elems = self.soup.select(
+                f"{selectors[cat]} li[class$='highlight-selection']"
             )
             if cat in ["start_season", "end_season", "popular", "value"]:
                 self.assertEqual(
                     len(elems), 1, cat
                 )
                 self.assertIsNotNone(
-                    elems[0].get_attribute("data-value")
+                    elems[0].getText()
                 )
             else:
                 self.assertEqual(

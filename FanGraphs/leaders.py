@@ -376,7 +376,7 @@ class SeasonStatGrid:
         self.address = "https://fangraphs.com/leaders/season-stat-grid"
 
         options = Options()
-        options.headless = True
+        options.headless = False
         os.makedirs("out", exist_ok=True)
         preferences = {
             "browser.download.folderList": 2,
@@ -391,6 +391,16 @@ class SeasonStatGrid:
         )
         self.browser.get(self.address)
 
+        self.soup = None
+        self.__refresh_parsers()
+
+    def __refresh_parsers(self):
+        self.soup = bs4.BeautifulSoup(
+            self.browser.find_element_by_css_selector("*").get_attribute(
+                "innerHTML"
+            ), "lxml"
+        )
+
     def list_queries(self):
         queries = []
         queries.extend(list(self.__selections))
@@ -401,15 +411,15 @@ class SeasonStatGrid:
         query = query.lower()
         if query in self.__selections:
             elems = [
-                self.browser.find_element_by_css_selector(s)
+                self.soup.select(s)[0]
                 for s in self.__selections[query]
             ]
-            options = [e.text for e in elems]
+            options = [e.getText() for e in elems]
         elif query in self.__dropdowns:
-            elems = self.browser.find_elements_by_css_selector(
-                f"{self.__dropdowns[query]} ul li"
+            elems = self.soup.select(
+                f"{self.__dropdowns[query]} li"
             )
-            options = [e.get_attribute("data-value") for e in elems]
+            options = [e.getText() for e in elems]
         else:
             raise FanGraphs.exceptions.InvalidFilterQuery(query)
         return options
@@ -417,33 +427,34 @@ class SeasonStatGrid:
     def current_option(self, query):
         query = query.lower()
         if query in self.__selections:
-            selector = "div[class$='fgButton button-green active isActive']"
-            elems = self.browser.find_elements_by_css_selector(
-                selector
-            )
+            selector = "div[class='fgButton button-green active isActive']"
+            elems = self.soup.select(selector)
             option = {
-                "stat": elems[0].text, "type": elems[1].text
+                "stat": elems[0].getText(), "type": elems[1].getText()
             }[query]
         elif query in self.__dropdowns:
-            try:
-                elem = self.browser.find_element_by_css_selector(
-                    f"{self.__dropdowns[query]} ul li[class$='highlight-selection']"
-                )
-                option = elem.get_attribute("data-value")
-            except exceptions.NoSuchElementException:
-                option = "None"
+            elems = self.soup.select(
+                f"{self.__dropdowns[query]} li[class$='highlight-selection']"
+            )
+            option = elems[0].getText() if elems else "None"
         else:
             raise FanGraphs.exceptions.InvalidFilterQuery(query)
         return option
 
     def configure(self, query, option):
         query = query.lower()
-        if query in self.__selections:
-            self.__configure_selection(query, option)
-        elif query in self.__dropdowns:
-            self.__configure_dropdown(query, option)
-        else:
-            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+        while True:
+            try:
+                if query in self.__selections:
+                    self.__configure_selection(query, option)
+                elif query in self.__dropdowns:
+                    self.__configure_dropdown(query, option)
+                else:
+                    raise FanGraphs.exceptions.InvalidFilterQuery(query)
+                break
+            except exceptions.ElementClickInterceptedException:
+                self.__close_ad()
+        self.__refresh_parsers()
 
     def __configure_selection(self, query, option):
         options = self.list_options(query)
@@ -460,13 +471,24 @@ class SeasonStatGrid:
         if option not in options:
             raise FanGraphs.exceptions.InvalidFilterOption(query, option)
         index = options.index(option)
+        dropdown = self.browser.find_element_by_css_selector(
+            self.__dropdowns[query]
+        )
+        dropdown.click()
         elem = self.browser.find_elements_by_css_selector(
-            f"{self.__dropdowns[query]} ul li"
+            f"{self.__dropdowns[query]} li"
         )[index]
+        elem.click()
+
+    def __close_ad(self):
+        elem = self.browser.find_element_by_class_name(
+            "ezmob-footer-close"
+        )
         elem.click()
 
     def reset(self):
         self.browser.get(self.address)
+        self.__refresh_parsers()
 
     def quit(self):
         self.browser.quit()
