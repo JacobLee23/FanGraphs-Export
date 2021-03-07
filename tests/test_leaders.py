@@ -350,7 +350,7 @@ class TestSeasonStatGrid(unittest.TestCase):
         }
         for cat in selectors:
             elems = [
-                self.soup.select(sel)
+                self.soup.select(sel)[0]
                 for sel in selectors[cat]
             ]
             options = [e.getText() for e in elems]

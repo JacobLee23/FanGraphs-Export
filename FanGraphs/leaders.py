@@ -389,9 +389,9 @@ class SeasonStatGrid:
         self.__refresh_parsers()
 
     def __refresh_parsers(self):
-        html_elem = self.browser.find_element_by_css_selector("*")
-        inner_html = html_elem.get_attribute("innerHTML")
-        self.soup = bs4.BeautifulSoup(inner_html, "lxml")
+        self.soup = bs4.BeautifulSoup(
+            self.browser.page_source, features="lxml"
+        )
 
     def list_queries(self):
         queries = []
