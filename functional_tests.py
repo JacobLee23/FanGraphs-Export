@@ -1,6 +1,7 @@
 #! python3
 # functional_tests.py
 
+import csv
 import os
 import random
 import unittest
@@ -155,7 +156,8 @@ class TestSeasonStatGrid(unittest.TestCase):
         os.rmdir("out")
         cls.parser.quit()
 
-    def test_init(self):
+    def test_class(self):
+        # Test SeasonStatGrid.__init__
         self.assertEqual(
             urlopen(self.parser.address).getcode(), 200
         )
@@ -163,12 +165,12 @@ class TestSeasonStatGrid(unittest.TestCase):
         self.assertTrue(self.parser.browser)
         self.assertTrue(self.parser.soup)
 
-    def test_list_queries(self):
+        # Test SeasonStatGrid.list_queries
         self.assertEqual(
             len(self.parser.list_queries()), 13
         )
 
-    def test_list_options(self):
+        # Test SeasonStatGrid.list_options
         option_count = {
             "stat": 2, "type": 3, "start_season": 71, "end_season": 71,
             "popular": 6, "standard": 20, "advanced": 17, "statcast": 8,
@@ -181,7 +183,7 @@ class TestSeasonStatGrid(unittest.TestCase):
                 query
             )
 
-    def test_current_option(self):
+        # Test SeasonStatGrid.current_option
         current_options = {
             "stat": "Batting", "type": "Normal", "start_season": "2011",
             "end_season": "2020", "popular": "WAR", "standard": "None",
@@ -195,7 +197,7 @@ class TestSeasonStatGrid(unittest.TestCase):
                 query
             )
 
-    def test_configure(self):
+        # Test SeasonStatGrid.configure
         self.parser.reset()
         queries = self.parser.list_queries()
         for query in queries:
@@ -207,6 +209,30 @@ class TestSeasonStatGrid(unittest.TestCase):
                     query
                 )
             self.parser.reset()
+
+        # Test SeasonStatGrid.export
+        self.parser.reset()
+        self.parser.export("test.csv", size="30")
+        self.assertTrue(
+            os.path.exists(os.path.join("out", "test.csv"))
+        )
+        with open(os.path.join("out", "test.csv")) as file:
+            reader = csv.reader(file)
+            data = list(reader)
+        self.assertEqual(
+            len(data), 31
+        )
+        self.assertTrue(
+            all([len(r) == 12 for r in data])
+        )
+
+        # Test SeasonStatGrid.reset
+        self.parser.browser.get("https://google.com")
+        self.parser.reset()
+        self.assertEqual(
+            self.parser.browser.current_url,
+            self.base_url
+        )
 
 
 if __name__ == "__main__":

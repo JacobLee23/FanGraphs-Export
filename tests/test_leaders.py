@@ -7,7 +7,10 @@ from urllib.request import urlopen
 import bs4
 from lxml import etree
 from selenium import webdriver
+from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.support.ui import WebDriverWait
 
 
 @unittest.SkipTest
@@ -282,10 +285,13 @@ class TestSeasonStatGrid(unittest.TestCase):
     def setUpClass(cls):
         cls.address = "https://www.fangraphs.com/leaders/season-stat-grid"
         cls.browser.get(cls.address)
+        WebDriverWait(
+            cls.browser, 5
+        ).until(expected_conditions.presence_of_element_located(
+            (By.ID, "root-season-grid")
+        ))
         cls.soup = bs4.BeautifulSoup(
-            cls.browser.find_element_by_css_selector("*").get_attribute(
-                "innerHTML"
-            ), "lxml"
+            cls.browser.page_source, features="lxml"
         )
 
     @classmethod
@@ -425,6 +431,48 @@ class TestSeasonStatGrid(unittest.TestCase):
                 self.assertEqual(
                     len(elems), 0, cat
                 )
+
+    def test_expand_table_dropdown_selector(self):
+        selector = ".table-page-control:nth-child(3) select"
+        elems = self.soup.select(selector)
+        self.assertEqual(
+            len(elems), 1
+        )
+
+    def test_expand_table_dropdown_options_selectors(self):
+        options = ["30", "50", "100", "200", "Infinity"]
+        selector = ".table-page-control:nth-child(3) select option"
+        elems = self.soup.select(selector)
+        self.assertEqual(
+            len(elems), 5
+        )
+        self.assertEqual(
+            [e.getText() for e in elems], options
+        )
+
+    def test_sortby_option_selectors(self):
+        selector = ".table-scroll thead tr th"
+        elems = self.soup.select(selector)
+        self.assertEqual(
+            len(elems), 12
+        )
+
+    def test_write_table_headers_selector(self):
+        selector = ".table-scroll thead tr th"
+        elems = self.soup.select(selector)
+        self.assertEqual(
+            len(elems), 12
+        )
+
+    def test_write_table_rows_selector(self):
+        selector = ".table-scroll tbody tr"
+        elems = self.soup.select(selector)
+        self.assertEqual(
+            len(elems), 30
+        )
+        for elem in elems:
+            item_elems = elem.select("td")
+            self.assertEqual(len(item_elems), 12)
 
 
 if __name__ == "__main__":

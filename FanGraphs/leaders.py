@@ -5,13 +5,13 @@
 
 """
 
+import csv
 import datetime
 import os
 from urllib.request import urlopen
 
 import bs4
 from lxml import etree
-import requests
 from selenium.common import exceptions
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium import webdriver
@@ -491,6 +491,62 @@ class SeasonStatGrid:
             "ezmob-footer-close"
         )
         elem.click()
+
+    def export(self, name="", *, sortby="Name", size="Infinity"):
+        while True:
+            try:
+                self.__expand_table(size=size)
+                break
+            except exceptions.ElementClickInterceptedException:
+                self.__close_ad()
+                continue
+        self.__sortby(sortby.title())
+        if not name or os.path.splitext(name)[1] != ".csv":
+            name = "{}.csv".format(
+                datetime.datetime.now().strftime("%d.%m.%y %H.%M.%S")
+            )
+        with open(os.path.join("out", name), "w", newline="") as file:
+            writer = csv.writer(file)
+            self.__write_table_headers(writer)
+            self.__write_table_rows(writer)
+
+    def __expand_table(self, *, size="Infinity"):
+        selector = ".table-page-control:nth-child(3) select"
+        dropdown = self.browser.find_element_by_css_selector(selector)
+        dropdown.click()
+        elems = self.soup.select(f"{selector} option")
+        options = [e.getText() for e in elems]
+        index = options.index(size)
+        option = self.browser.find_elements_by_css_selector(
+            f"{selector} option"
+        )[index]
+        option.click()
+
+    def __sortby(self, sortby, *, reverse=False):
+        selector = ".table-scroll thead tr th"
+        elems = self.soup.select(selector)
+        options = [e.getText() for e in elems]
+        index = options.index(sortby)
+        option = self.browser.find_elements_by_css_selector(
+            selector
+        )[index]
+        option.click()
+        if reverse:
+            option.click()
+
+    def __write_table_headers(self, writer):
+        selector = ".table-scroll thead tr th"
+        elems = self.soup.select(selector)
+        headers = [e.getText() for e in elems]
+        writer.writerow(headers)
+
+    def __write_table_rows(self, writer):
+        selector = ".table-scroll tbody tr"
+        row_elems = self.soup.select(selector)
+        for row in row_elems:
+            elems = row.select("td")
+            items = [e.getText() for e in elems]
+            writer.writerow(items)
 
     def reset(self):
         self.browser.get(self.address)
