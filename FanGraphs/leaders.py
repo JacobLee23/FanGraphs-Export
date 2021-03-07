@@ -476,7 +476,7 @@ class SeasonStatGrid:
             actions = ActionChains(self.browser)
             actions.move_to_element(elem).perform()
             WebDriverWait(self.browser, 5).until(
-                expected_conditions.visibility_of_element_located(
+                expected_conditions.element_to_be_clickable(
                     (By.CSS_SELECTOR, f"{self.__dropdowns[query]} li")
                 )
             ).click()
