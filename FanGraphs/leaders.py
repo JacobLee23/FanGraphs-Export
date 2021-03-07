@@ -384,6 +384,11 @@ class SeasonStatGrid:
             options=compile_options()
         )
         self.browser.get(self.address)
+        WebDriverWait(
+            self.browser, 5
+        ).until(expected_conditions.presence_of_element_located(
+            (By.ID, "root-season-grid")
+        ))
 
         self.soup = None
         self.__refresh_parsers()
