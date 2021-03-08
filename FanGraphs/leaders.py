@@ -373,20 +373,31 @@ class SplitsLeaderboards:
             ]
         }
         self.__dropdowns = {
-            "time_filter": "#root-menu-time-filter .fg-dropdown.splits.multi-choice",
-            "preset_range": "#root-menu-time-filter .fg-dropdown.splits.single-choice",
-            "handedness": ".fgBin:nth-child(1) .fg-dropdown.splits.multi-choice:nth-child(1)",
-            "home_away": ".fgBin:nth-child(1) .fg-dropdown.splits.multi-choice:nth-child(2)",
-            "batted_ball": ".fgBin:nth-child(1) .fg-dropdown.splits.multi-choice:nth-child(3)",
-            "situation": ".fgBin:nth-child(1) .fg-dropdown.splits.multi-choice:nth-child(4)",
-            "count": ".fgBin:nth-child(1) .fg-dropdown.splits.multi-choice:nth-child(5)",
-            "batting_order": ".fgBin:nth-child(2) .fg-dropdown.splits.multi-choice:nth-child(1)",
-            "position": ".fgBin:nth-child(2) .fg-dropdown.splits.multi-choice:nth-child(2)",
-            "inning": ".fgBin:nth-child(2) .fg-dropdown.splits.multi-choice:nth-child(3)",
-            "leverage": ".fgBin:nth-child(2) .fg-dropdown.splits.multi-choice:nth-child(4)",
-            "shifts": ".fgBin:nth-child(2) .fg-dropdown.splits.multi-choice:nth-child(5)",
-            "team": ".fgBin:nth-child(3) .fg-dropdown.splits.multi-choice:nth-child(1)",
-            "opponent": ".fgBin:nth-child(3) .fg-dropdown.splits.multi-choice:nth-child(2)",
+            "time_filter": "#root-menu-time-filter > .fg-dropdown.splits.multi-choice",
+            "preset_range": "#root-menu-time-filter > .fg-dropdown.splits.single-choice",
+        }
+        self.__quick_splits = {
+            "handedness": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(1)",
+            "home_away": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(2)",
+            "batted_ball": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(3)",
+            "situation": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(4)",
+            "count": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(5)",
+            "batting_order": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(1)",
+            "position": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(2)",
+            "inning": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(3)",
+            "leverage": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(4)",
+            "shifts": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(5)",
+            "team": ".fgBin:nth-child(3) > .fg-dropdown.splits.multi-choice:nth-child(1)",
+            "opponent": ".fgBin:nth-child(3) > .fg-dropdown.splits.multi-choice:nth-child(2)",
+        }
+        self.__splits = {
+            "batting_HA": ".quick-splits-position:nth-child(1) > .quick-splits-position-row:nth-child(2)",
+            "batting_vLHP": ".quick-splits-position:nth-child(1) > .quick-splits-position-row:nth-child(3)",
+            "batting_vRHP": ".quick-splits-position:nth-child(1) > .quick-splits-position-row:nth-child(4)",
+            "pitching_asSPRP": ".quick-splits-position-row-sprp",
+            "pitching_HA": ".quick-splits-position:nth-child(2) > .quick-splits-position-row:nth-child(2)",
+            "pitching_vLHH": ".quick-splits-position:nth-child(2) > .quick-splits-position-row:nth-child(3)",
+            "pitching_vRHH": ".quick-splits-position:nth-child(2) > .quick-splits-position-row:nth-child(4)"
         }
         self.address = "https://www.fangraphs.com/leaders/splits-leaderboards"
 
