@@ -4,13 +4,14 @@
 import csv
 import os
 import random
+import requests
 import unittest
-from urllib.request import urlopen
 
 from FanGraphs import exceptions
 from FanGraphs import leaders
 
 
+@unittest.SkipTest
 class TestExceptions(unittest.TestCase):
 
     def test_major_league_leaderboards(self):
@@ -59,6 +60,7 @@ class TestExceptions(unittest.TestCase):
         parser.quit()
 
 
+@unittest.SkipTest
 class TestMajorLeagueLeaderboards(unittest.TestCase):
 
     parser = leaders.MajorLeagueLeaderboards()
@@ -75,15 +77,13 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
         os.rmdir("out")
 
     def test_init(self):
-        res = urlopen(self.parser.address)
-        self.assertEqual(res.getcode(), 200)
-
+        self.assertEqual(
+            requests.get(self.parser.address).status_code, 200
+        )
         self.assertTrue(self.parser.tree)
-
         self.assertTrue(
             os.path.exists(os.path.join(os.getcwd(), "out"))
         )
-
         self.assertTrue(self.parser.browser)
 
     def test_list_queries(self):
@@ -164,6 +164,36 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
         )
 
 
+class TestSplitsLeaderboards(unittest.TestCase):
+
+    parser = leaders.SplitsLeaderboards()
+
+    @classmethod
+    def setUpClass(cls):
+        cls.base_url = cls.parser.browser.current_url
+
+    @classmethod
+    def tearDownClass(cls):
+        for file in os.listdir("out"):
+            os.remove(os.path.join("out", file))
+        os.rmdir("out")
+        cls.parser.quit()
+
+    def test_init(self):
+        self.assertEqual(
+            requests.get(self.parser.address).status_code, 200
+        )
+        self.assertTrue(os.path.exists("out"))
+        self.assertTrue(self.parser.browser)
+        self.assertTrue(self.parser.soup)
+
+    def test_list_queries(self):
+        self.assertEqual(
+            len(self.parser.list_queries()), 24
+        )
+
+
+@unittest.SkipTest
 class TestSeasonStatGrid(unittest.TestCase):
 
     parser = leaders.SeasonStatGrid()
@@ -181,7 +211,7 @@ class TestSeasonStatGrid(unittest.TestCase):
 
     def test_init(self):
         self.assertEqual(
-            urlopen(self.parser.address).getcode(), 200
+            requests.get(self.parser.address).status_code, 200
         )
         self.assertTrue(os.path.exists("out"))
         self.assertTrue(self.parser.browser)
@@ -255,27 +285,6 @@ class TestSeasonStatGrid(unittest.TestCase):
             self.parser.browser.current_url,
             self.base_url
         )
-
-
-class TestSplitsLeaderboards(unittest.TestCase):
-
-    parser = leaders.SplitsLeaderboards()
-
-    @classmethod
-    def setUpClass(cls):
-        cls.base_url = cls.parser.browser.current_url
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.parser.quit()
-        for file in os.listdir("dist"):
-            os.remove(os.path.join("dist", file))
-        os.rmdir("dist")
-
-    def test_init(self):
-        self.assertTrue(self.parser.tree)
-        self.assertTrue(self.parser.browser)
-        self.assertTrue(os.path.exists("dist"))
 
 
 if __name__ == "__main__":

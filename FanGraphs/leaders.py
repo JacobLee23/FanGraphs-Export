@@ -367,9 +367,9 @@ class SplitsLeaderboards:
                 ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(7)"
             ],
             "type": [
-                "#root-buttons-stats div:nth-child(1)",
-                "#root-buttons-stats div:nth-child(2)",
-                "#root-buttons-stats div:nth-child(3)"
+                "#root-buttons-stats > div:nth-child(1)",
+                "#root-buttons-stats > div:nth-child(2)",
+                "#root-buttons-stats > div:nth-child(3)"
             ]
         }
         self.__dropdowns = {
@@ -401,10 +401,6 @@ class SplitsLeaderboards:
         }
         self.address = "https://www.fangraphs.com/leaders/splits-leaderboards"
 
-        response = urlopen(self.address)
-        parser = etree.HTMLParser()
-        self.tree = etree.parse(response, parser)
-
         self.browser = webdriver.Firefox(
             options=compile_options()
         )
@@ -422,6 +418,14 @@ class SplitsLeaderboards:
         self.__refresh_parser()
 
         self.reset_filters()
+
+    def list_queries(self):
+        queries = []
+        queries.extend(list(self.__selections))
+        queries.extend(list(self.__dropdowns))
+        queries.extend(list(self.__quick_splits))
+        queries.extend(list(self.__splits))
+        return queries
 
     def __refresh_parser(self):
         self.soup = bs4.BeautifulSoup(
