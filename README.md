@@ -2,7 +2,6 @@
 
 ![GitHub last commit](https://img.shields.io/github/last-commit/JLpython-py/FanGraphs-Export)
 ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/JLpython-py/FanGraphs-Export/development)
-![GitHub last commit (branch)](https://img.shields.io/github/last-commit/JLpython-py/FanGraphs-Export/parsers/leaders)
 
 ![GitHub milestone](https://img.shields.io/github/milestones/progress/JLpython-py/FanGraphs-Export/1)
 ![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/JLpython-py/FanGraphs-Export)

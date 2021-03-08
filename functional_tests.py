@@ -11,8 +11,7 @@ from FanGraphs import exceptions
 from FanGraphs import leaders
 
 
-@unittest.SkipTest
-class TestExceptionsModule(unittest.TestCase):
+class TestExceptions(unittest.TestCase):
 
     def test_major_league_leaderboards(self):
         parser = leaders.MajorLeagueLeaderboards()
@@ -34,8 +33,32 @@ class TestExceptionsModule(unittest.TestCase):
 
         parser.quit()
 
+    def test_season_stat_grid(self):
+        parser = leaders.SeasonStatGrid()
 
-@unittest.SkipTest
+        with self.assertRaises(
+            exceptions.InvalidFilterQuery
+        ):
+            parser.list_options("nonexistent query")
+
+        with self.assertRaises(
+            exceptions.InvalidFilterQuery
+        ):
+            parser.current_option("nonexistent query")
+
+        with self.assertRaises(
+            exceptions.InvalidFilterQuery
+        ):
+            parser.configure("nonexistent query", "nonexistent option")
+
+        with self.assertRaises(
+            exceptions.InvalidFilterOption
+        ):
+            parser.configure("Stat", "nonexistent option")
+
+        parser.quit()
+
+
 class TestMajorLeagueLeaderboards(unittest.TestCase):
 
     parser = leaders.MajorLeagueLeaderboards()
@@ -156,8 +179,7 @@ class TestSeasonStatGrid(unittest.TestCase):
         os.rmdir("out")
         cls.parser.quit()
 
-    def test_class(self):
-        # Test SeasonStatGrid.__init__
+    def test_init(self):
         self.assertEqual(
             urlopen(self.parser.address).getcode(), 200
         )
@@ -165,12 +187,12 @@ class TestSeasonStatGrid(unittest.TestCase):
         self.assertTrue(self.parser.browser)
         self.assertTrue(self.parser.soup)
 
-        # Test SeasonStatGrid.list_queries
+    def test_list_queries(self):
         self.assertEqual(
             len(self.parser.list_queries()), 13
         )
 
-        # Test SeasonStatGrid.list_options
+    def test_list_options(self):
         option_count = {
             "stat": 2, "type": 3, "start_season": 71, "end_season": 71,
             "popular": 6, "standard": 20, "advanced": 17, "statcast": 8,
@@ -183,7 +205,7 @@ class TestSeasonStatGrid(unittest.TestCase):
                 query
             )
 
-        # Test SeasonStatGrid.current_option
+    def test_current_option(self):
         current_options = {
             "stat": "Batting", "type": "Normal", "start_season": "2011",
             "end_season": "2020", "popular": "WAR", "standard": "None",
@@ -197,7 +219,7 @@ class TestSeasonStatGrid(unittest.TestCase):
                 query
             )
 
-        # Test SeasonStatGrid.configure
+    def test_configure(self):
         self.parser.reset()
         queries = self.parser.list_queries()
         for query in queries:
@@ -210,7 +232,7 @@ class TestSeasonStatGrid(unittest.TestCase):
                 )
             self.parser.reset()
 
-        # Test SeasonStatGrid.export
+    def test_export(self):
         self.parser.reset()
         self.parser.export("test.csv", size="30")
         self.assertTrue(
@@ -226,7 +248,7 @@ class TestSeasonStatGrid(unittest.TestCase):
             all([len(r) == 12 for r in data])
         )
 
-        # Test SeasonStatGrid.reset
+    def test_reset(self):
         self.parser.browser.get("https://google.com")
         self.parser.reset()
         self.assertEqual(
