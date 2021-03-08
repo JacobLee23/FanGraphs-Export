@@ -1,6 +1,7 @@
 #! python3
 # tests/leaders.py
 
+import os
 import unittest
 from urllib.request import urlopen
 
@@ -327,6 +328,7 @@ class TestSplitsLeaderboards(unittest.TestCase):
         selectors = {
             "time_filter": "#root-menu-time-filter > .fg-dropdown.splits.multi-choice",
             "preset_range": "#root-menu-time-filter > .fg-dropdown.splits.single-choice",
+            "sortby": ".fg-dropdown.group-by"
         }
         for cat in selectors:
             elems = self.soup.select(selectors[cat])
@@ -335,6 +337,22 @@ class TestSplitsLeaderboards(unittest.TestCase):
             )
 
     def test_quick_splits_selectors(self):
+        selectors = {
+            "batting_ha": ".quick-splits-position:nth-child(1) > .quick-splits-position-row:nth-child(2)",
+            "batting_v_lhp": ".quick-splits-position:nth-child(1) > .quick-splits-position-row:nth-child(3)",
+            "batting_v_rhp": ".quick-splits-position:nth-child(1) > .quick-splits-position-row:nth-child(4)",
+            "pitching_as_sprp": ".quick-splits-position-row-sprp",
+            "pitching_ha": ".quick-splits-position:nth-child(2) > .quick-splits-position-row:nth-child(2)",
+            "pitching_v_lhh": ".quick-splits-position:nth-child(2) > .quick-splits-position-row:nth-child(3)",
+            "pitching_v_rhh": ".quick-splits-position:nth-child(2) > .quick-splits-position-row:nth-child(4)"
+        }
+        for cat in selectors:
+            elems = self.soup.select(selectors[cat])
+            self.assertEqual(
+                len(elems), 1, cat
+            )
+
+    def test_splits_selectors(self):
         selectors = {
             "handedness": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(1)",
             "home_away": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(2)",
@@ -348,22 +366,6 @@ class TestSplitsLeaderboards(unittest.TestCase):
             "shifts": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(5)",
             "team": ".fgBin:nth-child(3) > .fg-dropdown.splits.multi-choice:nth-child(1)",
             "opponent": ".fgBin:nth-child(3) > .fg-dropdown.splits.multi-choice:nth-child(2)",
-        }
-        for cat in selectors:
-            elems = self.soup.select(selectors[cat])
-            self.assertEqual(
-                len(elems), 1, cat
-            )
-
-    def test_splits_selectors(self):
-        selectors = {
-            "batting_HA": ".quick-splits-position:nth-child(1) > .quick-splits-position-row:nth-child(2)",
-            "batting_vLHP": ".quick-splits-position:nth-child(1) > .quick-splits-position-row:nth-child(3)",
-            "batting_vRHP": ".quick-splits-position:nth-child(1) > .quick-splits-position-row:nth-child(4)",
-            "pitching_asSPRP": ".quick-splits-position-row-sprp",
-            "pitching_HA": ".quick-splits-position:nth-child(2) > .quick-splits-position-row:nth-child(2)",
-            "pitching_vLHH": ".quick-splits-position:nth-child(2) > .quick-splits-position-row:nth-child(3)",
-            "pitching_vRHH": ".quick-splits-position:nth-child(2) > .quick-splits-position-row:nth-child(4)"
         }
         for cat in selectors:
             elems = self.soup.select(selectors[cat])
@@ -600,3 +602,5 @@ class TestSeasonStatGrid(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+    # Kill any lingering firefox.exe processes
+    os.system("taskkill /F /IM firefox.exe /T")

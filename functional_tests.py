@@ -179,6 +179,7 @@ class TestSplitsLeaderboards(unittest.TestCase):
         os.rmdir("out")
         cls.parser.quit()
 
+    @unittest.SkipTest
     def test_init(self):
         self.assertEqual(
             requests.get(self.parser.address).status_code, 200
@@ -187,10 +188,40 @@ class TestSplitsLeaderboards(unittest.TestCase):
         self.assertTrue(self.parser.browser)
         self.assertTrue(self.parser.soup)
 
+    @unittest.SkipTest
     def test_list_queries(self):
         self.assertEqual(
             len(self.parser.list_queries()), 24
         )
+
+    @unittest.SkipTest
+    def test_list_filter_groups(self):
+        groups = self.parser.list_filter_groups()
+        self.assertEqual(
+            len(groups), 4
+        )
+        self.assertEqual(
+            groups, ["Quick Splits", "Splits", "Filters", "Show All"]
+        )
+
+    @unittest.SkipTest
+    def test_list_options(self):
+        option_count = {
+            "group": 4, "stat": 2, "type": 3,
+            "time_filter": 10, "preset_range": 12, "sortby": 5,
+            "batting_ha": 2, "batting_v_lhp": 5, "batting_v_rhp": 5,
+            "pitching_as_sprp": 2, "pitching_ha": 2, "pitching_v_lhh": 5,
+            "pitching_v_rhh": 5,
+            "handedness": 4, "home_away": 2, "batted_ball": 15,
+            "situation": 7, "count": 11, "batting_order": 9, "position": 12,
+            "inning": 10, "leverage": 3, "shifts": 3, "team": 32,
+            "opponent": 32
+        }
+        for query in option_count:
+            self.assertEqual(
+                len(self.parser.list_options(query)), option_count[query],
+                query
+            )
 
 
 @unittest.SkipTest
@@ -289,3 +320,5 @@ class TestSeasonStatGrid(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+    # Kill any lingering firefox.exe processes
+    os.system("taskkill /F /IM firefox.exe /T")

@@ -375,8 +375,18 @@ class SplitsLeaderboards:
         self.__dropdowns = {
             "time_filter": "#root-menu-time-filter > .fg-dropdown.splits.multi-choice",
             "preset_range": "#root-menu-time-filter > .fg-dropdown.splits.single-choice",
+            "sortby": ".fg-dropdown.group-by"
         }
         self.__quick_splits = {
+            "batting_ha": ".quick-splits-position:nth-child(1) > .quick-splits-position-row:nth-child(2)",
+            "batting_v_lhp": ".quick-splits-position:nth-child(1) > .quick-splits-position-row:nth-child(3)",
+            "batting_v_rhp": ".quick-splits-position:nth-child(1) > .quick-splits-position-row:nth-child(4)",
+            "pitching_as_sprp": ".quick-splits-position-row-sprp",
+            "pitching_ha": ".quick-splits-position:nth-child(2) > .quick-splits-position-row:nth-child(2)",
+            "pitching_v_lhh": ".quick-splits-position:nth-child(2) > .quick-splits-position-row:nth-child(3)",
+            "pitching_v_rhh": ".quick-splits-position:nth-child(2) > .quick-splits-position-row:nth-child(4)"
+        }
+        self.__splits = {
             "handedness": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(1)",
             "home_away": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(2)",
             "batted_ball": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(3)",
@@ -389,15 +399,6 @@ class SplitsLeaderboards:
             "shifts": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(5)",
             "team": ".fgBin:nth-child(3) > .fg-dropdown.splits.multi-choice:nth-child(1)",
             "opponent": ".fgBin:nth-child(3) > .fg-dropdown.splits.multi-choice:nth-child(2)",
-        }
-        self.__splits = {
-            "batting_HA": ".quick-splits-position:nth-child(1) > .quick-splits-position-row:nth-child(2)",
-            "batting_vLHP": ".quick-splits-position:nth-child(1) > .quick-splits-position-row:nth-child(3)",
-            "batting_vRHP": ".quick-splits-position:nth-child(1) > .quick-splits-position-row:nth-child(4)",
-            "pitching_asSPRP": ".quick-splits-position-row-sprp",
-            "pitching_HA": ".quick-splits-position:nth-child(2) > .quick-splits-position-row:nth-child(2)",
-            "pitching_vLHH": ".quick-splits-position:nth-child(2) > .quick-splits-position-row:nth-child(3)",
-            "pitching_vRHH": ".quick-splits-position:nth-child(2) > .quick-splits-position-row:nth-child(4)"
         }
         self.address = "https://www.fangraphs.com/leaders/splits-leaderboards"
 
@@ -418,6 +419,12 @@ class SplitsLeaderboards:
         self.__refresh_parser()
 
         self.reset_filters()
+        self.configure_group("Show All")
+
+    def __refresh_parser(self):
+        self.soup = bs4.BeautifulSoup(
+            self.browser.page_source, features="lxml"
+        )
 
     def list_queries(self):
         queries = []
@@ -427,17 +434,35 @@ class SplitsLeaderboards:
         queries.extend(list(self.__splits))
         return queries
 
-    def __refresh_parser(self):
-        self.soup = bs4.BeautifulSoup(
-            self.browser.page_source, features="lxml"
-        )
+    def list_filter_groups(self):
+        selector = ".fgBin.splits-bin-controller div"
+        elems = self.soup.select(selector)
+        groups = [e.getText() for e in elems]
+        return groups
 
-    def reset_filters(self):
-        selector = "#stack-buttons div[class='fgButton small']:nth-last-child(1)"
-        elem = self.browser.find_element_by_css_selector(
-            selector
-        )
-        elem.click()
+    def list_options(self, query):
+        query = query.lower()
+        if query in self.__selections:
+            elems = [
+                self.soup.select(s)[0]
+                for s in self.__selections[query]
+            ]
+            options = [e.getText() for e in elems]
+        elif query in self.__dropdowns:
+            selector = f"{self.__dropdowns[query]} ul li"
+            elems = self.soup.select(selector)
+            options = [e.getText() for e in elems]
+        elif query in self.__quick_splits:
+            selector = f"{self.__quick_splits[query]} div"
+            elems = self.soup.select(selector)
+            options = [e.getText() for e in elems]
+        elif query in self.__splits:
+            selector = f"{self.__splits[query]} ul li"
+            elems = self.soup.select(selector)
+            options = [e.getText() for e in elems]
+        else:
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+        return options
 
     def configure_group(self, group="Show All"):
         selector = ".fgBin.splits-bin-controller div"
@@ -458,6 +483,13 @@ class SplitsLeaderboards:
             elem.click()
         except exceptions.NoSuchElementException:
             pass
+
+    def reset_filters(self):
+        selector = "#stack-buttons div[class='fgButton small']:nth-last-child(1)"
+        elem = self.browser.find_element_by_css_selector(
+            selector
+        )
+        elem.click()
 
     def quit(self):
         self.browser.quit()
