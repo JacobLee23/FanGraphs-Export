@@ -386,9 +386,20 @@ class SplitsLeaderboards:
         )
 
     def reset_filters(self):
+        selector = "#stack-buttons div[class='fgButton small']:nth-last-child(1)"
         elem = self.browser.find_element_by_css_selector(
-            "#stack-buttons div[class='fgButton small']:nth-last-child(1)"
+            selector
         )
+        elem.click()
+
+    def configure_group(self, group="Show All"):
+        selector = ".fgBin.splits-bin-controller div"
+        elems = self.soup.select(selector)
+        options = [e.getText() for e in elems]
+        index = options.index(group)
+        elem = self.browser.find_elements_by_css_selector(
+            selector
+        )[index]
         elem.click()
 
     def quit(self):

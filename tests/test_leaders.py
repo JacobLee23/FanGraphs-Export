@@ -305,6 +305,16 @@ class TestSplitsLeaderboards(unittest.TestCase):
             len(elems), 1
         )
 
+    def test_configure_filter_group_selector(self):
+        groups = ["Quick Splits", "Splits", "Filters", "Show All"]
+        selector = ".fgBin.splits-bin-controller div"
+        elems = self.soup.select(selector)
+        self.assertEqual(
+            len(elems), 4
+        )
+        self.assertEqual(
+            [e.getText() for e in elems], groups
+        )
 
 @unittest.SkipTest
 class TestSeasonStatGrid(unittest.TestCase):
