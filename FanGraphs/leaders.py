@@ -355,7 +355,27 @@ class MajorLeagueLeaderboards:
 class SplitsLeaderboards:
 
     def __init__(self):
-        self.__splits = {}
+        self.__selections = {
+            "group": [
+                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(1)",
+                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(2)",
+                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(3)",
+                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(4)"
+            ],
+            "stat": [
+                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(6)",
+                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(7)"
+            ],
+            "type": [
+                "#root-buttons-stats div:nth-child(1)",
+                "#root-buttons-stats div:nth-child(2)",
+                "#root-buttons-stats div:nth-child(3)"
+            ]
+        }
+        self.__dropdowns = {
+            "time_filter": "#root-menu-time-filter .fg-dropdown.splits.multi-choice",
+            "preset_range": "#root-menu-time-filter .fg-dropdown.splits.single-choice"
+        }
         self.address = "https://www.fangraphs.com/leaders/splits-leaderboards"
 
         response = urlopen(self.address)

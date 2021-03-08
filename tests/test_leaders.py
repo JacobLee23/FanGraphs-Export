@@ -316,6 +316,43 @@ class TestSplitsLeaderboards(unittest.TestCase):
             [e.getText() for e in elems], groups
         )
 
+    def test_selections_selectors(self):
+        selectors = {
+            "group": [
+                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(1)",
+                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(2)",
+                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(3)",
+                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(4)"
+            ],
+            "stat": [
+                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(6)",
+                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(7)"
+            ],
+            "type": [
+                "#root-buttons-stats div:nth-child(1)",
+                "#root-buttons-stats div:nth-child(2)",
+                "#root-buttons-stats div:nth-child(3)"
+            ]
+        }
+        for cat in selectors:
+            for sel in selectors[cat]:
+                elems = self.soup.select(sel)
+                self.assertEqual(
+                    len(elems), 1, (cat, sel)
+                )
+
+    def test_dropdowns_selectors(self):
+        selectors = {
+            "time_filter": "#root-menu-time-filter .fg-dropdown.splits.multi-choice",
+            "preset_range": "#root-menu-time-filter .fg-dropdown.splits.single-choice"
+        }
+        for cat in selectors:
+            elems = self.soup.select(selectors[cat])
+            self.assertEqual(
+                len(elems), 1, cat
+            )
+
+
 @unittest.SkipTest
 class TestSeasonStatGrid(unittest.TestCase):
 
