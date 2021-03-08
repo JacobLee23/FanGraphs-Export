@@ -434,6 +434,16 @@ class SplitsLeaderboards:
         )[index]
         elem.click()
 
+    def update(self):
+        selector = "#button-update"
+        try:
+            elem = self.browser.find_element_by_css_selector(
+                selector
+            )
+            elem.click()
+        except exceptions.NoSuchElementException:
+            pass
+
     def quit(self):
         self.browser.quit()
 

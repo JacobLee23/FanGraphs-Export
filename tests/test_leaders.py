@@ -298,24 +298,6 @@ class TestSplitsLeaderboards(unittest.TestCase):
     def tearDownClass(cls):
         cls.browser.quit()
 
-    def test_reset_filters_selector(self):
-        selector = "#stack-buttons div[class='fgButton small']:nth-last-child(1)"
-        elems = self.soup.select(selector)
-        self.assertEqual(
-            len(elems), 1
-        )
-
-    def test_configure_filter_group_selector(self):
-        groups = ["Quick Splits", "Splits", "Filters", "Show All"]
-        selector = ".fgBin.splits-bin-controller div"
-        elems = self.soup.select(selector)
-        self.assertEqual(
-            len(elems), 4
-        )
-        self.assertEqual(
-            [e.getText() for e in elems], groups
-        )
-
     def test_selections_selectors(self):
         selectors = {
             "group": [
@@ -363,6 +345,31 @@ class TestSplitsLeaderboards(unittest.TestCase):
             self.assertEqual(
                 len(elems), 1, cat
             )
+
+    def test_reset_filters_selector(self):
+        selector = "#stack-buttons div[class='fgButton small']:nth-last-child(1)"
+        elems = self.soup.select(selector)
+        self.assertEqual(
+            len(elems), 1
+        )
+
+    def test_configure_filter_group_selector(self):
+        groups = ["Quick Splits", "Splits", "Filters", "Show All"]
+        selector = ".fgBin.splits-bin-controller div"
+        elems = self.soup.select(selector)
+        self.assertEqual(
+            len(elems), 4
+        )
+        self.assertEqual(
+            [e.getText() for e in elems], groups
+        )
+
+    def test_update_button_selector(self):
+        selector = "#button-update"
+        elems = self.soup.select(selector)
+        self.assertEqual(
+            len(elems), 0
+        )
 
 
 @unittest.SkipTest
