@@ -24,6 +24,13 @@ import FanGraphs.exceptions
 
 
 def compile_options():
+    """
+    Modifies Selenium WebDriver Options for ideal browser usage.
+    Creates directory *out/* for exported files.
+
+    :returns: Selenium WebDriver Options Object
+    :rtype: selenium.webdriver.firefox.options.Options
+    """
     options = Options()
     options.headless = True
     os.makedirs("out", exist_ok=True)
@@ -352,8 +359,27 @@ class SplitsLeaderboards:
 
 
 class SeasonStatGrid:
-
+    """
+    Scrapes the FanGraphs Season Stat Grid webpage
+    """
     def __init__(self):
+        """
+        .. py:attribute:: address
+            The base URL address of the Season Stat Grid page
+
+            :type: str
+            :value: https://fangraphs.com/season-stat-grid
+
+        .. py:attribute:: browser
+            The ``selenium`` automated Firefox browser for navigating the webpage.
+
+            :type: selenium.webdriver.firefox.webdriver.WebDriver
+
+        .. py:attribute:: soup
+            The ``BeautifulSoup4`` HTML parser for scraping the webpage.
+
+            :type: bs4.BeautifulSoup
+        """
         self.__selections = {
             "stat": [
                 "div[class*='fgButton button-green']:nth-child(1)",
@@ -384,6 +410,7 @@ class SeasonStatGrid:
             options=compile_options()
         )
         self.browser.get(self.address)
+        # Wait for JavaScript to render
         WebDriverWait(
             self.browser, 5
         ).until(expected_conditions.presence_of_element_located(
@@ -394,17 +421,34 @@ class SeasonStatGrid:
         self.__refresh_parsers()
 
     def __refresh_parsers(self):
+        """
+        Re-initializes :py:attr:`soup` if a page reload is expected
+        """
         self.soup = bs4.BeautifulSoup(
             self.browser.page_source, features="lxml"
         )
 
     def list_queries(self):
+        """
+        Lists the possible filter queries which can be sued to modify search results.
+
+        :return: Filter queries which can be used to modify search results
+        :type: list
+        """
         queries = []
         queries.extend(list(self.__selections))
         queries.extend(list(self.__dropdowns))
         return queries
 
-    def list_options(self, query):
+    def list_options(self, query: str):
+        """
+        Lists the possible options which the filter query can be configured to.
+
+        :param query: The filter query
+        :return: Options which ``query`` can be configured to
+        :rtyp: list
+        :raises FanGraphs.exceptions.InvalidFilterQuery: Argument ``query`` is invalid
+        """
         query = query.lower()
         if query in self.__selections:
             elems = [
@@ -421,7 +465,15 @@ class SeasonStatGrid:
             raise FanGraphs.exceptions.InvalidFilterQuery(query)
         return options
 
-    def current_option(self, query):
+    def current_option(self, query: str):
+        """
+        Retrieves the option which the filter query is currently configured to.
+
+        :param query: The filter query
+        :return: The option which the filter query is currently configured to
+        :rtype: str
+        :raises FanGraphs.exceptions.InvalidFilterQuery: Argument ``query`` is invalid
+        """
         query = query.lower()
         if query in self.__selections:
             selector = "div[class='fgButton button-green active isActive']"
@@ -438,7 +490,15 @@ class SeasonStatGrid:
             raise FanGraphs.exceptions.InvalidFilterQuery(query)
         return option
 
-    def configure(self, query, option):
+    def configure(self, query: str, option: str):
+        """
+        Configures the filter query to the specified option.
+
+        :param query: The filter query
+        :param option: The option to configure ``query`` to
+        :raises FanGraphs.exceptions.InvalidFilterQuery: Argument ``query`` is invalid
+        :raises FanGraphs.exceptions.InvalidFilterOption: Filter ``query`` cannot be configured to ``option``
+        """
         query = query.lower()
         while True:
             try:
@@ -453,7 +513,14 @@ class SeasonStatGrid:
                 self.__close_ad()
         self.__refresh_parsers()
 
-    def __configure_selection(self, query, option):
+    def __configure_selection(self, query: str, option: str):
+        """
+        Configures a selection-class filter query to the option.
+
+        :param query: The filter query
+        :param option: The option to configure ``query`` to
+        :raises FanGraphs.exceptions.InvalidFilterOption: Filter ``query`` cannot be configured to ``option``
+        """
         options = self.list_options(query)
         if option not in options:
             raise FanGraphs.exceptions.InvalidFilterOption(query, option)
@@ -463,7 +530,14 @@ class SeasonStatGrid:
         )
         elem.click()
 
-    def __configure_dropdown(self, query, option):
+    def __configure_dropdown(self, query: str, option: str):
+        """
+        Configures a dropdown-class filter query to the option.
+
+        :param query: The filter query
+        :param option: The option to configure ``query`` to
+        :raises FanGraphs.exceptions.InvalidFilterOption: Filter ``query`` cannot be configured to ``option``
+        """
         options = self.list_options(query)
         if option not in options:
             raise FanGraphs.exceptions.InvalidFilterOption(query, option)
@@ -487,12 +561,26 @@ class SeasonStatGrid:
             ).click()
 
     def __close_ad(self):
+        """
+        Closes the ad which may interfere with interactions with other page elements
+        """
         elem = self.browser.find_element_by_class_name(
             "ezmob-footer-close"
         )
         elem.click()
 
-    def export(self, name="", *, sortby="Name", size="Infinity"):
+    def export(self, name="", *, size="Infinity", sortby="Name", reverse=False):
+        """
+        Exports the current leaderboard as a CSV file.
+        The file will be saved to *./out*.
+        If ``name`` is not specified, the file will take the following format:
+        ``datetime.datetime.now().strftime("%d.%m.%y %H.%M.%S")``
+
+        :param name: The filename to rename the exported file to
+        :param size: The number of rows, preset to 30, 50, 100, 200, or Infinity
+        :param sortby: The table header to sort the data by
+        :param reverse: If ``True``, the ordering of the data is reversed
+        """
         while True:
             try:
                 self.__expand_table(size=size)
@@ -500,7 +588,7 @@ class SeasonStatGrid:
             except exceptions.ElementClickInterceptedException:
                 self.__close_ad()
                 continue
-        self.__sortby(sortby.title())
+        self.__sortby(sortby.title(), reverse=reverse)
         if not name or os.path.splitext(name)[1] != ".csv":
             name = "{}.csv".format(
                 datetime.datetime.now().strftime("%d.%m.%y %H.%M.%S")
@@ -511,11 +599,17 @@ class SeasonStatGrid:
             self.__write_table_rows(writer)
 
     def __expand_table(self, *, size="Infinity"):
+        """
+        Sets the data table size to the specified number of rows.
+
+        :param size: The number of rows, preset to 30, 50, 100, 200 or Infinity
+        """
         selector = ".table-page-control:nth-child(3) select"
         dropdown = self.browser.find_element_by_css_selector(selector)
         dropdown.click()
         elems = self.soup.select(f"{selector} option")
         options = [e.getText() for e in elems]
+        size = "Infinity" if size not in options else size
         index = options.index(size)
         option = self.browser.find_elements_by_css_selector(
             f"{selector} option"
@@ -523,6 +617,12 @@ class SeasonStatGrid:
         option.click()
 
     def __sortby(self, sortby, *, reverse=False):
+        """
+        Sorts the data in the table to the specified table header
+
+        :param sortby: The table header to sort the data by
+        :param reverse: If ``True``, the ordering of the data will be reversed
+        """
         selector = ".table-scroll thead tr th"
         elems = self.soup.select(selector)
         options = [e.getText() for e in elems]
@@ -534,13 +634,23 @@ class SeasonStatGrid:
         if reverse:
             option.click()
 
-    def __write_table_headers(self, writer):
+    def __write_table_headers(self, writer: csv.writer):
+        """
+        Writes the data table headers
+
+        :param writer: The csv.writer object
+        """
         selector = ".table-scroll thead tr th"
         elems = self.soup.select(selector)
         headers = [e.getText() for e in elems]
         writer.writerow(headers)
 
-    def __write_table_rows(self, writer):
+    def __write_table_rows(self, writer: csv.writer):
+        """
+        Writes each row of the data table
+
+        :param writer: The csv.writer object
+        """
         selector = ".table-scroll tbody tr"
         row_elems = self.soup.select(selector)
         for row in row_elems:
@@ -549,10 +659,16 @@ class SeasonStatGrid:
             writer.writerow(items)
 
     def reset(self):
+        """
+        Calls the ``get()`` method of :py:attr:`browser`, passing :py:attr:`address`.
+        """
         self.browser.get(self.address)
         self.__refresh_parsers()
 
     def quit(self):
+        """
+        Calls the ``quit()`` method of :py:attr:`browser`
+        """
         self.browser.quit()
 
 
