@@ -362,27 +362,32 @@ class SplitsLeaderboards:
         parser = etree.HTMLParser()
         self.tree = etree.parse(response, parser)
 
-        options = Options()
-        options.headless = True
-        os.makedirs("dist", exist_ok=True)
-        preferences = {
-            "browser.download.folderList": 2,
-            "browser.download.manager.showWhenStarting": False,
-            "browser.download.dir": os.path.abspath("dist"),
-            "browser.helperApps.neverAsk.saveToDisk": "text/csv"
-        }
-        for pref in preferences:
-            options.set_preference(pref, preferences[pref])
         self.browser = webdriver.Firefox(
-            options=options
+            options=compile_options()
         )
         self.browser.get(self.address)
+        # Wait for JavaScript to render
+        WebDriverWait(
+            self.browser, 5
+        ).until(
+            expected_conditions.presence_of_element_located(
+                (By.CSS_SELECTOR, "#react-drop-test div")
+            )
+        )
+
+        self.soup = None
+        self.__refresh_parser()
 
         self.reset_filters()
 
+    def __refresh_parser(self):
+        self.soup = bs4.BeautifulSoup(
+            self.browser.page_source, features="lxml"
+        )
+
     def reset_filters(self):
         elem = self.browser.find_element_by_css_selector(
-            "div[class='fgButton small']"
+            "#stack-buttons div[class='fgButton small']:nth-last-child(1)"
         )
         elem.click()
 

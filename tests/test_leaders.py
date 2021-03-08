@@ -275,6 +275,38 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
         )
 
 
+class TestSplitsLeaderboards(unittest.TestCase):
+
+    options = Options()
+    options.headless = True
+    browser = webdriver.Firefox(options=options)
+
+    @classmethod
+    def setUpClass(cls):
+        cls.address = "https://www.fangraphs.com/leaders/splits-leaderboards"
+        cls.browser.get(cls.address)
+        WebDriverWait(
+            cls.browser, 5
+        ).until(expected_conditions.presence_of_element_located(
+            (By.CSS_SELECTOR, "#react-drop-test div")
+        ))
+        cls.soup = bs4.BeautifulSoup(
+            cls.browser.page_source, features="lxml"
+        )
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.browser.quit()
+
+    def test_reset_filters_selector(self):
+        selector = "#stack-buttons div[class='fgButton small']:nth-last-child(1)"
+        elems = self.soup.select(selector)
+        self.assertEqual(
+            len(elems), 1
+        )
+
+
+@unittest.SkipTest
 class TestSeasonStatGrid(unittest.TestCase):
 
     options = Options()
