@@ -329,9 +329,9 @@ class TestSplitsLeaderboards(unittest.TestCase):
                 ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(7)"
             ],
             "type": [
-                "#root-buttons-stats div:nth-child(1)",
-                "#root-buttons-stats div:nth-child(2)",
-                "#root-buttons-stats div:nth-child(3)"
+                "#root-buttons-stats > div:nth-child(1)",
+                "#root-buttons-stats > div:nth-child(2)",
+                "#root-buttons-stats > div:nth-child(3)"
             ]
         }
         for cat in selectors:
@@ -344,7 +344,19 @@ class TestSplitsLeaderboards(unittest.TestCase):
     def test_dropdowns_selectors(self):
         selectors = {
             "time_filter": "#root-menu-time-filter .fg-dropdown.splits.multi-choice",
-            "preset_range": "#root-menu-time-filter .fg-dropdown.splits.single-choice"
+            "preset_range": "#root-menu-time-filter .fg-dropdown.splits.single-choice",
+            "handedness": ".fgBin:nth-child(1) .fg-dropdown.splits.multi-choice:nth-child(1)",
+            "home_away": ".fgBin:nth-child(1) .fg-dropdown.splits.multi-choice:nth-child(2)",
+            "batted_ball": ".fgBin:nth-child(1) .fg-dropdown.splits.multi-choice:nth-child(3)",
+            "situation": ".fgBin:nth-child(1) .fg-dropdown.splits.multi-choice:nth-child(4)",
+            "count": ".fgBin:nth-child(1) .fg-dropdown.splits.multi-choice:nth-child(5)",
+            "batting_order": ".fgBin:nth-child(2) .fg-dropdown.splits.multi-choice:nth-child(1)",
+            "position": ".fgBin:nth-child(2) .fg-dropdown.splits.multi-choice:nth-child(2)",
+            "inning": ".fgBin:nth-child(2) .fg-dropdown.splits.multi-choice:nth-child(3)",
+            "leverage": ".fgBin:nth-child(2) .fg-dropdown.splits.multi-choice:nth-child(4)",
+            "shifts": ".fgBin:nth-child(2) .fg-dropdown.splits.multi-choice:nth-child(5)",
+            "team": ".fgBin:nth-child(3) .fg-dropdown.splits.multi-choice:nth-child(1)",
+            "opponent": ".fgBin:nth-child(3) .fg-dropdown.splits.multi-choice:nth-child(2)",
         }
         for cat in selectors:
             elems = self.soup.select(selectors[cat])
