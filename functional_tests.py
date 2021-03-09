@@ -14,6 +14,10 @@ from FanGraphs import leaders
 @unittest.SkipTest
 class TestExceptions(unittest.TestCase):
 
+    @classmethod
+    def tearDownClass(cls):
+        os.system("taskkill /F /IM firefox.exe")
+
     def test_major_league_leaderboards(self):
         parser = leaders.MajorLeagueLeaderboards()
 
@@ -75,6 +79,7 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
         for file in os.listdir("out"):
             os.remove(os.path.join("out", file))
         os.rmdir("out")
+        os.system("taskkill /F /IM firefox.exe")
 
     def test_init(self):
         self.assertEqual(
@@ -178,6 +183,7 @@ class TestSplitsLeaderboards(unittest.TestCase):
             os.remove(os.path.join("out", file))
         os.rmdir("out")
         cls.parser.quit()
+        os.system("taskkill /F /IM firefox.exe")
 
     @unittest.SkipTest
     def test_init(self):
@@ -208,7 +214,7 @@ class TestSplitsLeaderboards(unittest.TestCase):
     def test_list_options(self):
         option_count = {
             "group": 4, "stat": 2, "type": 3,
-            "time_filter": 10, "preset_range": 12, "sortby": 5,
+            "time_filter": 10, "preset_range": 12, "groupby": 5,
             "batting_ha": 2, "batting_v_lhp": 5, "batting_v_rhp": 5,
             "pitching_as_sprp": 2, "pitching_ha": 2, "pitching_v_lhh": 5,
             "pitching_v_rhh": 5,
@@ -220,6 +226,22 @@ class TestSplitsLeaderboards(unittest.TestCase):
         for query in option_count:
             self.assertEqual(
                 len(self.parser.list_options(query)), option_count[query],
+                query
+            )
+
+    @unittest.SkipTest
+    def test_current_option(self):
+        current_options = {
+            "group": ["Player"], "stat": ["Batting"], "type": ["Standard"],
+            "time_filter": [], "preset_range": [], "groupby": ["Season"],
+            "handedness": [], "home_away": [], "batted_ball": [],
+            "situation": [], "count": [], "batting_order": [], "position": [],
+            "inning": [], "leverage": [], "shifts": [], "team": [],
+            "opponent": []
+        }
+        for query in current_options:
+            self.assertEqual(
+                self.parser.current_option(query), current_options[query],
                 query
             )
 
@@ -239,6 +261,7 @@ class TestSeasonStatGrid(unittest.TestCase):
             os.remove(os.path.join("out", file))
         os.rmdir("out")
         cls.parser.quit()
+        os.system("taskkill /F /IM firefox.exe")
 
     def test_init(self):
         self.assertEqual(
@@ -320,5 +343,3 @@ class TestSeasonStatGrid(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-    # Kill any lingering firefox.exe processes
-    os.system("taskkill /F /IM firefox.exe /T")

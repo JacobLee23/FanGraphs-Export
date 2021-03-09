@@ -298,6 +298,7 @@ class TestSplitsLeaderboards(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.browser.quit()
+        os.system("taskkill /F /IM firefox.exe")
 
     def test_selections_selectors(self):
         selectors = {
@@ -328,23 +329,7 @@ class TestSplitsLeaderboards(unittest.TestCase):
         selectors = {
             "time_filter": "#root-menu-time-filter > .fg-dropdown.splits.multi-choice",
             "preset_range": "#root-menu-time-filter > .fg-dropdown.splits.single-choice",
-            "sortby": ".fg-dropdown.group-by"
-        }
-        for cat in selectors:
-            elems = self.soup.select(selectors[cat])
-            self.assertEqual(
-                len(elems), 1, cat
-            )
-
-    def test_quick_splits_selectors(self):
-        selectors = {
-            "batting_ha": ".quick-splits-position:nth-child(1) > .quick-splits-position-row:nth-child(2)",
-            "batting_v_lhp": ".quick-splits-position:nth-child(1) > .quick-splits-position-row:nth-child(3)",
-            "batting_v_rhp": ".quick-splits-position:nth-child(1) > .quick-splits-position-row:nth-child(4)",
-            "pitching_as_sprp": ".quick-splits-position-row-sprp",
-            "pitching_ha": ".quick-splits-position:nth-child(2) > .quick-splits-position-row:nth-child(2)",
-            "pitching_v_lhh": ".quick-splits-position:nth-child(2) > .quick-splits-position-row:nth-child(3)",
-            "pitching_v_rhh": ".quick-splits-position:nth-child(2) > .quick-splits-position-row:nth-child(4)"
+            "groupby": ".fg-dropdown.group-by"
         }
         for cat in selectors:
             elems = self.soup.select(selectors[cat])
@@ -398,6 +383,66 @@ class TestSplitsLeaderboards(unittest.TestCase):
             len(elems), 0
         )
 
+    def test_current_option_selections(self):
+        selectors = {
+            "group": [
+                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(1)",
+                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(2)",
+                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(3)",
+                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(4)"
+            ],
+            "stat": [
+                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(6)",
+                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(7)"
+            ],
+            "type": [
+                "#root-buttons-stats > div:nth-child(1)",
+                "#root-buttons-stats > div:nth-child(2)",
+                "#root-buttons-stats > div:nth-child(3)"
+            ]
+        }
+        for query in selectors:
+            class_attributes = []
+            for sel in selectors[query]:
+                elem = self.soup.select(sel)[0]
+                self.assertTrue(elem.get("class"))
+                class_attributes.append(elem.get("class"))
+            self.assertEqual(
+                ["isActive" in attr for attr in class_attributes].count(True),
+                1
+            )
+
+    def test_current_option_dropdowns(self):
+        selectors = {
+            "time_filter": "#root-menu-time-filter > .fg-dropdown.splits.multi-choice",
+            "preset_range": "#root-menu-time-filter > .fg-dropdown.splits.single-choice",
+            "groupby": ".fg-dropdown.group-by"
+        }
+        for query in selectors:
+            elems = self.soup.select(f"{selectors[query]} ul li")
+            for elem in elems:
+                self.assertTrue(elem.get("class"))
+
+    def test_current_option_splits(self):
+        selectors = {
+            "handedness": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(1)",
+            "home_away": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(2)",
+            "batted_ball": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(3)",
+            "situation": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(4)",
+            "count": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(5)",
+            "batting_order": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(1)",
+            "position": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(2)",
+            "inning": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(3)",
+            "leverage": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(4)",
+            "shifts": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(5)",
+            "team": ".fgBin:nth-child(3) > .fg-dropdown.splits.multi-choice:nth-child(1)",
+            "opponent": ".fgBin:nth-child(3) > .fg-dropdown.splits.multi-choice:nth-child(2)",
+        }
+        for query in selectors:
+            elems = self.soup.select(f"{selectors[query]} ul li")
+            for elem in elems:
+                self.assertTrue(elem.get("class"))
+
 
 @unittest.SkipTest
 class TestSeasonStatGrid(unittest.TestCase):
@@ -422,6 +467,7 @@ class TestSeasonStatGrid(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.browser.quit()
+        os.system("taskkill /F /IM firefox.exe")
 
     def test_base_address(self):
         self.assertEqual(
@@ -602,5 +648,3 @@ class TestSeasonStatGrid(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-    # Kill any lingering firefox.exe processes
-    os.system("taskkill /F /IM firefox.exe /T")

@@ -375,16 +375,7 @@ class SplitsLeaderboards:
         self.__dropdowns = {
             "time_filter": "#root-menu-time-filter > .fg-dropdown.splits.multi-choice",
             "preset_range": "#root-menu-time-filter > .fg-dropdown.splits.single-choice",
-            "sortby": ".fg-dropdown.group-by"
-        }
-        self.__quick_splits = {
-            "batting_ha": ".quick-splits-position:nth-child(1) > .quick-splits-position-row:nth-child(2)",
-            "batting_v_lhp": ".quick-splits-position:nth-child(1) > .quick-splits-position-row:nth-child(3)",
-            "batting_v_rhp": ".quick-splits-position:nth-child(1) > .quick-splits-position-row:nth-child(4)",
-            "pitching_as_sprp": ".quick-splits-position-row-sprp",
-            "pitching_ha": ".quick-splits-position:nth-child(2) > .quick-splits-position-row:nth-child(2)",
-            "pitching_v_lhh": ".quick-splits-position:nth-child(2) > .quick-splits-position-row:nth-child(3)",
-            "pitching_v_rhh": ".quick-splits-position:nth-child(2) > .quick-splits-position-row:nth-child(4)"
+            "groupby": ".fg-dropdown.group-by"
         }
         self.__splits = {
             "handedness": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(1)",
@@ -430,7 +421,6 @@ class SplitsLeaderboards:
         queries = []
         queries.extend(list(self.__selections))
         queries.extend(list(self.__dropdowns))
-        queries.extend(list(self.__quick_splits))
         queries.extend(list(self.__splits))
         return queries
 
@@ -452,14 +442,37 @@ class SplitsLeaderboards:
             selector = f"{self.__dropdowns[query]} ul li"
             elems = self.soup.select(selector)
             options = [e.getText() for e in elems]
-        elif query in self.__quick_splits:
-            selector = f"{self.__quick_splits[query]} div"
-            elems = self.soup.select(selector)
-            options = [e.getText() for e in elems]
         elif query in self.__splits:
             selector = f"{self.__splits[query]} ul li"
             elems = self.soup.select(selector)
             options = [e.getText() for e in elems]
+        else:
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+        return options
+
+    def current_option(self, query: str):
+        query = query.lower()
+        options = []
+        if query in self.__selections:
+            for sel in self.__selections[query]:
+                elem = self.soup.select(sel)[0]
+                if "isActive" in elem.get("class"):
+                    options = [elem.getText()]
+                    break
+        elif query in self.__dropdowns:
+            elems = self.soup.select(
+                f"{self.__dropdowns[query]} ul li"
+            )
+            for elem in elems:
+                if "highlight-selection" in elem.get("class"):
+                    options.append(elem.getText())
+        elif query in self.__splits:
+            elems = self.soup.select(
+                f"{self.__splits[query]} ul li"
+            )
+            for elem in elems:
+                if "highlight-selection" in elem.get("class"):
+                    options.append(elem.getText())
         else:
             raise FanGraphs.exceptions.InvalidFilterQuery(query)
         return options
@@ -486,10 +499,25 @@ class SplitsLeaderboards:
 
     def reset_filters(self):
         selector = "#stack-buttons div[class='fgButton small']:nth-last-child(1)"
-        elem = self.browser.find_element_by_css_selector(
-            selector
-        )
-        elem.click()
+        while True:
+            try:
+                elem = self.browser.find_element_by_css_selector(
+                    selector
+                )
+                elem.click()
+                break
+            except exceptions.ElementClickInterceptedException:
+                self.__close_ad()
+                continue
+
+    def __close_ad(self):
+        try:
+            elem = self.browser.find_element_by_class_name(
+                "ezmob-footer-close"
+            )
+            elem.click()
+        except exceptions.NoSuchElementException:
+            pass
 
     def quit(self):
         self.browser.quit()
