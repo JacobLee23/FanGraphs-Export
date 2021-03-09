@@ -245,6 +245,17 @@ class TestSplitsLeaderboards(unittest.TestCase):
                 query
             )
 
+    def test_configure(self):
+        queries = self.parser.list_queries()
+        for query in queries:
+            option = self.parser.list_options(query)[-1]
+            self.parser.configure(query, option)
+            self.assertIn(
+                option, self.parser.current_option(query),
+                query
+            )
+            self.parser.reset()
+
 
 @unittest.SkipTest
 class TestSeasonStatGrid(unittest.TestCase):

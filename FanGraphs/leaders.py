@@ -493,9 +493,14 @@ class SplitsLeaderboards:
             elem = self.browser.find_element_by_css_selector(
                 selector
             )
-            elem.click()
         except exceptions.NoSuchElementException:
-            pass
+            return
+        while True:
+            try:
+                elem.click()
+                break
+            except exceptions.ElementClickInterceptedException:
+                self.__close_ad()
 
     def reset_filters(self):
         selector = "#stack-buttons div[class='fgButton small']:nth-last-child(1)"
@@ -510,6 +515,84 @@ class SplitsLeaderboards:
                 self.__close_ad()
                 continue
 
+    def configure(self, query: str, option: str, *, autoupdate=True):
+        query = query.lower()
+        while True:
+            try:
+                if query in self.__selections:
+                    self.__configure_selection(query, option)
+                elif query in self.__dropdowns:
+                    self.__configure_dropdown(query, option)
+                elif query in self.__splits:
+                    self.__configure_split(query, option)
+                else:
+                    raise FanGraphs.exceptions.InvalidFilterQuery(query)
+                break
+            except exceptions.ElementClickInterceptedException:
+                self.__close_ad()
+        if autoupdate:
+            self.update()
+        self.__refresh_parser()
+
+    def __configure_selection(self, query: str, option: str):
+        options = self.list_options(query)
+        try:
+            index = options.index(option)
+        except ValueError:
+            raise FanGraphs.exceptions.InvalidFilterOption(query, option)
+        elem = self.browser.find_element_by_css_selector(
+            f"{self.__selections[query][index]}"
+        )
+        elem.click()
+
+    def __configure_dropdown(self, query: str, option: str):
+        options = self.list_options(query)
+        try:
+            index = options.index(option)
+        except ValueError:
+            raise FanGraphs.exceptions.InvalidFilterOption(query, option)
+        dropdown = self.browser.find_element_by_css_selector(
+            self.__dropdowns[query]
+        )
+        dropdown.click()
+        elem = self.browser.find_elements_by_css_selector(
+            f"{self.__dropdowns[query]} ul li"
+        )[index]
+        try:
+            elem.click()
+        except exceptions.ElementNotInteractableException:
+            actions = ActionChains(self.browser)
+            actions.move_to_element(elem).perform()
+            WebDriverWait(self.browser, 5).until(
+                expected_conditions.element_to_be_clickable(
+                    (By.CSS_SELECTOR, f"{self.__dropdowns[query]} ul li")
+                )
+            ).click()
+
+    def __configure_split(self, query: str, option: str):
+        options = self.list_options(query)
+        try:
+            index = options.index(option)
+        except ValueError:
+            raise FanGraphs.exceptions.InvalidFilterOption(query, option)
+        dropdown = self.browser.find_element_by_css_selector(
+            self.__splits[query]
+        )
+        dropdown.click()
+        elem = self.browser.find_elements_by_css_selector(
+            f"{self.__splits[query]} ul li"
+        )[index]
+        try:
+            elem.click()
+        except exceptions.ElementNotInteractableException:
+            actions = ActionChains(self.browser)
+            actions.move_to_element(elem).perform()
+            WebDriverWait(self.browser, 5).until(
+                expected_conditions.element_to_be_clickable(
+                    (By.CSS_SELECTOR, f"{self.__splits[query]} ul li")
+                )
+            ).click()
+
     def __close_ad(self):
         try:
             elem = self.browser.find_element_by_class_name(
@@ -518,6 +601,10 @@ class SplitsLeaderboards:
             elem.click()
         except exceptions.NoSuchElementException:
             pass
+
+    def reset(self):
+        self.browser.get(self.address)
+        self.__refresh_parser()
 
     def quit(self):
         self.browser.quit()
