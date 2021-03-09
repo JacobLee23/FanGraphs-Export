@@ -161,7 +161,7 @@ class MajorLeagueLeaderboards:
             elems = self.tree.xpath(xpath)
             options = [e.text for e in elems]
         else:
-            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
         return options
 
     def current_option(self, query):
@@ -194,7 +194,7 @@ class MajorLeagueLeaderboards:
             elem = self.tree.xpath(xpath)[0]
             option = elem.text
         else:
-            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
         return option
 
     def configure(self, query, option):
@@ -206,7 +206,7 @@ class MajorLeagueLeaderboards:
         """
         query, option = query.lower(), str(option).lower()
         if query not in self.list_queries():
-            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
         while True:
             try:
                 if query in self.__checkboxes:
@@ -391,6 +391,34 @@ class SplitsLeaderboards:
             "team": ".fgBin:nth-child(3) > .fg-dropdown.splits.multi-choice:nth-child(1)",
             "opponent": ".fgBin:nth-child(3) > .fg-dropdown.splits.multi-choice:nth-child(2)",
         }
+        self.__quick_splits = {
+            "batting_home": (("stat", "Batting"), ("home_away", "Home")),
+            "batting_away": (("stat", "Batting"), ("home_away", "Away")),
+            "vs_lhp": (("stat", "Batting"), ("handedness", "vs LHP")),
+            "vs_lhp_home": (("stat", "Batting"), ("handedness", "vs LHP"), ("home_away", "Home")),
+            "vs_lhp_away": (("stat", "Batting"), ("handedness", "vs LHP"), ("home_away", "Away")),
+            "vs_lhp_as_lhh": (("stat", "Batting"), ("handedness", "vs LHP"), ("handedness", "as LHH")),
+            "vs_lhp_as_rhh": (("stat", "Batting"), ("handedness", "vs LHP"), ("handedness", "as RHH")),
+            "vs_rhp": (("stat", "Batting"), ("handedness", "vs RHP")),
+            "vs_rhp_home": (("stat", "Batting"), ("handedness", "vs RHP"), ("home_away", "Home")),
+            "vs_rhp_away": (("stat", "Batting"), ("handedness", "vs RHP"), ("home_away", "Away")),
+            "vs_rhp_as_lhh": (("stat", "Batting"), ("handedness", "vs RHP"), ("handedness", "as LHH")),
+            "vs_rhp_as_rhh": (("stat", "Batting"), ("handedness", "vs RHP"), ("handedness", "as RHH")),
+            "pitching_as_sp": (("stat", "Pitching"), ("position", "as SP")),
+            "pitching_as_rp": (("stat", "Pitching"), ("position", "as RP")),
+            "pitching_home": (("stat", "Pitching"), ("home_away", "Home")),
+            "pitching_away": (("stat", "Pitching"), ("home_away", "Away")),
+            "vs_lhh": (("stat", "Pitching"), ("handedness", "vs LHH")),
+            "vs_lhh_home": (("stat", "Pitching"), ("handedness", "vs LHH"), ("home_away", "Home")),
+            "vs_lhh_away": (("stat", "Pitching"), ("handedness", "vs LHH"), ("home_away", "Away")),
+            "vs_lhh_as_rhp": (("stat", "Pitching"), ("handedness", "vs LHH"), ("handedness", "as RHP")),
+            "vs_lhh_as_lhp": (("stat", "Pitching"), ("handedness", "vs LHH"), ("handedness", "as LHP")),
+            "vs_rhh": (("stat", "Pitching"), ("handedness", "vs RHH")),
+            "vs_rhh_home": (("stat", "Pitching"), ("handedness", "vs RHH"), ("home_away", "Home")),
+            "vs_rhh_away": (("stat", "Pitching"), ("handedness", "vs RHH"), ("home_away", "Away")),
+            "vs_rhh_as_rhp": (("stat", "Pitching"), ("handedness", "vs RHH"), ("handedness", "as RHP")),
+            "vs_rhh_as_lhp": (("stat", "Pitching"), ("handedness", "vs RHH"), ("handedness", "as LHP"))
+        }
         self.address = "https://www.fangraphs.com/leaders/splits-leaderboards"
 
         self.browser = webdriver.Firefox(
@@ -447,7 +475,7 @@ class SplitsLeaderboards:
             elems = self.soup.select(selector)
             options = [e.getText() for e in elems]
         else:
-            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
         return options
 
     def current_option(self, query: str):
@@ -474,7 +502,7 @@ class SplitsLeaderboards:
                 if "highlight-selection" in elem.get("class"):
                     options.append(elem.getText())
         else:
-            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
         return options
 
     def configure_group(self, group="Show All"):
@@ -521,6 +549,21 @@ class SplitsLeaderboards:
                 self.__close_ad()
                 continue
 
+    def quick_split(self, quick_split: str):
+        configurations = self.__quick_splits.get(quick_split)
+        if configurations is None:
+            raise FanGraphs.exceptions.InvalidQuickSplitException(quick_split)
+        return configurations
+
+    def configure_quick_split(self, quick_split: str):
+        configurations = self.__quick_splits.get(quick_split)
+        if configurations is None:
+            raise FanGraphs.exceptions.InvalidQuickSplitException(quick_split)
+        self.reset_filters()
+        for query, option in configurations:
+            self.configure(query, option)
+        self.update()
+
     def configure(self, query: str, option: str, *, autoupdate=False):
         query = query.lower()
         while True:
@@ -532,7 +575,7 @@ class SplitsLeaderboards:
                 elif query in self.__splits:
                     self.__configure_split(query, option)
                 else:
-                    raise FanGraphs.exceptions.InvalidFilterQuery(query)
+                    raise FanGraphs.exceptions.InvalidFilterQueryException(query)
                 break
             except exceptions.ElementClickInterceptedException:
                 self.__close_ad()
@@ -545,7 +588,7 @@ class SplitsLeaderboards:
         try:
             index = options.index(option)
         except ValueError:
-            raise FanGraphs.exceptions.InvalidFilterOption(query, option)
+            raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
         elem = self.browser.find_element_by_css_selector(
             f"{self.__selections[query][index]}"
         )
@@ -556,7 +599,7 @@ class SplitsLeaderboards:
         try:
             index = options.index(option)
         except ValueError:
-            raise FanGraphs.exceptions.InvalidFilterOption(query, option)
+            raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
         dropdown = self.browser.find_element_by_css_selector(
             self.__dropdowns[query]
         )
@@ -580,7 +623,7 @@ class SplitsLeaderboards:
         try:
             index = options.index(option)
         except ValueError:
-            raise FanGraphs.exceptions.InvalidFilterOption(query, option)
+            raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
         dropdown = self.browser.find_element_by_css_selector(
             self.__splits[query]
         )
@@ -739,7 +782,7 @@ class SeasonStatGrid:
             )
             options = [e.getText() for e in elems]
         else:
-            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
         return options
 
     def current_option(self, query: str):
@@ -764,7 +807,7 @@ class SeasonStatGrid:
             )
             option = elems[0].getText() if elems else "None"
         else:
-            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
         return option
 
     def configure(self, query: str, option: str):
@@ -784,7 +827,7 @@ class SeasonStatGrid:
                 elif query in self.__dropdowns:
                     self.__configure_dropdown(query, option)
                 else:
-                    raise FanGraphs.exceptions.InvalidFilterQuery(query)
+                    raise FanGraphs.exceptions.InvalidFilterQueryException(query)
                 break
             except exceptions.ElementClickInterceptedException:
                 self.__close_ad()
@@ -800,7 +843,7 @@ class SeasonStatGrid:
         """
         options = self.list_options(query)
         if option not in options:
-            raise FanGraphs.exceptions.InvalidFilterOption(query, option)
+            raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
         index = options.index(option)
         elem = self.browser.find_element_by_css_selector(
             self.__selections[query][index]
@@ -817,7 +860,7 @@ class SeasonStatGrid:
         """
         options = self.list_options(query)
         if option not in options:
-            raise FanGraphs.exceptions.InvalidFilterOption(query, option)
+            raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
         index = options.index(option)
         dropdown = self.browser.find_element_by_css_selector(
             self.__dropdowns[query]

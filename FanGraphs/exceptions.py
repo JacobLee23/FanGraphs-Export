@@ -2,7 +2,7 @@
 # FanGraphs/exceptions.py
 
 
-class InvalidFilterQuery(Exception):
+class InvalidFilterQueryException(Exception):
 
     def __init__(self, query):
         """
@@ -15,7 +15,7 @@ class InvalidFilterQuery(Exception):
         super().__init__(self.message)
 
 
-class InvalidFilterOption(Exception):
+class InvalidFilterOptionException(Exception):
 
     def __init__(self, query, option):
         """
@@ -26,4 +26,16 @@ class InvalidFilterOption(Exception):
         """
         self.query, self.option = query, option
         self.message = f"No option '{self.option}' could be found for query '{self.query}'"
+        super().__init__(self.message)
+
+
+class InvalidQuickSplitException(Exception):
+
+    def __init__(self, quick_split):
+        """
+
+        :param quick_split:
+        """
+        self.quick_split = quick_split
+        self.message = f"No quick split '{self.quick_split}` could be found"
         super().__init__(self.message)

@@ -22,17 +22,17 @@ class TestExceptions(unittest.TestCase):
         parser = leaders.MajorLeagueLeaderboards()
 
         with self.assertRaises(
-            exceptions.InvalidFilterQuery
+            exceptions.InvalidFilterQueryException
         ):
             parser.list_options("nonexistent query")
 
         with self.assertRaises(
-            exceptions.InvalidFilterQuery
+            exceptions.InvalidFilterQueryException
         ):
             parser.current_option("nonexistent query")
 
         with self.assertRaises(
-            exceptions.InvalidFilterQuery
+            exceptions.InvalidFilterQueryException
         ):
             parser.configure("nonexistent query", "nonexistent option")
 
@@ -42,22 +42,22 @@ class TestExceptions(unittest.TestCase):
         parser = leaders.SeasonStatGrid()
 
         with self.assertRaises(
-            exceptions.InvalidFilterQuery
+            exceptions.InvalidFilterQueryException
         ):
             parser.list_options("nonexistent query")
 
         with self.assertRaises(
-            exceptions.InvalidFilterQuery
+            exceptions.InvalidFilterQueryException
         ):
             parser.current_option("nonexistent query")
 
         with self.assertRaises(
-            exceptions.InvalidFilterQuery
+            exceptions.InvalidFilterQueryException
         ):
             parser.configure("nonexistent query", "nonexistent option")
 
         with self.assertRaises(
-            exceptions.InvalidFilterOption
+            exceptions.InvalidFilterOptionException
         ):
             parser.configure("Stat", "nonexistent option")
 
@@ -256,6 +256,44 @@ class TestSplitsLeaderboards(unittest.TestCase):
                 query
             )
             self.parser.reset()
+
+    @unittest.SkipTest
+    def test_quick_split(self):
+        quick_splits = {
+            'batting_home': 2, 'batting_away': 2, 'vs_lhp': 2, 'vs_lhp_home': 3,
+            'vs_lhp_away': 3, 'vs_lhp_as_lhh': 3, 'vs_lhp_as_rhh': 3, 'vs_rhp': 2,
+            'vs_rhp_home': 3, 'vs_rhp_away': 3, 'vs_rhp_as_lhh': 3, 'vs_rhp_as_rhh': 3,
+            'pitching_as_sp': 2, 'pitching_as_rp': 2, 'pitching_home': 2,
+            'pitching_away': 2, 'vs_lhh': 2, 'vs_lhh_home': 3, 'vs_lhh_away': 3,
+            'vs_lhh_as_rhp': 3, 'vs_lhh_as_lhp': 3, 'vs_rhh': 2, 'vs_rhh_home': 3,
+            'vs_rhh_away': 3, 'vs_rhh_as_rhp': 3, 'vs_rhh_as_lhp': 3
+        }
+        for qsplit in quick_splits:
+            configs = self.parser.quick_split(qsplit)
+            self.assertEqual(
+                len(configs), quick_splits[qsplit],
+                qsplit
+            )
+
+    @unittest.SkipTest
+    def test_configure_quick_split(self):
+        quick_splits = [
+            'batting_home', 'batting_away', 'vs_lhp', 'vs_lhp_home',
+            'vs_lhp_away', 'vs_lhp_as_lhh', 'vs_lhp_as_rhh', 'vs_rhp',
+            'vs_rhp_home', 'vs_rhp_away', 'vs_rhp_as_lhh', 'vs_rhp_as_rhh',
+            'pitching_as_sp', 'pitching_as_rp', 'pitching_home',
+            'pitching_away', 'vs_lhh', 'vs_lhh_home', 'vs_lhh_away',
+            'vs_lhh_as_rhp', 'vs_lhh_as_lhp', 'vs_rhh', 'vs_rhh_home',
+            'vs_rhh_away', 'vs_rhh_as_rhp', 'vs_rhh_as_lhp'
+        ]
+        for qsplit in quick_splits:
+            self.parser.configure_quick_split(qsplit)
+            configurations = self.parser.quick_split(qsplit)
+            for query, option in configurations:
+                self.assertIn(
+                    option, self.parser.current_option(query),
+                    query
+                )
 
     def test_export(self):
         self.parser.export("test.csv")
