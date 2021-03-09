@@ -443,6 +443,13 @@ class TestSplitsLeaderboards(unittest.TestCase):
             for elem in elems:
                 self.assertTrue(elem.get("class"))
 
+    def test_export_data_classname(self):
+        selector = ".data-export"
+        elems = self.soup.select(selector)
+        self.assertEqual(
+            len(elems), 1
+        )
+
 
 @unittest.SkipTest
 class TestSeasonStatGrid(unittest.TestCase):

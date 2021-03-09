@@ -11,7 +11,7 @@ from FanGraphs import exceptions
 from FanGraphs import leaders
 
 
-@unittest.SkipTest
+@unittest.skip
 class TestExceptions(unittest.TestCase):
 
     @classmethod
@@ -64,7 +64,7 @@ class TestExceptions(unittest.TestCase):
         parser.quit()
 
 
-@unittest.SkipTest
+@unittest.skip
 class TestMajorLeagueLeaderboards(unittest.TestCase):
 
     parser = leaders.MajorLeagueLeaderboards()
@@ -179,10 +179,10 @@ class TestSplitsLeaderboards(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        for file in os.listdir("out"):
-            os.remove(os.path.join("out", file))
-        os.rmdir("out")
         cls.parser.quit()
+        # for file in os.listdir("out"):
+        #    os.remove(os.path.join("out", file))
+        # os.rmdir("out")
         os.system("taskkill /F /IM firefox.exe")
 
     @unittest.SkipTest
@@ -245,19 +245,28 @@ class TestSplitsLeaderboards(unittest.TestCase):
                 query
             )
 
+    @unittest.SkipTest
     def test_configure(self):
         queries = self.parser.list_queries()
         for query in queries:
             option = self.parser.list_options(query)[-1]
-            self.parser.configure(query, option)
+            self.parser.configure(query, option, autoupdate=True)
             self.assertIn(
                 option, self.parser.current_option(query),
                 query
             )
             self.parser.reset()
 
+    def test_export(self):
+        self.parser.export("test.csv")
+        self.assertTrue(
+            os.path.exists(
+                os.path.join("out", "test.csv")
+            )
+        )
 
-@unittest.SkipTest
+
+@unittest.skip
 class TestSeasonStatGrid(unittest.TestCase):
 
     parser = leaders.SeasonStatGrid()

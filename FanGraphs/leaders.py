@@ -485,7 +485,12 @@ class SplitsLeaderboards:
         elem = self.browser.find_elements_by_css_selector(
             selector
         )[index]
-        elem.click()
+        while True:
+            try:
+                elem.click()
+                break
+            except exceptions.ElementClickInterceptedException:
+                self.__close_ad()
 
     def update(self):
         selector = "#button-update"
@@ -501,21 +506,22 @@ class SplitsLeaderboards:
                 break
             except exceptions.ElementClickInterceptedException:
                 self.__close_ad()
+        self.__refresh_parser()
 
     def reset_filters(self):
         selector = "#stack-buttons div[class='fgButton small']:nth-last-child(1)"
+        elem = self.browser.find_element_by_css_selector(
+            selector
+        )
         while True:
             try:
-                elem = self.browser.find_element_by_css_selector(
-                    selector
-                )
                 elem.click()
                 break
             except exceptions.ElementClickInterceptedException:
                 self.__close_ad()
                 continue
 
-    def configure(self, query: str, option: str, *, autoupdate=True):
+    def configure(self, query: str, option: str, *, autoupdate=False):
         query = query.lower()
         while True:
             try:
@@ -598,9 +604,28 @@ class SplitsLeaderboards:
             elem = self.browser.find_element_by_class_name(
                 "ezmob-footer-close"
             )
-            elem.click()
         except exceptions.NoSuchElementException:
-            pass
+            return
+        elem.click()
+
+    def export(self, name=""):
+        if not name or os.path.splitext(name)[1] != ".csv":
+            name = "{}.csv".format(
+                datetime.datetime.now().strftime("%d.%m.%y %H.%M.%S")
+            )
+        elem = self.browser.find_element_by_class_name(
+            "data-export"
+        )
+        while True:
+            try:
+                elem.click()
+                break
+            except exceptions.ElementClickInterceptedException:
+                self.__close_ad()
+        os.rename(
+            os.path.join("out", "Splits Leaderboard Data.csv"),
+            os.path.join("out", name)
+        )
 
     def reset(self):
         self.browser.get(self.address)
