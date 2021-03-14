@@ -358,6 +358,17 @@ class TestSplitsLeaderboards(unittest.TestCase):
                 len(elems), 1, cat
             )
 
+    def test_switches_selectors(self):
+        selectors = {
+            "split_teams": "#stack-buttons > div:nth-child(2)",
+            "auto_pt": "#stack-buttons > div:nth-child(3)"
+        }
+        for cat in selectors:
+            elems = self.soup.select(selectors[cat])
+            self.assertEqual(
+                len(elems), 1, cat
+            )
+
     def test_reset_filters_selector(self):
         selector = "#stack-buttons div[class='fgButton small']:nth-last-child(1)"
         elems = self.soup.select(selector)
@@ -443,12 +454,56 @@ class TestSplitsLeaderboards(unittest.TestCase):
             for elem in elems:
                 self.assertTrue(elem.get("class"))
 
-    def test_export_data_classname(self):
-        selector = ".data-export"
+    def test_current_option_switches(self):
+        selectors = {
+            "split_teams": "#stack-buttons > div:nth-child(2)",
+            "auto_pt": "#stack-buttons > div:nth-child(3)"
+        }
+        for query in selectors:
+            elem = self.soup.select(selectors[query])
+            self.assertTrue(elem.get("class"))
+
+    def test_expand_table_dropdown_selector(self):
+        selector = ".table-page-control:nth-child(3) select"
         elems = self.soup.select(selector)
         self.assertEqual(
             len(elems), 1
         )
+
+    def test_expand_table_dropdown_options_selectors(self):
+        options = ["30", "50", "100", "200", "Infinity"]
+        selector = ".table-page-control:nth-child(3) select option"
+        elems = self.soup.select(selector)
+        self.assertEqual(
+            len(elems), 5
+        )
+        self.assertEqual(
+            [e.getText() for e in elems], options
+        )
+
+    def test_sortby_option_selectors(self):
+        selector = ".table-scroll thead tr th"
+        elems = self.soup.select(selector)
+        self.assertEqual(
+            len(elems), 24
+        )
+
+    def test_write_table_headers_selector(self):
+        selector = ".table-scroll thead tr th"
+        elems = self.soup.select(selector)
+        self.assertEqual(
+            len(elems), 24
+        )
+
+    def test_write_table_rows_selector(self):
+        selector = ".table-scroll tbody tr"
+        elems = self.soup.select(selector)
+        self.assertEqual(
+            len(elems), 30
+        )
+        for elem in elems:
+            item_elems = elem.select("td")
+            self.assertEqual(len(item_elems), 24)
 
 
 @unittest.SkipTest

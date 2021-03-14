@@ -32,7 +32,7 @@ def compile_options():
     :rtype: selenium.webdriver.firefox.options.Options
     """
     options = Options()
-    options.headless = True
+    options.headless = False
     os.makedirs("out", exist_ok=True)
     preferences = {
         "browser.download.folderList": 2,
@@ -419,6 +419,10 @@ class SplitsLeaderboards:
             "vs_rhh_as_rhp": (("stat", "Pitching"), ("handedness", "vs RHH"), ("handedness", "as RHP")),
             "vs_rhh_as_lhp": (("stat", "Pitching"), ("handedness", "vs RHH"), ("handedness", "as LHP"))
         }
+        self.__switches = {
+            "split_teams": "#stack-buttons > div:nth-child(2)",
+            "auto_pt": "#stack-buttons > div:nth-child(3)"
+        }
         self.address = "https://www.fangraphs.com/leaders/splits-leaderboards"
 
         self.browser = webdriver.Firefox(
@@ -437,7 +441,7 @@ class SplitsLeaderboards:
         self.soup = None
         self.__refresh_parser()
 
-        self.reset_filters()
+        self.configure("auto_pt", "False", autoupdate=True)
         self.configure_group("Show All")
 
     def __refresh_parser(self):
@@ -450,6 +454,7 @@ class SplitsLeaderboards:
         queries.extend(list(self.__selections))
         queries.extend(list(self.__dropdowns))
         queries.extend(list(self.__splits))
+        queries.extend(list(self.__switches))
         return queries
 
     def list_filter_groups(self):
@@ -458,7 +463,7 @@ class SplitsLeaderboards:
         groups = [e.getText() for e in elems]
         return groups
 
-    def list_options(self, query):
+    def list_options(self, query: str):
         query = query.lower()
         if query in self.__selections:
             elems = [
@@ -474,6 +479,8 @@ class SplitsLeaderboards:
             selector = f"{self.__splits[query]} ul li"
             elems = self.soup.select(selector)
             options = [e.getText() for e in elems]
+        elif query in self.__switches:
+            options = ["True", "False"]
         else:
             raise FanGraphs.exceptions.InvalidFilterQueryException(query)
         return options
@@ -501,6 +508,9 @@ class SplitsLeaderboards:
             for elem in elems:
                 if "highlight-selection" in elem.get("class"):
                     options.append(elem.getText())
+        elif query in self.__switches:
+            elem = self.soup.select(self.__switches[query])
+            options = ["True" if "isActive" in elem[0].get("class") else "False"]
         else:
             raise FanGraphs.exceptions.InvalidFilterQueryException(query)
         return options
@@ -549,7 +559,11 @@ class SplitsLeaderboards:
                 self.__close_ad()
                 continue
 
-    def quick_split(self, quick_split: str):
+    def list_quick_splits(self):
+        quick_splits = list(self.__quick_splits)
+        return quick_splits
+
+    def get_quick_split(self, quick_split: str):
         configurations = self.__quick_splits.get(quick_split)
         if configurations is None:
             raise FanGraphs.exceptions.InvalidQuickSplitException(quick_split)
@@ -561,8 +575,7 @@ class SplitsLeaderboards:
             raise FanGraphs.exceptions.InvalidQuickSplitException(quick_split)
         self.reset_filters()
         for query, option in configurations:
-            self.configure(query, option)
-        self.update()
+            self.configure(query, option, autoupdate=True)
 
     def configure(self, query: str, option: str, *, autoupdate=False):
         query = query.lower()
@@ -574,6 +587,8 @@ class SplitsLeaderboards:
                     self.__configure_dropdown(query, option)
                 elif query in self.__splits:
                     self.__configure_split(query, option)
+                elif query in self.__switches:
+                    self.__configure_switch(query, option)
                 else:
                     raise FanGraphs.exceptions.InvalidFilterQueryException(query)
                 break
@@ -603,7 +618,16 @@ class SplitsLeaderboards:
         dropdown = self.browser.find_element_by_css_selector(
             self.__dropdowns[query]
         )
-        dropdown.click()
+        try:
+            dropdown.click()
+        except exceptions.ElementNotInteractableException:
+            actions = ActionChains(self.browser)
+            actions.move_to_element(dropdown).perform()
+            WebDriverWait(self.browser, 5).until(
+                expected_conditions.element_to_be_clickable(
+                    (By.CSS_SELECTOR, self.__dropdowns[query])
+                )
+            )
         elem = self.browser.find_elements_by_css_selector(
             f"{self.__dropdowns[query]} ul li"
         )[index]
@@ -627,7 +651,16 @@ class SplitsLeaderboards:
         dropdown = self.browser.find_element_by_css_selector(
             self.__splits[query]
         )
-        dropdown.click()
+        try:
+            dropdown.click()
+        except exceptions.ElementNotInteractableException:
+            actions = ActionChains(self.browser)
+            actions.move_to_element(dropdown).perform()
+            WebDriverWait(self.browser, 5).until(
+                expected_conditions.element_to_be_clickable(
+                    (By.CSS_SELECTOR, f"{self.__splits[query]}")
+                )
+            ).click()
         elem = self.browser.find_elements_by_css_selector(
             f"{self.__splits[query]} ul li"
         )[index]
@@ -642,6 +675,14 @@ class SplitsLeaderboards:
                 )
             ).click()
 
+    def __configure_switch(self, query, option):
+        if option == self.current_option(query)[0]:
+            return
+        elem = self.browser.find_element_by_css_selector(
+            self.__switches[query]
+        )
+        elem.click()
+
     def __close_ad(self):
         try:
             elem = self.browser.find_element_by_class_name(
@@ -651,24 +692,68 @@ class SplitsLeaderboards:
             return
         elem.click()
 
-    def export(self, name=""):
+    def export(self, name="", *, size="Infinity", sortby="", reverse=False):
+        WebDriverWait(self.browser, 5).until(
+            expected_conditions.presence_of_element_located(
+                (By.CLASS_NAME, "data-export")
+            )
+        )
+        while True:
+            try:
+                self.__expand_table(size=size)
+                break
+            except exceptions.ElementClickInterceptedException:
+                self.__close_ad()
+                continue
+        if sortby:
+            self.__sortby(sortby.title(), reverse=reverse)
         if not name or os.path.splitext(name)[1] != ".csv":
             name = "{}.csv".format(
                 datetime.datetime.now().strftime("%d.%m.%y %H.%M.%S")
             )
-        elem = self.browser.find_element_by_class_name(
-            "data-export"
-        )
-        while True:
-            try:
-                elem.click()
-                break
-            except exceptions.ElementClickInterceptedException:
-                self.__close_ad()
-        os.rename(
-            os.path.join("out", "Splits Leaderboard Data.csv"),
-            os.path.join("out", name)
-        )
+        with open(os.path.join("out", name), "w", newline="") as file:
+            writer = csv.writer(file)
+            self.__write_table_headers(writer)
+            self.__write_table_rows(writer)
+
+    def __expand_table(self, *, size="Infinity"):
+        selector = ".table-page-control:nth-child(3) select"
+        dropdown = self.browser.find_element_by_css_selector(selector)
+        dropdown.click()
+        elems = self.soup.select(f"{selector} option")
+        options = [e.getText() for e in elems]
+        size = "Infinity" if size not in options else size
+        index = options.index(size)
+        option = self.browser.find_elements_by_css_selector(
+            f"{selector} option"
+        )[index]
+        option.click()
+
+    def __sortby(self, sortby, *, reverse=False):
+        selector = ".table-scroll thead tr th"
+        elems = self.soup.select(selector)
+        options = [e.getText() for e in elems]
+        index = options.index(sortby)
+        option = self.browser.find_elements_by_css_selector(
+            selector
+        )[index]
+        option.click()
+        if reverse:
+            option.click()
+
+    def __write_table_headers(self, writer: csv.writer):
+        selector = ".table-scroll thead tr th"
+        elems = self.soup.select(selector)
+        headers = [e.getText() for e in elems]
+        writer.writerow(headers)
+
+    def __write_table_rows(self, writer: csv.writer):
+        selector = ".table-scroll tbody tr"
+        row_elems = self.soup.select(selector)
+        for row in row_elems:
+            elems = row.select("td")
+            items = [e.getText() for e in elems]
+            writer.writerow(items)
 
     def reset(self):
         self.browser.get(self.address)

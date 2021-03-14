@@ -3,3 +3,4 @@ virtualenv/
 .idea/
 *.log
 out/
+.vs/ 

@@ -11,6 +11,9 @@ from FanGraphs import exceptions
 from FanGraphs import leaders
 
 
+unittest.TestLoader.sortTestMethodsUsing = None
+
+
 @unittest.skip
 class TestExceptions(unittest.TestCase):
 
@@ -180,13 +183,15 @@ class TestSplitsLeaderboards(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.parser.quit()
-        # for file in os.listdir("out"):
-        #    os.remove(os.path.join("out", file))
-        # os.rmdir("out")
+        for file in os.listdir("out"):
+           os.remove(os.path.join("out", file))
+        os.rmdir("out")
         os.system("taskkill /F /IM firefox.exe")
 
-    @unittest.SkipTest
-    def test_init(self):
+    def test_00(self):
+        """
+        SplitsLeaderboards.__init__
+        """
         self.assertEqual(
             requests.get(self.parser.address).status_code, 200
         )
@@ -194,14 +199,19 @@ class TestSplitsLeaderboards(unittest.TestCase):
         self.assertTrue(self.parser.browser)
         self.assertTrue(self.parser.soup)
 
-    @unittest.SkipTest
-    def test_list_queries(self):
+    def test_01(self):
+        """
+        SplitsLeaderboards.list_queries
+        """
+        # SeasonStatGrid.list_queries
         self.assertEqual(
-            len(self.parser.list_queries()), 24
+            len(self.parser.list_queries()), 20
         )
 
-    @unittest.SkipTest
-    def test_list_filter_groups(self):
+    def test_02(self):
+        """
+        SplitsLeaderboards.list_filter_groups
+        """
         groups = self.parser.list_filter_groups()
         self.assertEqual(
             len(groups), 4
@@ -210,18 +220,18 @@ class TestSplitsLeaderboards(unittest.TestCase):
             groups, ["Quick Splits", "Splits", "Filters", "Show All"]
         )
 
-    @unittest.SkipTest
-    def test_list_options(self):
+    def test_03(self):
+        """
+        SplitsLeaderboards.list_options
+        """
         option_count = {
             "group": 4, "stat": 2, "type": 3,
             "time_filter": 10, "preset_range": 12, "groupby": 5,
-            "batting_ha": 2, "batting_v_lhp": 5, "batting_v_rhp": 5,
-            "pitching_as_sprp": 2, "pitching_ha": 2, "pitching_v_lhh": 5,
-            "pitching_v_rhh": 5,
             "handedness": 4, "home_away": 2, "batted_ball": 15,
             "situation": 7, "count": 11, "batting_order": 9, "position": 12,
             "inning": 10, "leverage": 3, "shifts": 3, "team": 32,
-            "opponent": 32
+            "opponent": 32,
+            "split_teams": 2, "auto_pt": 2
         }
         for query in option_count:
             self.assertEqual(
@@ -229,15 +239,18 @@ class TestSplitsLeaderboards(unittest.TestCase):
                 query
             )
 
-    @unittest.SkipTest
-    def test_current_option(self):
+    def test_04(self):
+        """
+        SplitsLeaderboards.current_option
+        """
         current_options = {
             "group": ["Player"], "stat": ["Batting"], "type": ["Standard"],
             "time_filter": [], "preset_range": [], "groupby": ["Season"],
             "handedness": [], "home_away": [], "batted_ball": [],
             "situation": [], "count": [], "batting_order": [], "position": [],
             "inning": [], "leverage": [], "shifts": [], "team": [],
-            "opponent": []
+            "opponent": [],
+            "split_teams": ["False"], "auto_pt": ["False"]
         }
         for query in current_options:
             self.assertEqual(
@@ -245,10 +258,13 @@ class TestSplitsLeaderboards(unittest.TestCase):
                 query
             )
 
-    @unittest.SkipTest
-    def test_configure(self):
+    def test_05(self):
+        """
+        SplitsLeaderboards.configure
+        """
         queries = self.parser.list_queries()
         for query in queries:
+            print(query)
             option = self.parser.list_options(query)[-1]
             self.parser.configure(query, option, autoupdate=True)
             self.assertIn(
@@ -257,8 +273,27 @@ class TestSplitsLeaderboards(unittest.TestCase):
             )
             self.parser.reset()
 
-    @unittest.SkipTest
-    def test_quick_split(self):
+    def test_06(self):
+        """
+        SplitsLeaderboards.list_quick_splits
+        """
+        quick_splits = [
+            'batting_home', 'batting_away', 'vs_lhp', 'vs_lhp_home',
+            'vs_lhp_away', 'vs_lhp_as_lhh', 'vs_lhp_as_rhh', 'vs_rhp',
+            'vs_rhp_home', 'vs_rhp_away', 'vs_rhp_as_lhh', 'vs_rhp_as_rhh',
+            'pitching_as_sp', 'pitching_as_rp', 'pitching_home',
+            'pitching_away', 'vs_lhh', 'vs_lhh_home', 'vs_lhh_away',
+            'vs_lhh_as_rhp', 'vs_lhh_as_lhp', 'vs_rhh', 'vs_rhh_home',
+            'vs_rhh_away', 'vs_rhh_as_rhp', 'vs_rhh_as_lhp'
+        ]
+        self.assertEqual(
+            self.parser.list_quick_splits(), quick_splits
+        )
+
+    def test_07(self):
+        """
+        SplitsLeaderboards.get_quick_split
+        """
         quick_splits = {
             'batting_home': 2, 'batting_away': 2, 'vs_lhp': 2, 'vs_lhp_home': 3,
             'vs_lhp_away': 3, 'vs_lhp_as_lhh': 3, 'vs_lhp_as_rhh': 3, 'vs_rhp': 2,
@@ -269,34 +304,31 @@ class TestSplitsLeaderboards(unittest.TestCase):
             'vs_rhh_away': 3, 'vs_rhh_as_rhp': 3, 'vs_rhh_as_lhp': 3
         }
         for qsplit in quick_splits:
-            configs = self.parser.quick_split(qsplit)
+            configs = self.parser.get_quick_split(qsplit)
             self.assertEqual(
                 len(configs), quick_splits[qsplit],
                 qsplit
             )
 
-    @unittest.SkipTest
-    def test_configure_quick_split(self):
-        quick_splits = [
-            'batting_home', 'batting_away', 'vs_lhp', 'vs_lhp_home',
-            'vs_lhp_away', 'vs_lhp_as_lhh', 'vs_lhp_as_rhh', 'vs_rhp',
-            'vs_rhp_home', 'vs_rhp_away', 'vs_rhp_as_lhh', 'vs_rhp_as_rhh',
-            'pitching_as_sp', 'pitching_as_rp', 'pitching_home',
-            'pitching_away', 'vs_lhh', 'vs_lhh_home', 'vs_lhh_away',
-            'vs_lhh_as_rhp', 'vs_lhh_as_lhp', 'vs_rhh', 'vs_rhh_home',
-            'vs_rhh_away', 'vs_rhh_as_rhp', 'vs_rhh_as_lhp'
-        ]
-        for qsplit in quick_splits:
+    def test_08(self):
+        """
+        SplitsLeaderboards.configure_quick_split
+        """
+        for qsplit in self.parser.list_quick_splits():
+            print(qsplit)
             self.parser.configure_quick_split(qsplit)
-            configurations = self.parser.quick_split(qsplit)
+            configurations = self.parser.get_quick_split(qsplit)
             for query, option in configurations:
                 self.assertIn(
                     option, self.parser.current_option(query),
                     query
                 )
 
-    def test_export(self):
-        self.parser.export("test.csv")
+    def test_09(self):
+        """
+        SplitsLeaderboards.export
+        """
+        self.parser.export("test.csv", size="30")
         self.assertTrue(
             os.path.exists(
                 os.path.join("out", "test.csv")
