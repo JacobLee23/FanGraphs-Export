@@ -32,7 +32,7 @@ def compile_options():
     :rtype: selenium.webdriver.firefox.options.Options
     """
     options = Options()
-    options.headless = False
+    options.headless = True
     os.makedirs("out", exist_ok=True)
     preferences = {
         "browser.download.folderList": 2,
@@ -392,32 +392,32 @@ class SplitsLeaderboards:
             "opponent": ".fgBin:nth-child(3) > .fg-dropdown.splits.multi-choice:nth-child(2)",
         }
         self.__quick_splits = {
-            "batting_home": (("stat", "Batting"), ("home_away", "Home")),
-            "batting_away": (("stat", "Batting"), ("home_away", "Away")),
-            "vs_lhp": (("stat", "Batting"), ("handedness", "vs LHP")),
-            "vs_lhp_home": (("stat", "Batting"), ("handedness", "vs LHP"), ("home_away", "Home")),
-            "vs_lhp_away": (("stat", "Batting"), ("handedness", "vs LHP"), ("home_away", "Away")),
-            "vs_lhp_as_lhh": (("stat", "Batting"), ("handedness", "vs LHP"), ("handedness", "as LHH")),
-            "vs_lhp_as_rhh": (("stat", "Batting"), ("handedness", "vs LHP"), ("handedness", "as RHH")),
-            "vs_rhp": (("stat", "Batting"), ("handedness", "vs RHP")),
-            "vs_rhp_home": (("stat", "Batting"), ("handedness", "vs RHP"), ("home_away", "Home")),
-            "vs_rhp_away": (("stat", "Batting"), ("handedness", "vs RHP"), ("home_away", "Away")),
-            "vs_rhp_as_lhh": (("stat", "Batting"), ("handedness", "vs RHP"), ("handedness", "as LHH")),
-            "vs_rhp_as_rhh": (("stat", "Batting"), ("handedness", "vs RHP"), ("handedness", "as RHH")),
-            "pitching_as_sp": (("stat", "Pitching"), ("position", "as SP")),
-            "pitching_as_rp": (("stat", "Pitching"), ("position", "as RP")),
-            "pitching_home": (("stat", "Pitching"), ("home_away", "Home")),
-            "pitching_away": (("stat", "Pitching"), ("home_away", "Away")),
-            "vs_lhh": (("stat", "Pitching"), ("handedness", "vs LHH")),
-            "vs_lhh_home": (("stat", "Pitching"), ("handedness", "vs LHH"), ("home_away", "Home")),
-            "vs_lhh_away": (("stat", "Pitching"), ("handedness", "vs LHH"), ("home_away", "Away")),
-            "vs_lhh_as_rhp": (("stat", "Pitching"), ("handedness", "vs LHH"), ("handedness", "as RHP")),
-            "vs_lhh_as_lhp": (("stat", "Pitching"), ("handedness", "vs LHH"), ("handedness", "as LHP")),
-            "vs_rhh": (("stat", "Pitching"), ("handedness", "vs RHH")),
-            "vs_rhh_home": (("stat", "Pitching"), ("handedness", "vs RHH"), ("home_away", "Home")),
-            "vs_rhh_away": (("stat", "Pitching"), ("handedness", "vs RHH"), ("home_away", "Away")),
-            "vs_rhh_as_rhp": (("stat", "Pitching"), ("handedness", "vs RHH"), ("handedness", "as RHP")),
-            "vs_rhh_as_lhp": (("stat", "Pitching"), ("handedness", "vs RHH"), ("handedness", "as LHP"))
+            "batting_home": ".quick-splits > div:nth-child(1) > div:nth-child(2) > .fgButton:nth-child(1)",
+            "batting_away": ".quick-splits > div:nth-child(1) > div:nth-child(2) > .fgButton:nth-child(2)",
+            "vs_lhp": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(1)",
+            "vs_lhp_home": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(2)",
+            "vs_lhp_away": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(3)",
+            "vs_lhp_as_lhh": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(4)",
+            "vs_lhp_as_rhh": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(5)",
+            "vs_rhp": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(1)",
+            "vs_rhp_home": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(2)",
+            "vs_rhp_away": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(3)",
+            "vs_rhp_as_lhh": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(4)",
+            "vs_rhp_as_rhh": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(5)",
+            "pitching_as_sp": ".quick-splits > div:nth-child(2) > div:nth-child(1) .fgButton:nth-child(1)",
+            "pitching_as_rp": ".quick-splits > div:nth-child(2) > div:nth-child(1) .fgButton:nth-child(2)",
+            "pitching_home": ".quick-splits > div:nth-child(2) > div:nth-child(2) > .fgButton:nth-child(1)",
+            "pitching_away": ".quick-splits > div:nth-child(2) > div:nth-child(2) > .fgButton:nth-child(2)",
+            "vs_lhh": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(1)",
+            "vs_lhh_home": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(2)",
+            "vs_lhh_away": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(3)",
+            "vs_lhh_as_rhp": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(4)",
+            "vs_lhh_as_lhp": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(5)",
+            "vs_rhh": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)",
+            "vs_rhh_home": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)",
+            "vs_rhh_away": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)",
+            "vs_rhh_as_rhp": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)",
+            "vs_rhh_as_lhp": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)"
         }
         self.__switches = {
             "split_teams": "#stack-buttons > div:nth-child(2)",
@@ -560,40 +560,35 @@ class SplitsLeaderboards:
                 continue
 
     def list_quick_splits(self):
-        quick_splits = list(self.__quick_splits)
-        return quick_splits
-
-    def get_quick_split(self, quick_split: str):
-        configurations = self.__quick_splits.get(quick_split)
-        if configurations is None:
-            raise FanGraphs.exceptions.InvalidQuickSplitException(quick_split)
-        return configurations
+        return list(self.__quick_splits)
 
     def configure_quick_split(self, quick_split: str):
+        quick_split = quick_split.lower()
+        if quick_split not in self.__quick_splits:
+            raise FanGraphs.exceptions.InvalidQuickSplitException(quick_split)
+        self.__close_ad()
+        elem = self.browser.find_element_by_css_selector(
+            self.__quick_splits.get(quick_split)
+        )
+        elem.click()
+        self.update()
         configurations = self.__quick_splits.get(quick_split)
         if configurations is None:
             raise FanGraphs.exceptions.InvalidQuickSplitException(quick_split)
-        self.reset_filters()
-        for query, option in configurations:
-            self.configure(query, option, autoupdate=True)
 
     def configure(self, query: str, option: str, *, autoupdate=False):
+        self.__close_ad()
         query = query.lower()
-        while True:
-            try:
-                if query in self.__selections:
-                    self.__configure_selection(query, option)
-                elif query in self.__dropdowns:
-                    self.__configure_dropdown(query, option)
-                elif query in self.__splits:
-                    self.__configure_split(query, option)
-                elif query in self.__switches:
-                    self.__configure_switch(query, option)
-                else:
-                    raise FanGraphs.exceptions.InvalidFilterQueryException(query)
-                break
-            except exceptions.ElementClickInterceptedException:
-                self.__close_ad()
+        if query in self.__selections:
+            self.__configure_selection(query, option)
+        elif query in self.__dropdowns:
+            self.__configure_dropdown(query, option)
+        elif query in self.__splits:
+            self.__configure_split(query, option)
+        elif query in self.__switches:
+            self.__configure_switch(query, option)
+        else:
+            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
         if autoupdate:
             self.update()
         self.__refresh_parser()
@@ -615,32 +610,23 @@ class SplitsLeaderboards:
             index = options.index(option)
         except ValueError:
             raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
-        dropdown = self.browser.find_element_by_css_selector(
-            self.__dropdowns[query]
-        )
-        try:
-            dropdown.click()
-        except exceptions.ElementNotInteractableException:
-            actions = ActionChains(self.browser)
-            actions.move_to_element(dropdown).perform()
-            WebDriverWait(self.browser, 5).until(
-                expected_conditions.element_to_be_clickable(
-                    (By.CSS_SELECTOR, self.__dropdowns[query])
-                )
+        dropdown = WebDriverWait(self.browser, 5).until(
+            expected_conditions.element_to_be_clickable(
+                (By.CSS_SELECTOR, self.__dropdowns[query])
             )
+        )
+        ActionChains(self.browser).move_to_element(dropdown).perform()
+        dropdown.click()
+        WebDriverWait(self.browser, 5).until(
+            expected_conditions.element_to_be_clickable(
+                (By.CSS_SELECTOR, f"{self.__dropdowns[query]} ul")
+            )
+        )
         elem = self.browser.find_elements_by_css_selector(
             f"{self.__dropdowns[query]} ul li"
         )[index]
-        try:
-            elem.click()
-        except exceptions.ElementNotInteractableException:
-            actions = ActionChains(self.browser)
-            actions.move_to_element(elem).perform()
-            WebDriverWait(self.browser, 5).until(
-                expected_conditions.element_to_be_clickable(
-                    (By.CSS_SELECTOR, f"{self.__dropdowns[query]} ul li")
-                )
-            ).click()
+        ActionChains(self.browser).move_to_element(elem).perform()
+        elem.click()
 
     def __configure_split(self, query: str, option: str):
         options = self.list_options(query)
@@ -648,32 +634,18 @@ class SplitsLeaderboards:
             index = options.index(option)
         except ValueError:
             raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
-        dropdown = self.browser.find_element_by_css_selector(
-            self.__splits[query]
+        dropdown = WebDriverWait(self.browser, 5).until(
+            expected_conditions.element_to_be_clickable(
+                (By.CSS_SELECTOR, f"{self.__splits[query]}")
+            )
         )
-        try:
-            dropdown.click()
-        except exceptions.ElementNotInteractableException:
-            actions = ActionChains(self.browser)
-            actions.move_to_element(dropdown).perform()
-            WebDriverWait(self.browser, 5).until(
-                expected_conditions.element_to_be_clickable(
-                    (By.CSS_SELECTOR, f"{self.__splits[query]}")
-                )
-            ).click()
+        ActionChains(self.browser).move_to_element(dropdown).perform()
+        dropdown.click()
         elem = self.browser.find_elements_by_css_selector(
-            f"{self.__splits[query]} ul li"
+            f"{self.__dropdowns[query]} ul li"
         )[index]
-        try:
-            elem.click()
-        except exceptions.ElementNotInteractableException:
-            actions = ActionChains(self.browser)
-            actions.move_to_element(elem).perform()
-            WebDriverWait(self.browser, 5).until(
-                expected_conditions.element_to_be_clickable(
-                    (By.CSS_SELECTOR, f"{self.__splits[query]} ul li")
-                )
-            ).click()
+        ActionChains(self.browser).move_to_element(elem).perform()
+        elem.click()
 
     def __configure_switch(self, query, option):
         if option == self.current_option(query)[0]:
@@ -688,9 +660,9 @@ class SplitsLeaderboards:
             elem = self.browser.find_element_by_class_name(
                 "ezmob-footer-close"
             )
+            elem.click()
         except exceptions.NoSuchElementException:
             return
-        elem.click()
 
     def export(self, name="", *, size="Infinity", sortby="", reverse=False):
         WebDriverWait(self.browser, 5).until(
