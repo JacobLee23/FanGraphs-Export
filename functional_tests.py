@@ -178,13 +178,13 @@ class TestSplitsLeaderboards(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.base_url = cls.parser.browser.current_url
+        cls.base_url = cls.parser.browser.url
 
     @classmethod
     def tearDownClass(cls):
         cls.parser.quit()
         for file in os.listdir("out"):
-           os.remove(os.path.join("out", file))
+            os.remove(os.path.join("out", file))
         os.rmdir("out")
         os.system("taskkill /F /IM firefox.exe")
 
@@ -197,6 +197,7 @@ class TestSplitsLeaderboards(unittest.TestCase):
         )
         self.assertTrue(os.path.exists("out"))
         self.assertTrue(self.parser.browser)
+        self.assertTrue(self.parser.page)
         self.assertTrue(self.parser.soup)
 
     def test_01(self):
@@ -291,7 +292,7 @@ class TestSplitsLeaderboards(unittest.TestCase):
             self.parser.list_quick_splits(), quick_splits
         )
 
-    def test_08(self):
+    def test_07(self):
         """
         SplitsLeaderboards.configure_quick_split
         """
@@ -302,7 +303,7 @@ class TestSplitsLeaderboards(unittest.TestCase):
                 qsplit
             )
 
-    def test_09(self):
+    def test_08(self):
         """
         SplitsLeaderboards.export
         """

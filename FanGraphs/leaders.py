@@ -12,6 +12,7 @@ from urllib.request import urlopen
 
 import bs4
 from lxml import etree
+from playwright.sync_api import sync_playwright
 from selenium.common import exceptions
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium import webdriver
@@ -353,108 +354,105 @@ class MajorLeagueLeaderboards:
 
 
 class SplitsLeaderboards:
+    """
+    Parses the FanGraphs Splits Leaderboards page.
+    """
+    __selections = {
+        "group": [
+            ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(1)",
+            ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(2)",
+            ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(3)",
+            ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(4)"
+        ],
+        "stat": [
+            ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(6)",
+            ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(7)"
+        ],
+        "type": [
+            "#root-buttons-stats > div:nth-child(1)",
+            "#root-buttons-stats > div:nth-child(2)",
+            "#root-buttons-stats > div:nth-child(3)"
+        ]
+    }
+    __dropdowns = {
+        "time_filter": "#root-menu-time-filter > .fg-dropdown.splits.multi-choice",
+        "preset_range": "#root-menu-time-filter > .fg-dropdown.splits.single-choice",
+        "groupby": ".fg-dropdown.group-by"
+    }
+    __splits = {
+        "handedness": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(1)",
+        "home_away": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(2)",
+        "batted_ball": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(3)",
+        "situation": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(4)",
+        "count": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(5)",
+        "batting_order": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(1)",
+        "position": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(2)",
+        "inning": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(3)",
+        "leverage": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(4)",
+        "shifts": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(5)",
+        "team": ".fgBin:nth-child(3) > .fg-dropdown.splits.multi-choice:nth-child(1)",
+        "opponent": ".fgBin:nth-child(3) > .fg-dropdown.splits.multi-choice:nth-child(2)",
+    }
+    __quick_splits = {
+        "batting_home": ".quick-splits > div:nth-child(1) > div:nth-child(2) > .fgButton:nth-child(1)",
+        "batting_away": ".quick-splits > div:nth-child(1) > div:nth-child(2) > .fgButton:nth-child(2)",
+        "vs_lhp": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(1)",
+        "vs_lhp_home": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(2)",
+        "vs_lhp_away": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(3)",
+        "vs_lhp_as_lhh": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(4)",
+        "vs_lhp_as_rhh": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(5)",
+        "vs_rhp": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(1)",
+        "vs_rhp_home": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(2)",
+        "vs_rhp_away": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(3)",
+        "vs_rhp_as_lhh": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(4)",
+        "vs_rhp_as_rhh": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(5)",
+        "pitching_as_sp": ".quick-splits > div:nth-child(2) > div:nth-child(1) .fgButton:nth-child(1)",
+        "pitching_as_rp": ".quick-splits > div:nth-child(2) > div:nth-child(1) .fgButton:nth-child(2)",
+        "pitching_home": ".quick-splits > div:nth-child(2) > div:nth-child(2) > .fgButton:nth-child(1)",
+        "pitching_away": ".quick-splits > div:nth-child(2) > div:nth-child(2) > .fgButton:nth-child(2)",
+        "vs_lhh": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(1)",
+        "vs_lhh_home": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(2)",
+        "vs_lhh_away": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(3)",
+        "vs_lhh_as_rhp": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(4)",
+        "vs_lhh_as_lhp": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(5)",
+        "vs_rhh": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)",
+        "vs_rhh_home": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)",
+        "vs_rhh_away": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)",
+        "vs_rhh_as_rhp": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)",
+        "vs_rhh_as_lhp": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)"
+    }
+    __switches = {
+        "split_teams": "#stack-buttons > div:nth-child(2)",
+        "auto_pt": "#stack-buttons > div:nth-child(3)"
+    }
 
-    def __init__(self):
-        self.__selections = {
-            "group": [
-                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(1)",
-                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(2)",
-                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(3)",
-                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(4)"
-            ],
-            "stat": [
-                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(6)",
-                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(7)"
-            ],
-            "type": [
-                "#root-buttons-stats > div:nth-child(1)",
-                "#root-buttons-stats > div:nth-child(2)",
-                "#root-buttons-stats > div:nth-child(3)"
-            ]
-        }
-        self.__dropdowns = {
-            "time_filter": "#root-menu-time-filter > .fg-dropdown.splits.multi-choice",
-            "preset_range": "#root-menu-time-filter > .fg-dropdown.splits.single-choice",
-            "groupby": ".fg-dropdown.group-by"
-        }
-        self.__splits = {
-            "handedness": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(1)",
-            "home_away": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(2)",
-            "batted_ball": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(3)",
-            "situation": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(4)",
-            "count": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(5)",
-            "batting_order": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(1)",
-            "position": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(2)",
-            "inning": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(3)",
-            "leverage": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(4)",
-            "shifts": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(5)",
-            "team": ".fgBin:nth-child(3) > .fg-dropdown.splits.multi-choice:nth-child(1)",
-            "opponent": ".fgBin:nth-child(3) > .fg-dropdown.splits.multi-choice:nth-child(2)",
-        }
-        self.__quick_splits = {
-            "batting_home": ".quick-splits > div:nth-child(1) > div:nth-child(2) > .fgButton:nth-child(1)",
-            "batting_away": ".quick-splits > div:nth-child(1) > div:nth-child(2) > .fgButton:nth-child(2)",
-            "vs_lhp": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(1)",
-            "vs_lhp_home": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(2)",
-            "vs_lhp_away": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(3)",
-            "vs_lhp_as_lhh": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(4)",
-            "vs_lhp_as_rhh": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(5)",
-            "vs_rhp": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(1)",
-            "vs_rhp_home": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(2)",
-            "vs_rhp_away": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(3)",
-            "vs_rhp_as_lhh": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(4)",
-            "vs_rhp_as_rhh": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(5)",
-            "pitching_as_sp": ".quick-splits > div:nth-child(2) > div:nth-child(1) .fgButton:nth-child(1)",
-            "pitching_as_rp": ".quick-splits > div:nth-child(2) > div:nth-child(1) .fgButton:nth-child(2)",
-            "pitching_home": ".quick-splits > div:nth-child(2) > div:nth-child(2) > .fgButton:nth-child(1)",
-            "pitching_away": ".quick-splits > div:nth-child(2) > div:nth-child(2) > .fgButton:nth-child(2)",
-            "vs_lhh": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(1)",
-            "vs_lhh_home": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(2)",
-            "vs_lhh_away": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(3)",
-            "vs_lhh_as_rhp": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(4)",
-            "vs_lhh_as_lhp": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(5)",
-            "vs_rhh": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)",
-            "vs_rhh_home": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)",
-            "vs_rhh_away": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)",
-            "vs_rhh_as_rhp": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)",
-            "vs_rhh_as_lhp": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)"
-        }
-        self.__switches = {
-            "split_teams": "#stack-buttons > div:nth-child(2)",
-            "auto_pt": "#stack-buttons > div:nth-child(3)"
-        }
-        self.address = "https://www.fangraphs.com/leaders/splits-leaderboards"
+    address = "https://fangraphs.com/leaders/splits-leaderboards"
 
-        self.browser = webdriver.Firefox(
-            options=compile_options()
-        )
-        self.browser.get(self.address)
-        # Wait for JavaScript to render
-        WebDriverWait(
-            self.browser, 5
-        ).until(
-            expected_conditions.presence_of_element_located(
-                (By.CSS_SELECTOR, "#react-drop-test div")
-            )
-        )
+    def __init__(self, *, browser="chromium"):
+        self.play = sync_playwright().start()
+        if browser == "chromium":
+            self.browser = self.play.chromium.launch()
+        self.page = self.browser.new_page()
+        self.page.goto(self.address, timeout=0)
 
         self.soup = None
         self.__refresh_parser()
 
-        self.configure("auto_pt", "False", autoupdate=True)
         self.configure_group("Show All")
+        self.configure("auto_pt", "False", autoupdate=True)
 
     def __refresh_parser(self):
         self.soup = bs4.BeautifulSoup(
-            self.browser.page_source, features="lxml"
+            self.page.content(), features="lxml"
         )
 
-    def list_queries(self):
+    @classmethod
+    def list_queries(cls):
         queries = []
-        queries.extend(list(self.__selections))
-        queries.extend(list(self.__dropdowns))
-        queries.extend(list(self.__splits))
-        queries.extend(list(self.__switches))
+        queries.extend(list(cls.__selections))
+        queries.extend(list(cls.__dropdowns))
+        queries.extend(list(cls.__splits))
+        queries.extend(list(cls.__switches))
         return queries
 
     def list_filter_groups(self):
@@ -519,62 +517,43 @@ class SplitsLeaderboards:
         selector = ".fgBin.splits-bin-controller div"
         elems = self.soup.select(selector)
         options = [e.getText() for e in elems]
-        index = options.index(group)
-        elem = self.browser.find_elements_by_css_selector(
-            selector
-        )[index]
-        while True:
-            try:
-                elem.click()
-                break
-            except exceptions.ElementClickInterceptedException:
-                self.__close_ad()
+        try:
+            index = options.index(group)
+        except ValueError:
+            raise Exception
+        self.__close_ad()
+        elem = self.page.query_selector_all(selector)[index]
+        elem.click()
 
     def update(self):
         selector = "#button-update"
-        try:
-            elem = self.browser.find_element_by_css_selector(
-                selector
-            )
-        except exceptions.NoSuchElementException:
+        elem = self.page.query_selector(selector)
+        if elem is None:
             return
-        while True:
-            try:
-                elem.click()
-                break
-            except exceptions.ElementClickInterceptedException:
-                self.__close_ad()
+        self.__close_ad()
+        elem.click()
         self.__refresh_parser()
 
     def reset_filters(self):
         selector = "#stack-buttons div[class='fgButton small']:nth-last-child(1)"
-        elem = self.browser.find_element_by_css_selector(
-            selector
-        )
-        while True:
-            try:
-                elem.click()
-                break
-            except exceptions.ElementClickInterceptedException:
-                self.__close_ad()
-                continue
+        elem = self.page.query_selector(selector)
+        if elem is None:
+            return
+        self.__close_ad()
+        elem.click()
 
     def list_quick_splits(self):
         return list(self.__quick_splits)
 
     def configure_quick_split(self, quick_split: str):
         quick_split = quick_split.lower()
-        if quick_split not in self.__quick_splits:
+        try:
+            selector = self.__quick_splits[quick_split]
+        except KeyError:
             raise FanGraphs.exceptions.InvalidQuickSplitException(quick_split)
         self.__close_ad()
-        elem = self.browser.find_element_by_css_selector(
-            self.__quick_splits.get(quick_split)
-        )
-        elem.click()
+        self.page.click(selector)
         self.update()
-        configurations = self.__quick_splits.get(quick_split)
-        if configurations is None:
-            raise FanGraphs.exceptions.InvalidQuickSplitException(quick_split)
 
     def configure(self, query: str, option: str, *, autoupdate=False):
         self.__close_ad()
@@ -599,10 +578,7 @@ class SplitsLeaderboards:
             index = options.index(option)
         except ValueError:
             raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
-        elem = self.browser.find_element_by_css_selector(
-            f"{self.__selections[query][index]}"
-        )
-        elem.click()
+        self.page.click(self.__selections[query][index])
 
     def __configure_dropdown(self, query: str, option: str):
         options = self.list_options(query)
@@ -610,22 +586,8 @@ class SplitsLeaderboards:
             index = options.index(option)
         except ValueError:
             raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
-        dropdown = WebDriverWait(self.browser, 5).until(
-            expected_conditions.element_to_be_clickable(
-                (By.CSS_SELECTOR, self.__dropdowns[query])
-            )
-        )
-        ActionChains(self.browser).move_to_element(dropdown).perform()
-        dropdown.click()
-        WebDriverWait(self.browser, 5).until(
-            expected_conditions.element_to_be_clickable(
-                (By.CSS_SELECTOR, f"{self.__dropdowns[query]} ul")
-            )
-        )
-        elem = self.browser.find_elements_by_css_selector(
-            f"{self.__dropdowns[query]} ul li"
-        )[index]
-        ActionChains(self.browser).move_to_element(elem).perform()
+        self.page.hover(self.__dropdowns[query])
+        elem = self.page.query_selector_all(f"{self.__dropdowns[query]} ul li")[index]
         elem.click()
 
     def __configure_split(self, query: str, option: str):
@@ -634,71 +596,44 @@ class SplitsLeaderboards:
             index = options.index(option)
         except ValueError:
             raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
-        dropdown = WebDriverWait(self.browser, 5).until(
-            expected_conditions.element_to_be_clickable(
-                (By.CSS_SELECTOR, f"{self.__splits[query]}")
-            )
-        )
-        ActionChains(self.browser).move_to_element(dropdown).perform()
-        dropdown.click()
-        elem = self.browser.find_elements_by_css_selector(
-            f"{self.__dropdowns[query]} ul li"
-        )[index]
-        ActionChains(self.browser).move_to_element(elem).perform()
+        self.page.hover(self.__splits[query])
+        elem = self.page.query_selector_all(f"{self.__splits[query]} ul li")[index]
         elem.click()
 
     def __configure_switch(self, query, option):
         if option == self.current_option(query)[0]:
             return
-        elem = self.browser.find_element_by_css_selector(
-            self.__switches[query]
-        )
-        elem.click()
+        self.page.click(self.__switches[query])
 
     def __close_ad(self):
-        try:
-            elem = self.browser.find_element_by_class_name(
-                "ezmob-footer-close"
-            )
+        elem = self.page.query_selector(".ezmob-footer-close")
+        if elem and elem.is_visible():
             elem.click()
-        except exceptions.NoSuchElementException:
-            return
 
-    def export(self, name="", *, size="Infinity", sortby="", reverse=False):
-        WebDriverWait(self.browser, 5).until(
-            expected_conditions.presence_of_element_located(
-                (By.CLASS_NAME, "data-export")
-            )
-        )
-        while True:
-            try:
-                self.__expand_table(size=size)
-                break
-            except exceptions.ElementClickInterceptedException:
-                self.__close_ad()
-                continue
+    def export(self, path="", *, size="Infinity", sortby="", reverse=False):
+        self.page.hover(".data-export")
+        self.__close_ad()
+        self.__expand_table(size=size)
         if sortby:
             self.__sortby(sortby.title(), reverse=reverse)
-        if not name or os.path.splitext(name)[1] != ".csv":
-            name = "{}.csv".format(
+        if not path or os.path.splitext(path)[1] != ".csv":
+            path = "{}.csv".format(
                 datetime.datetime.now().strftime("%d.%m.%y %H.%M.%S")
             )
-        with open(os.path.join("out", name), "w", newline="") as file:
+        with open(os.path.join("out", path), "w", newline="") as file:
             writer = csv.writer(file)
             self.__write_table_headers(writer)
             self.__write_table_rows(writer)
 
     def __expand_table(self, *, size="Infinity"):
         selector = ".table-page-control:nth-child(3) select"
-        dropdown = self.browser.find_element_by_css_selector(selector)
+        dropdown = self.page.query_selector(selector)
         dropdown.click()
         elems = self.soup.select(f"{selector} option")
         options = [e.getText() for e in elems]
         size = "Infinity" if size not in options else size
         index = options.index(size)
-        option = self.browser.find_elements_by_css_selector(
-            f"{selector} option"
-        )[index]
+        option = self.page.query_selector_all(f"{selector} option")[index]
         option.click()
 
     def __sortby(self, sortby, *, reverse=False):
@@ -706,9 +641,7 @@ class SplitsLeaderboards:
         elems = self.soup.select(selector)
         options = [e.getText() for e in elems]
         index = options.index(sortby)
-        option = self.browser.find_elements_by_css_selector(
-            selector
-        )[index]
+        option = self.page.query_selector_all(selector)[index]
         option.click()
         if reverse:
             option.click()
@@ -728,11 +661,12 @@ class SplitsLeaderboards:
             writer.writerow(items)
 
     def reset(self):
-        self.browser.get(self.address)
+        self.page.goto(self.address)
         self.__refresh_parser()
 
     def quit(self):
-        self.browser.quit()
+        self.browser.close()
+        self.play.stop()
 
 
 class SeasonStatGrid:
