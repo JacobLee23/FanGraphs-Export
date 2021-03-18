@@ -14,7 +14,6 @@ import bs4
 from lxml import etree
 from playwright.sync_api import sync_playwright
 from selenium.common import exceptions
-from selenium.webdriver.common.action_chains import ActionChains
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
@@ -208,6 +207,7 @@ class MajorLeagueLeaderboards:
         query, option = query.lower(), str(option).lower()
         if query not in self.list_queries():
             raise FanGraphs.exceptions.InvalidFilterQueryException(query)
+        self.__close_ad()
         while True:
             try:
                 if query in self.__checkboxes:
@@ -429,10 +429,10 @@ class SplitsLeaderboards:
     address = "https://fangraphs.com/leaders/splits-leaderboards"
 
     def __init__(self, *, browser="chromium"):
-        self.play = sync_playwright().start()
+        self.__play = sync_playwright().start()
         if browser == "chromium":
-            self.browser = self.play.chromium.launch()
-        self.page = self.browser.new_page()
+            self.__browser = self.__play.chromium.launch()
+        self.page = self.__browser.new_page()
         self.page.goto(self.address, timeout=0)
 
         self.soup = None
@@ -665,68 +665,63 @@ class SplitsLeaderboards:
         self.__refresh_parser()
 
     def quit(self):
-        self.browser.close()
-        self.play.stop()
+        self.__browser.close()
+        self.__play.stop()
 
 
 class SeasonStatGrid:
     """
     Scrapes the FanGraphs Season Stat Grid webpage
+
+    .. py:attribute:: address
+        The base URL address of the Season Stat Grid page
+
+        :type: str
+        :value: https://fangraphs.com/season-stat-grid
     """
+
+    __selections = {
+        "stat": [
+            "div[class*='fgButton button-green']:nth-child(1)",
+            "div[class*='fgButton button-green']:nth-child(2)"
+        ],
+        "type": [
+            "div[class*='fgButton button-green']:nth-child(4)",
+            "div[class*='fgButton button-green']:nth-child(5)",
+            "div[class*='fgButton button-green']:nth-child(6)"
+        ]
+    }
+    __dropdowns = {
+        "start_season": ".row-season > div:nth-child(2)",
+        "end_season": ".row-season > div:nth-child(4)",
+        "popular": ".season-grid-controls-dropdown-row-stats > div:nth-child(1)",
+        "standard": ".season-grid-controls-dropdown-row-stats > div:nth-child(2)",
+        "advanced": ".season-grid-controls-dropdown-row-stats > div:nth-child(3)",
+        "statcast": ".season-grid-controls-dropdown-row-stats > div:nth-child(4)",
+        "batted_ball": ".season-grid-controls-dropdown-row-stats > div:nth-child(5)",
+        "win_probability": ".season-grid-controls-dropdown-row-stats > div:nth-child(6)",
+        "pitch_type": ".season-grid-controls-dropdown-row-stats > div:nth-child(7)",
+        "plate_discipline": ".season-grid-controls-dropdown-row-stats > div:nth-child(8)",
+        "value": ".season-grid-controls-dropdown-row-stats > div:nth-child(9)"
+    }
+    address = "https://fangraphs.com/leaders/season-stat-grid"
+
     def __init__(self):
         """
-        .. py:attribute:: address
-            The base URL address of the Season Stat Grid page
+        .. py:attribute:: page
+            The generated synchronous ``Playwright`` page for browser automation.
 
-            :type: str
-            :value: https://fangraphs.com/season-stat-grid
-
-        .. py:attribute:: browser
-            The ``selenium`` automated Firefox browser for navigating the webpage.
-
-            :type: selenium.webdriver.firefox.webdriver.WebDriver
+            :type: playwright.sync_api._generated.Page
 
         .. py:attribute:: soup
             The ``BeautifulSoup4`` HTML parser for scraping the webpage.
 
             :type: bs4.BeautifulSoup
         """
-        self.__selections = {
-            "stat": [
-                "div[class*='fgButton button-green']:nth-child(1)",
-                "div[class*='fgButton button-green']:nth-child(2)"
-            ],
-            "type": [
-                "div[class*='fgButton button-green']:nth-child(4)",
-                "div[class*='fgButton button-green']:nth-child(5)",
-                "div[class*='fgButton button-green']:nth-child(6)"
-            ]
-        }
-        self.__dropdowns = {
-            "start_season": ".row-season > div:nth-child(2)",
-            "end_season": ".row-season > div:nth-child(4)",
-            "popular": ".season-grid-controls-dropdown-row-stats > div:nth-child(1)",
-            "standard": ".season-grid-controls-dropdown-row-stats > div:nth-child(2)",
-            "advanced": ".season-grid-controls-dropdown-row-stats > div:nth-child(3)",
-            "statcast": ".season-grid-controls-dropdown-row-stats > div:nth-child(4)",
-            "batted_ball": ".season-grid-controls-dropdown-row-stats > div:nth-child(5)",
-            "win_probability": ".season-grid-controls-dropdown-row-stats > div:nth-child(6)",
-            "pitch_type": ".season-grid-controls-dropdown-row-stats > div:nth-child(7)",
-            "plate_discipline": ".season-grid-controls-dropdown-row-stats > div:nth-child(8)",
-            "value": ".season-grid-controls-dropdown-row-stats > div:nth-child(9)"
-        }
-        self.address = "https://fangraphs.com/leaders/season-stat-grid"
-
-        self.browser = webdriver.Firefox(
-            options=compile_options()
-        )
-        self.browser.get(self.address)
-        # Wait for JavaScript to render
-        WebDriverWait(
-            self.browser, 5
-        ).until(expected_conditions.presence_of_element_located(
-            (By.ID, "root-season-grid")
-        ))
+        self.__play = sync_playwright().start()
+        self.__browser = self.__play.chromium.launch()
+        self.page = self.__browser.new_page()
+        self.page.goto(self.address)
 
         self.soup = None
         self.__refresh_parsers()
@@ -736,10 +731,11 @@ class SeasonStatGrid:
         Re-initializes :py:attr:`soup` if a page reload is expected
         """
         self.soup = bs4.BeautifulSoup(
-            self.browser.page_source, features="lxml"
+            self.page.content(), features="lxml"
         )
 
-    def list_queries(self):
+    @classmethod
+    def list_queries(cls):
         """
         Lists the possible filter queries which can be sued to modify search results.
 
@@ -747,8 +743,8 @@ class SeasonStatGrid:
         :type: list
         """
         queries = []
-        queries.extend(list(self.__selections))
-        queries.extend(list(self.__dropdowns))
+        queries.extend(list(cls.__selections))
+        queries.extend(list(cls.__dropdowns))
         return queries
 
     def list_options(self, query: str):
@@ -811,17 +807,13 @@ class SeasonStatGrid:
         :raises FanGraphs.exceptions.InvalidFilterOption: Filter ``query`` cannot be configured to ``option``
         """
         query = query.lower()
-        while True:
-            try:
-                if query in self.__selections:
-                    self.__configure_selection(query, option)
-                elif query in self.__dropdowns:
-                    self.__configure_dropdown(query, option)
-                else:
-                    raise FanGraphs.exceptions.InvalidFilterQueryException(query)
-                break
-            except exceptions.ElementClickInterceptedException:
-                self.__close_ad()
+        self.__close_ad()
+        if query in self.__selections:
+            self.__configure_selection(query, option)
+        elif query in self.__dropdowns:
+            self.__configure_dropdown(query, option)
+        else:
+            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
         self.__refresh_parsers()
 
     def __configure_selection(self, query: str, option: str):
@@ -833,13 +825,11 @@ class SeasonStatGrid:
         :raises FanGraphs.exceptions.InvalidFilterOption: Filter ``query`` cannot be configured to ``option``
         """
         options = self.list_options(query)
-        if option not in options:
+        try:
+            index = options.index(option)
+        except ValueError:
             raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
-        index = options.index(option)
-        elem = self.browser.find_element_by_css_selector(
-            self.__selections[query][index]
-        )
-        elem.click()
+        self.page.click(self.__selections[query][index])
 
     def __configure_dropdown(self, query: str, option: str):
         """
@@ -850,35 +840,21 @@ class SeasonStatGrid:
         :raises FanGraphs.exceptions.InvalidFilterOption: Filter ``query`` cannot be configured to ``option``
         """
         options = self.list_options(query)
-        if option not in options:
-            raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
-        index = options.index(option)
-        dropdown = self.browser.find_element_by_css_selector(
-            self.__dropdowns[query]
-        )
-        dropdown.click()
-        elem = self.browser.find_elements_by_css_selector(
-            f"{self.__dropdowns[query]} li"
-        )[index]
         try:
-            elem.click()
-        except exceptions.ElementNotInteractableException:
-            actions = ActionChains(self.browser)
-            actions.move_to_element(elem).perform()
-            WebDriverWait(self.browser, 5).until(
-                expected_conditions.element_to_be_clickable(
-                    (By.CSS_SELECTOR, f"{self.__dropdowns[query]} li")
-                )
-            ).click()
+            index = options.index(option)
+        except ValueError:
+            raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
+        self.page.hover(self.__dropdowns[query])
+        elem = self.page.query_selector_all(f"{self.__dropdowns[query]} ul li")[index]
+        elem.click()
 
     def __close_ad(self):
         """
         Closes the ad which may interfere with interactions with other page elements
         """
-        elem = self.browser.find_element_by_class_name(
-            "ezmob-footer-close"
-        )
-        elem.click()
+        elem = self.page.query_selector(".ezmob-footer-close")
+        if elem and elem.is_visible():
+            elem.click()
 
     def export(self, name="", *, size="Infinity", sortby="Name", reverse=False):
         """
@@ -892,13 +868,8 @@ class SeasonStatGrid:
         :param sortby: The table header to sort the data by
         :param reverse: If ``True``, the ordering of the data is reversed
         """
-        while True:
-            try:
-                self.__expand_table(size=size)
-                break
-            except exceptions.ElementClickInterceptedException:
-                self.__close_ad()
-                continue
+        self.__close_ad()
+        self.__expand_table(size=size)
         self.__sortby(sortby.title(), reverse=reverse)
         if not name or os.path.splitext(name)[1] != ".csv":
             name = "{}.csv".format(
@@ -916,15 +887,13 @@ class SeasonStatGrid:
         :param size: The number of rows, preset to 30, 50, 100, 200 or Infinity
         """
         selector = ".table-page-control:nth-child(3) select"
-        dropdown = self.browser.find_element_by_css_selector(selector)
+        dropdown = self.page.query_selector(selector)
         dropdown.click()
         elems = self.soup.select(f"{selector} option")
         options = [e.getText() for e in elems]
         size = "Infinity" if size not in options else size
         index = options.index(size)
-        option = self.browser.find_elements_by_css_selector(
-            f"{selector} option"
-        )[index]
+        option = self.page.query_selector_all(f"{selector} option")[index]
         option.click()
 
     def __sortby(self, sortby, *, reverse=False):
@@ -938,9 +907,7 @@ class SeasonStatGrid:
         elems = self.soup.select(selector)
         options = [e.getText() for e in elems]
         index = options.index(sortby)
-        option = self.browser.find_elements_by_css_selector(
-            selector
-        )[index]
+        option = self.page.query_selector_all(selector)[index]
         option.click()
         if reverse:
             option.click()
@@ -973,14 +940,15 @@ class SeasonStatGrid:
         """
         Calls the ``get()`` method of :py:attr:`browser`, passing :py:attr:`address`.
         """
-        self.browser.get(self.address)
+        self.page.goto(self.address)
         self.__refresh_parsers()
 
     def quit(self):
         """
         Calls the ``quit()`` method of :py:attr:`browser`
         """
-        self.browser.quit()
+        self.__browser.close()
+        self.__play.stop()
 
 
 class GameSpanLeaderboards:
