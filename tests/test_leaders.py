@@ -8,14 +8,13 @@ from playwright.sync_api import sync_playwright
 import requests
 
 
-@unittest.SkipTest
 class TestMajorLeagueLeaderboards(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
         cls.address = "https://fangraphs.com/leaders.aspx"
         cls.res = requests.get(cls.address)
-        cls.soup = bs4.BeautifulSoup(cls.res.text)
+        cls.soup = bs4.BeautifulSoup(cls.res.text, features="lxml")
 
     def test_selections_selectors(self):
         selectors = {
@@ -169,11 +168,11 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
             "type": "#LeaderBoard1_tsType"
         }
         for cat in selectors:
-            elem = self.soup.select(f"{selectors[cat]} .rtsLink.rstSelected")
+            elem = self.soup.select(f"{selectors[cat]} .rtsLink.rtsSelected")
             self.assertEqual(
-                len(elem), 1
+                len(elem), 1, cat
             )
-            self.assertIsInstance(elem.getText(), str)
+            self.assertIsInstance(elem[0].getText(), str)
 
     def test_configure_dropdown_selectors(self):
         selectors = {
@@ -203,7 +202,7 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
             self.assertTrue(elems)
 
     def test_configure_selection_expand_sublevel(self):
-        elems = self.soup.select("#LeaderBoard_tsType a[href='#']")
+        elems = self.soup.select("#LeaderBoard1_tsType a[href='#']")
         self.assertEqual(len(elems), 1)
 
     def test_export_id(self):
@@ -217,7 +216,7 @@ class TestSplitsLeaderboards(unittest.TestCase):
     def setUpClass(cls):
         cls.page = browser.new_page()
         cls.address = "https://www.fangraphs.com/leaders/splits-leaderboards"
-        cls.page.goto(cls.address)
+        cls.page.goto(cls.address, timeout=0)
         cls.soup = bs4.BeautifulSoup(
             cls.page.content(), features="lxml"
         )
@@ -463,14 +462,13 @@ class TestSplitsLeaderboards(unittest.TestCase):
             self.assertEqual(len(item_elems), 24)
 
 
-@unittest.SkipTest
 class TestSeasonStatGrid(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
         cls.page = browser.new_page()
         cls.address = "https://www.fangraphs.com/leaders/season-stat-grid"
-        cls.page.goto(cls.address)
+        cls.page.goto(cls.address, timeout=0)
         cls.soup = bs4.BeautifulSoup(
             cls.page.content(), features="lxml"
         )
