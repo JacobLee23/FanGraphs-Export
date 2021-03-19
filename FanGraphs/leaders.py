@@ -214,12 +214,10 @@ class MajorLeagueLeaderboards:
         """
         options = [o.lower() for o in self.list_options(query)]
         index = options.index(option)
+        self.page.click("#LeaderBoard_tsType a[href='#']")
         elem = self.page.query_selector_all(
-            f"{self.__selections[query]} > div > ul > li"
+            f"{self.__selections[query]} li"
         )[index]
-        self.page.click(
-            "div[id='LeaderBoard_tsType'] > div > ul > li > a[href='#']"
-        )
         elem.click()
 
     def __submit_form(self, query):
