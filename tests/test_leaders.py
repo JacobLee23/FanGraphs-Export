@@ -1,10 +1,10 @@
 #! python3
 # tests/leaders.py
 
-import os
 import unittest
 
 import bs4
+from playwright.sync_api import sync_playwright
 import requests
 
 
@@ -213,27 +213,22 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
 
 class TestSplitsLeaderboards(unittest.TestCase):
 
-    options = Options()
-    options.headless = True
-    browser = webdriver.Firefox(options=options)
+    play = sync_playwright().start()
+    browser = play.chromium.launch()
+    page = browser.new_page()
 
     @classmethod
     def setUpClass(cls):
         cls.address = "https://www.fangraphs.com/leaders/splits-leaderboards"
-        cls.browser.get(cls.address)
-        WebDriverWait(
-            cls.browser, 5
-        ).until(expected_conditions.presence_of_element_located(
-            (By.CSS_SELECTOR, "#react-drop-test div")
-        ))
+        cls.page.goto(cls.address)
         cls.soup = bs4.BeautifulSoup(
-            cls.browser.page_source, features="lxml"
+            cls.page.content(), features="lxml"
         )
 
     @classmethod
     def tearDownClass(cls):
-        cls.browser.quit()
-        os.system("taskkill /F /IM firefox.exe")
+        cls.browser.close()
+        cls.play.stop()
 
     def test_selections_selectors(self):
         selectors = {
@@ -479,31 +474,26 @@ class TestSplitsLeaderboards(unittest.TestCase):
 @unittest.SkipTest
 class TestSeasonStatGrid(unittest.TestCase):
 
-    options = Options()
-    options.headless = True
-    browser = webdriver.Firefox(options=options)
+    play = sync_playwright().start()
+    browser = play.chromium.launch()
+    page = browser.new_page()
 
     @classmethod
     def setUpClass(cls):
         cls.address = "https://www.fangraphs.com/leaders/season-stat-grid"
-        cls.browser.get(cls.address)
-        WebDriverWait(
-            cls.browser, 5
-        ).until(expected_conditions.presence_of_element_located(
-            (By.ID, "root-season-grid")
-        ))
+        cls.page.goto(cls.address)
         cls.soup = bs4.BeautifulSoup(
-            cls.browser.page_source, features="lxml"
+            cls.page.content(), features="lxml"
         )
 
     @classmethod
     def tearDownClass(cls):
-        cls.browser.quit()
-        os.system("taskkill /F /IM firefox.exe")
+        cls.browser.close()
+        cls.play.stop()
 
     def test_base_address(self):
         self.assertEqual(
-            urlopen(self.address).getcode(), 200
+            requests.get(self.address).status_code, 200
         )
 
     def test_selections_selectors(self):
