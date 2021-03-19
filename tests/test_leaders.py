@@ -213,22 +213,14 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
 
 class TestSplitsLeaderboards(unittest.TestCase):
 
-    play = sync_playwright().start()
-    browser = play.chromium.launch()
-    page = browser.new_page()
-
     @classmethod
     def setUpClass(cls):
+        cls.page = browser.new_page()
         cls.address = "https://www.fangraphs.com/leaders/splits-leaderboards"
         cls.page.goto(cls.address)
         cls.soup = bs4.BeautifulSoup(
             cls.page.content(), features="lxml"
         )
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.browser.close()
-        cls.play.stop()
 
     def test_selections_selectors(self):
         selectors = {
@@ -474,22 +466,14 @@ class TestSplitsLeaderboards(unittest.TestCase):
 @unittest.SkipTest
 class TestSeasonStatGrid(unittest.TestCase):
 
-    play = sync_playwright().start()
-    browser = play.chromium.launch()
-    page = browser.new_page()
-
     @classmethod
     def setUpClass(cls):
+        cls.page = browser.new_page()
         cls.address = "https://www.fangraphs.com/leaders/season-stat-grid"
         cls.page.goto(cls.address)
         cls.soup = bs4.BeautifulSoup(
             cls.page.content(), features="lxml"
         )
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.browser.close()
-        cls.play.stop()
 
     def test_base_address(self):
         self.assertEqual(
@@ -669,4 +653,6 @@ class TestSeasonStatGrid(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    with sync_playwright() as play:
+        browser = play.chromium.launch()
+        unittest.main()
