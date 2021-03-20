@@ -84,9 +84,15 @@ class MajorLeagueLeaderboards:
             :type: selenium.webdriver.firefox.webdriver.WebDriver
 
         """
+        os.makedirs("out", exist_ok=True)
+
         self.__play = sync_playwright().start()
-        self.__browser = self.__play.chromium.launch()
-        self.page = self.__browser.new_page()
+        self.__browser = self.__play.chromium.launch(
+            downloads_path=os.path.abspath("out")
+        )
+        self.page = self.__browser.new_page(
+            accept_downloads=True
+        )
         self.page.goto(self.address)
 
         self.soup = None
@@ -266,11 +272,11 @@ class MajorLeagueLeaderboards:
                 datetime.datetime.now().strftime("%d.%m.%y %H.%M.%S")
             )
         self.__close_ad()
-        self.page.click("#LeaderBoard1_cmdCSV")
-        os.rename(
-            os.path.join("out", "FanGraphs Leaderboard.csv"),
-            os.path.join("out", name)
-        )
+        with self.page.expect_download() as down_info:
+            self.page.click("#LeaderBoard1_cmdCSV")
+        download = down_info.value
+        path = download.path()
+        os.rename(path, os.path.join("out", name))
 
 
 class SplitsLeaderboards:
@@ -349,6 +355,8 @@ class SplitsLeaderboards:
     address = "https://fangraphs.com/leaders/splits-leaderboards"
 
     def __init__(self, *, browser="chromium"):
+        os.makedirs("out", exist_ok=True)
+
         self.__play = sync_playwright().start()
         if browser == "chromium":
             self.__browser = self.__play.chromium.launch()
@@ -638,6 +646,8 @@ class SeasonStatGrid:
 
             :type: bs4.BeautifulSoup
         """
+        os.makedirs("out", exist_ok=True)
+
         self.__play = sync_playwright().start()
         self.__browser = self.__play.chromium.launch()
         self.page = self.__browser.new_page()

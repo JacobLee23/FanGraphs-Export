@@ -14,12 +14,7 @@ from FanGraphs import leaders
 unittest.TestLoader.sortTestMethodsUsing = None
 
 
-@unittest.skip
 class TestExceptions(unittest.TestCase):
-
-    @classmethod
-    def tearDownClass(cls):
-        os.system("taskkill /F /IM firefox.exe")
 
     def test_major_league_leaderboards(self):
         parser = leaders.MajorLeagueLeaderboards()
@@ -67,14 +62,13 @@ class TestExceptions(unittest.TestCase):
         parser.quit()
 
 
-@unittest.skip
 class TestMajorLeagueLeaderboards(unittest.TestCase):
 
     parser = leaders.MajorLeagueLeaderboards()
 
     @classmethod
     def setUpClass(cls):
-        cls.base_url = cls.parser.browser.current_url
+        cls.base_url = cls.parser.page.url
 
     @classmethod
     def tearDownClass(cls):
@@ -88,11 +82,8 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
         self.assertEqual(
             requests.get(self.parser.address).status_code, 200
         )
-        self.assertTrue(self.parser.tree)
-        self.assertTrue(
-            os.path.exists(os.path.join(os.getcwd(), "out"))
-        )
-        self.assertTrue(self.parser.browser)
+        self.assertTrue(self.parser.page)
+        self.assertTrue(self.parser.soup)
 
     def test_list_queries(self):
         queries = self.parser.list_queries()
@@ -158,10 +149,10 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
             self.parser.reset()
 
     def test_reset(self):
-        self.parser.browser.get("https://google.com")
+        self.parser.page.goto("https://google.com")
         self.parser.reset()
         self.assertEqual(
-            self.parser.browser.current_url,
+            self.parser.page.url,
             self.base_url
         )
 
@@ -178,7 +169,7 @@ class TestSplitsLeaderboards(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.base_url = cls.parser.browser.url
+        cls.base_url = cls.parser.page.url
 
     @classmethod
     def tearDownClass(cls):
@@ -196,7 +187,6 @@ class TestSplitsLeaderboards(unittest.TestCase):
             requests.get(self.parser.address).status_code, 200
         )
         self.assertTrue(os.path.exists("out"))
-        self.assertTrue(self.parser.browser)
         self.assertTrue(self.parser.page)
         self.assertTrue(self.parser.soup)
 
@@ -315,14 +305,13 @@ class TestSplitsLeaderboards(unittest.TestCase):
         )
 
 
-@unittest.skip
 class TestSeasonStatGrid(unittest.TestCase):
 
     parser = leaders.SeasonStatGrid()
 
     @classmethod
     def setUpClass(cls):
-        cls.base_url = cls.parser.browser.current_url
+        cls.base_url = cls.parser.page.url
 
     @classmethod
     def tearDownClass(cls):
@@ -337,7 +326,7 @@ class TestSeasonStatGrid(unittest.TestCase):
             requests.get(self.parser.address).status_code, 200
         )
         self.assertTrue(os.path.exists("out"))
-        self.assertTrue(self.parser.browser)
+        self.assertTrue(self.parser.page)
         self.assertTrue(self.parser.soup)
 
     def test_list_queries(self):
@@ -402,10 +391,10 @@ class TestSeasonStatGrid(unittest.TestCase):
         )
 
     def test_reset(self):
-        self.parser.browser.get("https://google.com")
+        self.parser.page.goto("https://google.com")
         self.parser.reset()
         self.assertEqual(
-            self.parser.browser.current_url,
+            self.parser.page.url,
             self.base_url
         )
 
