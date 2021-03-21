@@ -9,12 +9,54 @@ import pytest
 import requests
 
 
-class TestMajorLeagueLeaderboards(unittest.TestCase):
+class TestMajorLeagueLeaderboards:
+
+    __selections = {
+        "group": "#LeaderBoard1_tsGroup",
+        "stat": "#LeaderBoard1_tsStats",
+        "position": "#LeaderBoard1_tsPosition",
+        "type": "#LeaderBoard1_tsType"
+    }
+    __dropdowns = {
+        "league": "#LeaderBoard1_rcbLeague_Input",
+        "team": "#LeaderBoard1_rcbTeam_Input",
+        "single_season": "#LeaderBoard1_rcbSeason_Input",
+        "split": "#LeaderBoard1_rcbMonth_Input",
+        "min_pa": "#LeaderBoard1_rcbMin_Input",
+        "season1": "#LeaderBoard1_rcbSeason1_Input",
+        "season2": "#LeaderBoard1_rcbSeason2_Input",
+        "age1": "#LeaderBoard1_rcbAge1_Input",
+        "age2": "#LeaderBoard1_rcbAge2_Input"
+    }
+    __dropdown_options = {
+        "league": "#LeaderBoard1_rcbLeague_DropDown",
+        "team": "#LeaderBoard1_rcbTeam_DropDown",
+        "single_season": "#LeaderBoard1_rcbSeason_DropDown",
+        "split": "#LeaderBoard1_rcbMonth_DropDown",
+        "min_pa": "#LeaderBoard1_rcbMin_DropDown",
+        "season1": "#LeaderBoard1_rcbSeason1_DropDown",
+        "season2": "#LeaderBoard1_rcbSeason2_DropDown",
+        "age1": "#LeaderBoard1_rcbAge1_DropDown",
+        "age2": "#LeaderBoard1_rcbAge2_DropDown"
+    }
+    __checkboxes = {
+        "split_teams": "#LeaderBoard1_cbTeams",
+        "active_roster": "#LeaderBoard1_cbActive",
+        "hof": "#LeaderBoard1_cbHOF",
+        "split_seasons": "#LeaderBoard1_cbSeason",
+        "rookies": "#LeaderBoard1_cbRookie"
+    }
+    __buttons = {
+        "season1": "#LeaderBoard1_btnMSeason",
+        "season2": "#LeaderBoard1_btnMSeason",
+        "age1": "#LeaderBoard1_cmdAge",
+        "age2": "#LeaderBoard1_cmdAge"
+    }
 
     address = "https://fangraphs.com/leaders.aspx"
 
     @classmethod
-    def setUpClass(cls):
+    def setup_class(cls):
         with sync_playwright() as p:
             browser = p.chromium.launch()
             page = browser.new_page()
@@ -24,198 +66,47 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
             )
             browser.close()
 
-    def test_selections_selectors(self):
-        selectors = {
-            "group": "#LeaderBoard1_tsGroup",
-            "stat": "#LeaderBoard1_tsStats",
-            "position": "#LeaderBoard1_tsPosition",
-            "type": "#LeaderBoard1_tsType"
-        }
-        for cat in selectors:
-            elems = self.soup.select(selectors[cat])
-            self.assertEqual(
-                len(elems), 1, cat
-            )
-
-    def test_dropdowns_selectors(self):
-        selectors = {
-            "league": "#LeaderBoard1_rcbLeague_Input",
-            "team": "#LeaderBoard1_rcbTeam_Input",
-            "single_season": "#LeaderBoard1_rcbSeason_Input",
-            "split": "#LeaderBoard1_rcbMonth_Input",
-            "min_pa": "#LeaderBoard1_rcbMin_Input",
-            "season1": "#LeaderBoard1_rcbSeason1_Input",
-            "season2": "#LeaderBoard1_rcbSeason2_Input",
-            "age1": "#LeaderBoard1_rcbAge1_Input",
-            "age2": "#LeaderBoard1_rcbAge2_Input"
-        }
-        for cat in selectors:
-            elems = self.soup.select(selectors[cat])
-            self.assertEqual(
-                len(elems), 1, cat
-            )
-
-    def test_dropdown_options_selectors(self):
-        selectors = {
-            "league": "#LeaderBoard1_rcbLeague_DropDown",
-            "team": "#LeaderBoard1_rcbTeam_DropDown",
-            "single_season": "#LeaderBoard1_rcbSeason_DropDown",
-            "split": "#LeaderBoard1_rcbMonth_DropDown",
-            "min_pa": "#LeaderBoard1_rcbMin_DropDown",
-            "season1": "#LeaderBoard1_rcbSeason1_DropDown",
-            "season2": "#LeaderBoard1_rcbSeason2_DropDown",
-            "age1": "#LeaderBoard1_rcbAge1_DropDown",
-            "age2": "#LeaderBoard1_rcbAge2_DropDown"
-        }
-        for cat in selectors:
-            elems = self.soup.select(selectors[cat])
-            self.assertEqual(
-                len(elems), 1, cat
-            )
-
-    def test_checkboxes_selectors(self):
-        selectors = {
-            "split_teams": "#LeaderBoard1_cbTeams",
-            "active_roster": "#LeaderBoard1_cbActive",
-            "hof": "#LeaderBoard1_cbHOF",
-            "split_seasons": "#LeaderBoard1_cbSeason",
-            "rookies": "#LeaderBoard1_cbRookie"
-        }
-        for cat in selectors:
-            elems = self.soup.select(selectors[cat])
-            self.assertEqual(
-                len(elems), 1, cat
-            )
-
-    def test_buttons_selectors(self):
-        selectors = {
-            "season1": "#LeaderBoard1_btnMSeason",
-            "season2": "#LeaderBoard1_btnMSeason",
-            "age1": "#LeaderBoard1_cmdAge",
-            "age2": "#LeaderBoard1_cmdAge"
-        }
-        for cat in selectors:
-            elems = self.soup.select(selectors[cat])
-            self.assertEqual(
-                len(elems), 1, cat
-            )
-
     def test_address(self):
-        self.assertEqual(
-            requests.get(self.address).status_code, 200
-        )
+        res = requests.get(self.address)
+        assert res.status_code == 200
 
-    def test_list_options_dropdown_selectors(self):
-        selectors = {
-            "league": "#LeaderBoard1_rcbLeague_DropDown",
-            "team": "#LeaderBoard1_rcbTeam_DropDown",
-            "single_season": "#LeaderBoard1_rcbSeason_DropDown",
-            "split": "#LeaderBoard1_rcbMonth_DropDown",
-            "min_pa": "#LeaderBoard1_rcbMin_DropDown",
-            "season1": "#LeaderBoard1_rcbSeason1_DropDown",
-            "season2": "#LeaderBoard1_rcbSeason2_DropDown",
-            "age1": "#LeaderBoard1_rcbAge1_DropDown",
-            "age2": "#LeaderBoard1_rcbAge2_DropDown"
-        }
-        for cat in selectors:
-            elems = self.soup.select(f"{selectors[cat]} li")
-            self.assertTrue(
-                all([isinstance(e.getText(), str) for e in elems])
-            )
+    @pytest.mark.parametrize(
+        "selectors",
+        [__selections, __dropdowns, __dropdown_options,
+         __checkboxes, __buttons]
+    )
+    def test_selectors(self, selectors: dict):
+        for query, sel in selectors.items():
+            elems = self.soup.select(sel)
+            assert len(elems) == 1, query
 
-    def test_list_options_selections_selectors(self):
-        selectors = {
-            "group": "#LeaderBoard1_tsGroup",
-            "stat": "#LeaderBoard1_tsStats",
-            "position": "#LeaderBoard1_tsPosition",
-            "type": "#LeaderBoard1_tsType"
-        }
-        for cat in selectors:
-            elems = self.soup.select(f"{selectors[cat]} li")
-            self.assertTrue(
-                all([isinstance(e.getText(), str) for e in elems])
-            )
-
-    def test_current_option_checkbox_selectors(self):
-        selectors = {
-            "split_teams": "#LeaderBoard1_cbTeams",
-            "active_roster": "#LeaderBoard1_cbActive",
-            "hof": "#LeaderBoard1_cbHOF",
-            "split_seasons": "#LeaderBoard1_cbSeason",
-            "rookies": "#LeaderBoard1_cbRookie"
-        }
-        for cat in selectors:
-            elems = self.soup.select(selectors[cat])
-            self.assertEqual(
-                len(elems), 1, len(elems)
-            )
-
-    def test_current_option_dropdowns_selectors(self):
-        selectors = {
-            "league": "#LeaderBoard1_rcbLeague_Input",
-            "team": "#LeaderBoard1_rcbTeam_Input",
-            "single_season": "#LeaderBoard1_rcbSeason_Input",
-            "split": "#LeaderBoard1_rcbMonth_Input",
-            "min_pa": "#LeaderBoard1_rcbMin_Input",
-            "season1": "#LeaderBoard1_rcbSeason1_Input",
-            "season2": "#LeaderBoard1_rcbSeason2_Input",
-            "age1": "#LeaderBoard1_rcbAge1_Input",
-            "age2": "#LeaderBoard1_rcbAge2_Input"
-        }
-        for cat in selectors:
-            elem = self.soup.select(selectors[cat])[0]
-            self.assertIsNotNone(
-                elem.get("value")
-            )
+    @pytest.mark.parametrize(
+        "selectors",
+        [__selections, __dropdown_options]
+    )
+    def test_list_options(self, selectors: dict):
+        for query, sel in selectors.items():
+            elems = self.soup.select(f"{sel} li")
+            assert all([isinstance(e.getText(), str) for e in elems]), query
 
     def test_current_option_selections_selectors(self):
-        selectors = {
-            "group": "#LeaderBoard1_tsGroup",
-            "stat": "#LeaderBoard1_tsStats",
-            "position": "#LeaderBoard1_tsPosition",
-            "type": "#LeaderBoard1_tsType"
-        }
-        for cat in selectors:
-            elem = self.soup.select(f"{selectors[cat]} .rtsLink.rtsSelected")
-            self.assertEqual(
-                len(elem), 1, cat
-            )
-            self.assertIsInstance(elem[0].getText(), str)
+        for query, sel in self.__selections.items():
+            elem = self.soup.select(f"{sel} .rtsLink.rtsSelected")
+            assert len(elem) == 1, query
+            assert isinstance(elem[0].getText(), str), query
 
-    def test_configure_dropdown_selectors(self):
-        selectors = {
-            "league": "#LeaderBoard1_rcbLeague_DropDown",
-            "team": "#LeaderBoard1_rcbTeam_DropDown",
-            "single_season": "#LeaderBoard1_rcbSeason_DropDown",
-            "split": "#LeaderBoard1_rcbMonth_DropDown",
-            "min_pa": "#LeaderBoard1_rcbMin_DropDown",
-            "season1": "#LeaderBoard1_rcbSeason1_DropDown",
-            "season2": "#LeaderBoard1_rcbSeason2_DropDown",
-            "age1": "#LeaderBoard1_rcbAge1_DropDown",
-            "age2": "#LeaderBoard1_rcbAge2_DropDown"
-        }
-        for cat in selectors:
-            elems = self.soup.select(f"{selectors[cat]} > div > ul > li")
-            self.assertTrue(elems)
+    def test_current_option_dropdowns_selectors(self):
+        for query, sel in self.__dropdowns.items():
+            elem = self.soup.select(sel)[0]
+            assert elem.get("value") is not None, query
 
-    def test_configure_selection_selectors(self):
-        selectors = {
-            "group": "#LeaderBoard1_tsGroup",
-            "stat": "#LeaderBoard1_tsStats",
-            "position": "#LeaderBoard1_tsPosition",
-            "type": "#LeaderBoard1_tsType"
-        }
-        for cat in selectors:
-            elems = self.soup.select(f"{selectors[cat]} li")
-            self.assertTrue(elems)
-
-    def test_configure_selection_expand_sublevel(self):
+    def test_expand_sublevel_selector(self):
         elems = self.soup.select("#LeaderBoard1_tsType a[href='#']")
-        self.assertEqual(len(elems), 1)
+        assert len(elems) == 1
 
-    def test_export_id(self):
+    def test_export_selector(self):
         elems = self.soup.select("#LeaderBoard1_cmdCSV")
-        self.assertEqual(len(elems), 1)
+        assert len(elems) == 1
 
 
 class TestSplitsLeaderboards(unittest.TestCase):
