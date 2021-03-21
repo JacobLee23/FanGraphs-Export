@@ -5,16 +5,24 @@ import unittest
 
 import bs4
 from playwright.sync_api import sync_playwright
+import pytest
 import requests
 
 
 class TestMajorLeagueLeaderboards(unittest.TestCase):
 
+    address = "https://fangraphs.com/leaders.aspx"
+
     @classmethod
     def setUpClass(cls):
-        cls.address = "https://fangraphs.com/leaders.aspx"
-        cls.res = requests.get(cls.address)
-        cls.soup = bs4.BeautifulSoup(cls.res.text, features="lxml")
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            page = browser.new_page()
+            page.goto(cls.address, timeout=0)
+            cls.soup = bs4.BeautifulSoup(
+                page.content(), features="lxml"
+            )
+            browser.close()
 
     def test_selections_selectors(self):
         selectors = {
@@ -212,14 +220,18 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
 
 class TestSplitsLeaderboards(unittest.TestCase):
 
+    address = "https://www.fangraphs.com/leaders/splits-leaderboards"
+
     @classmethod
     def setUpClass(cls):
-        cls.page = browser.new_page()
-        cls.address = "https://www.fangraphs.com/leaders/splits-leaderboards"
-        cls.page.goto(cls.address, timeout=0)
-        cls.soup = bs4.BeautifulSoup(
-            cls.page.content(), features="lxml"
-        )
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            page = browser.new_page()
+            page.goto(cls.address, timeout=0)
+            cls.soup = bs4.BeautifulSoup(
+                page.content(), features="lxml"
+            )
+            browser.close()
 
     def test_selections_selectors(self):
         selectors = {
@@ -464,14 +476,18 @@ class TestSplitsLeaderboards(unittest.TestCase):
 
 class TestSeasonStatGrid(unittest.TestCase):
 
+    address = "https://www.fangraphs.com/leaders/season-stat-grid"
+
     @classmethod
     def setUpClass(cls):
-        cls.page = browser.new_page()
-        cls.address = "https://www.fangraphs.com/leaders/season-stat-grid"
-        cls.page.goto(cls.address, timeout=0)
-        cls.soup = bs4.BeautifulSoup(
-            cls.page.content(), features="lxml"
-        )
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            page = browser.new_page()
+            page.goto(cls.address, timeout=0)
+            cls.soup = bs4.BeautifulSoup(
+                page.content(), features="lxml"
+            )
+            browser.close()
 
     def test_base_address(self):
         self.assertEqual(
@@ -648,9 +664,3 @@ class TestSeasonStatGrid(unittest.TestCase):
         for elem in elems:
             item_elems = elem.select("td")
             self.assertEqual(len(item_elems), 12)
-
-
-if __name__ == "__main__":
-    with sync_playwright() as play:
-        browser = play.chromium.launch()
-        unittest.main()
