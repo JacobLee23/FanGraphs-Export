@@ -1,304 +1,225 @@
 #! python3
 # tests/leaders.py
 
-import os
 import unittest
-from urllib.request import urlopen
 
 import bs4
-from lxml import etree
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.firefox.options import Options
-from selenium.webdriver.support import expected_conditions
-from selenium.webdriver.support.ui import WebDriverWait
+from playwright.sync_api import sync_playwright
+import requests
 
 
-@unittest.SkipTest
 class TestMajorLeagueLeaderboards(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
         cls.address = "https://fangraphs.com/leaders.aspx"
-        cls.response = urlopen(cls.address)
-        cls.parser = etree.HTMLParser()
-        cls.tree = etree.parse(cls.response, cls.parser)
+        cls.res = requests.get(cls.address)
+        cls.soup = bs4.BeautifulSoup(cls.res.text, features="lxml")
 
-    def test_selections_ids(self):
-        ids = [
-            "LeaderBoard1_tsGroup",
-            "LeaderBoard1_tsStats",
-            "LeaderBoard1_tsPosition",
-            "LeaderBoard1_tsType"
-        ]
-        for i in ids:
-            elems = self.tree.xpath(
-                f"//div[@id='{i}']"
-            )
+    def test_selections_selectors(self):
+        selectors = {
+            "group": "#LeaderBoard1_tsGroup",
+            "stat": "#LeaderBoard1_tsStats",
+            "position": "#LeaderBoard1_tsPosition",
+            "type": "#LeaderBoard1_tsType"
+        }
+        for cat in selectors:
+            elems = self.soup.select(selectors[cat])
             self.assertEqual(
-                len(elems), 1, len(elems)
+                len(elems), 1, cat
             )
 
-    def test_dropdowns_ids(self):
-        ids = [
-            "LeaderBoard1_rcbLeague_Input",
-            "LeaderBoard1_rcbTeam_Input",
-            "LeaderBoard1_rcbSeason_Input",
-            "LeaderBoard1_rcbMonth_Input",
-            "LeaderBoard1_rcbMin_Input",
-            "LeaderBoard1_rcbSeason1_Input",
-            "LeaderBoard1_rcbSeason2_Input",
-            "LeaderBoard1_rcbAge1_Input",
-            "LeaderBoard1_rcbAge2_Input"
-        ]
-        for i in ids:
-            elems = self.tree.xpath(
-                f"//input[@id='{i}']"
-            )
+    def test_dropdowns_selectors(self):
+        selectors = {
+            "league": "#LeaderBoard1_rcbLeague_Input",
+            "team": "#LeaderBoard1_rcbTeam_Input",
+            "single_season": "#LeaderBoard1_rcbSeason_Input",
+            "split": "#LeaderBoard1_rcbMonth_Input",
+            "min_pa": "#LeaderBoard1_rcbMin_Input",
+            "season1": "#LeaderBoard1_rcbSeason1_Input",
+            "season2": "#LeaderBoard1_rcbSeason2_Input",
+            "age1": "#LeaderBoard1_rcbAge1_Input",
+            "age2": "#LeaderBoard1_rcbAge2_Input"
+        }
+        for cat in selectors:
+            elems = self.soup.select(selectors[cat])
             self.assertEqual(
-                len(elems), 1, len(elems)
+                len(elems), 1, cat
             )
 
-    def test_dropdown_options_ids(self):
-        ids = [
-            "LeaderBoard1_rcbLeague_DropDown",
-            "LeaderBoard1_rcbTeam_DropDown",
-            "LeaderBoard1_rcbSeason_DropDown",
-            "LeaderBoard1_rcbMonth_DropDown",
-            "LeaderBoard1_rcbMin_DropDown",
-            "LeaderBoard1_rcbSeason1_DropDown",
-            "LeaderBoard1_rcbSeason2_DropDown",
-            "LeaderBoard1_rcbAge1_DropDown",
-            "LeaderBoard1_rcbAge2_DropDown"
-        ]
-        for i in ids:
-            elems = self.tree.xpath(
-                f"//div[@id='{i}']"
-            )
+    def test_dropdown_options_selectors(self):
+        selectors = {
+            "league": "#LeaderBoard1_rcbLeague_DropDown",
+            "team": "#LeaderBoard1_rcbTeam_DropDown",
+            "single_season": "#LeaderBoard1_rcbSeason_DropDown",
+            "split": "#LeaderBoard1_rcbMonth_DropDown",
+            "min_pa": "#LeaderBoard1_rcbMin_DropDown",
+            "season1": "#LeaderBoard1_rcbSeason1_DropDown",
+            "season2": "#LeaderBoard1_rcbSeason2_DropDown",
+            "age1": "#LeaderBoard1_rcbAge1_DropDown",
+            "age2": "#LeaderBoard1_rcbAge2_DropDown"
+        }
+        for cat in selectors:
+            elems = self.soup.select(selectors[cat])
             self.assertEqual(
-                len(elems), 1, len(elems)
+                len(elems), 1, cat
             )
 
-    def test_checkboxes_ids(self):
-        ids = [
-            "LeaderBoard1_cbTeams",
-            "LeaderBoard1_cbActive",
-            "LeaderBoard1_cbHOF",
-            "LeaderBoard1_cbSeason",
-            "LeaderBoard1_cbRookie"
-        ]
-        for i in ids:
-            elems = self.tree.xpath(
-                f"//input[@id='{i}']"
-            )
+    def test_checkboxes_selectors(self):
+        selectors = {
+            "split_teams": "#LeaderBoard1_cbTeams",
+            "active_roster": "#LeaderBoard1_cbActive",
+            "hof": "#LeaderBoard1_cbHOF",
+            "split_seasons": "#LeaderBoard1_cbSeason",
+            "rookies": "#LeaderBoard1_cbRookie"
+        }
+        for cat in selectors:
+            elems = self.soup.select(selectors[cat])
             self.assertEqual(
-                len(elems), 1, len(elems)
+                len(elems), 1, cat
             )
 
-    def test_buttons_ids(self):
-        ids = [
-            "LeaderBoard1_btnMSeason",
-            "LeaderBoard1_cmdAge"
-        ]
-        for i in ids:
-            elems = self.tree.xpath(
-                f"//input[@id='{i}']"
-            )
+    def test_buttons_selectors(self):
+        selectors = {
+            "season1": "#LeaderBoard1_btnMSeason",
+            "season2": "#LeaderBoard1_btnMSeason",
+            "age1": "#LeaderBoard1_cmdAge",
+            "age2": "#LeaderBoard1_cmdAge"
+        }
+        for cat in selectors:
+            elems = self.soup.select(selectors[cat])
             self.assertEqual(
-                len(elems), 1, len(elems)
+                len(elems), 1, cat
             )
 
-    def test_base_url(self):
+    def test_address(self):
         self.assertEqual(
-            urlopen("https://fangraphs.com/leaders.aspx").getcode(),
-            200
+            requests.get(self.address).status_code, 200
         )
 
-    def test_list_options_dropdown_options_ids(self):
-        ids = [
-            "LeaderBoard1_rcbLeague_DropDown",
-            "LeaderBoard1_rcbTeam_DropDown",
-            "LeaderBoard1_rcbSeason_DropDown",
-            "LeaderBoard1_rcbMonth_DropDown",
-            "LeaderBoard1_rcbMin_DropDown",
-            "LeaderBoard1_rcbSeason1_DropDown",
-            "LeaderBoard1_rcbSeason2_DropDown",
-            "LeaderBoard1_rcbAge1_DropDown",
-            "LeaderBoard1_rcbAge2_DropDown"
-        ]
-        for i in ids:
-            elems = self.tree.xpath(
-                f"//div[@id='{i}']//div//ul//li"
-            )
-            self.assertTrue(elems)
-            elem_text = [e.text for e in elems]
+    def test_list_options_dropdown_selectors(self):
+        selectors = {
+            "league": "#LeaderBoard1_rcbLeague_DropDown",
+            "team": "#LeaderBoard1_rcbTeam_DropDown",
+            "single_season": "#LeaderBoard1_rcbSeason_DropDown",
+            "split": "#LeaderBoard1_rcbMonth_DropDown",
+            "min_pa": "#LeaderBoard1_rcbMin_DropDown",
+            "season1": "#LeaderBoard1_rcbSeason1_DropDown",
+            "season2": "#LeaderBoard1_rcbSeason2_DropDown",
+            "age1": "#LeaderBoard1_rcbAge1_DropDown",
+            "age2": "#LeaderBoard1_rcbAge2_DropDown"
+        }
+        for cat in selectors:
+            elems = self.soup.select(f"{selectors[cat]} li")
             self.assertTrue(
-                all([isinstance(t, str) for t in elem_text])
+                all([isinstance(e.getText(), str) for e in elems])
             )
 
-    def test_list_options_selections_ids(self):
-        ids = [
-            "LeaderBoard1_tsGroup",
-            "LeaderBoard1_tsStats",
-            "LeaderBoard1_tsPosition",
-            "LeaderBoard1_tsType"
-        ]
-        for i in ids:
-            elems = self.tree.xpath(
-                f"//div[@id='{i}']//div//ul//li//a//span//span//span"
-            )
-            self.assertTrue(elems)
-            elem_text = [e.text for e in elems]
+    def test_list_options_selections_selectors(self):
+        selectors = {
+            "group": "#LeaderBoard1_tsGroup",
+            "stat": "#LeaderBoard1_tsStats",
+            "position": "#LeaderBoard1_tsPosition",
+            "type": "#LeaderBoard1_tsType"
+        }
+        for cat in selectors:
+            elems = self.soup.select(f"{selectors[cat]} li")
             self.assertTrue(
-                all([isinstance(t, str) for t in elem_text])
+                all([isinstance(e.getText(), str) for e in elems])
             )
 
-    def test_current_option_checkbox_ids(self):
-        ids = [
-            "LeaderBoard1_cbTeams",
-            "LeaderBoard1_cbActive",
-            "LeaderBoard1_cbHOF",
-            "LeaderBoard1_cbSeason",
-            "LeaderBoard1_cbRookie"
-        ]
-        for i in ids:
-            elems = self.tree.xpath(
-                f"//input[@id='{i}']"
-            )
+    def test_current_option_checkbox_selectors(self):
+        selectors = {
+            "split_teams": "#LeaderBoard1_cbTeams",
+            "active_roster": "#LeaderBoard1_cbActive",
+            "hof": "#LeaderBoard1_cbHOF",
+            "split_seasons": "#LeaderBoard1_cbSeason",
+            "rookies": "#LeaderBoard1_cbRookie"
+        }
+        for cat in selectors:
+            elems = self.soup.select(selectors[cat])
             self.assertEqual(
                 len(elems), 1, len(elems)
             )
 
-    def test_current_option_dropdowns_ids(self):
-        ids = [
-            "LeaderBoard1_rcbLeague_Input",
-            "LeaderBoard1_rcbTeam_Input",
-            "LeaderBoard1_rcbSeason_Input",
-            "LeaderBoard1_rcbMonth_Input",
-            "LeaderBoard1_rcbMin_Input",
-            "LeaderBoard1_rcbSeason1_Input",
-            "LeaderBoard1_rcbSeason2_Input",
-            "LeaderBoard1_rcbAge1_Input",
-            "LeaderBoard1_rcbAge2_Input"
-        ]
-        for i in ids:
-            elems = self.tree.xpath(
-                f"//input[@id='{i}']"
-            )
-            self.assertEqual(
-                len(elems), 1
-            )
+    def test_current_option_dropdowns_selectors(self):
+        selectors = {
+            "league": "#LeaderBoard1_rcbLeague_Input",
+            "team": "#LeaderBoard1_rcbTeam_Input",
+            "single_season": "#LeaderBoard1_rcbSeason_Input",
+            "split": "#LeaderBoard1_rcbMonth_Input",
+            "min_pa": "#LeaderBoard1_rcbMin_Input",
+            "season1": "#LeaderBoard1_rcbSeason1_Input",
+            "season2": "#LeaderBoard1_rcbSeason2_Input",
+            "age1": "#LeaderBoard1_rcbAge1_Input",
+            "age2": "#LeaderBoard1_rcbAge2_Input"
+        }
+        for cat in selectors:
+            elem = self.soup.select(selectors[cat])[0]
             self.assertIsNotNone(
-                elems[0].get("value")
+                elem.get("value")
             )
 
-    def test_current_option_selections_ids(self):
-        ids = [
-            "LeaderBoard1_tsGroup",
-            "LeaderBoard1_tsStats",
-            "LeaderBoard1_tsPosition",
-            "LeaderBoard1_tsType"
-        ]
-        for i in ids:
-            elems = self.tree.xpath(
-                f"//div[@id='{i}']//div//ul//li//a[@class='rtsLink rtsSelected']//span//span//span"
-            )
+    def test_current_option_selections_selectors(self):
+        selectors = {
+            "group": "#LeaderBoard1_tsGroup",
+            "stat": "#LeaderBoard1_tsStats",
+            "position": "#LeaderBoard1_tsPosition",
+            "type": "#LeaderBoard1_tsType"
+        }
+        for cat in selectors:
+            elem = self.soup.select(f"{selectors[cat]} .rtsLink.rtsSelected")
             self.assertEqual(
-                len(elems), 1
+                len(elem), 1, cat
             )
+            self.assertIsInstance(elem[0].getText(), str)
 
-    def test_config_dropdown_ids(self):
-        ids = [
-            "LeaderBoard1_rcbLeague_Input",
-            "LeaderBoard1_rcbTeam_Input",
-            "LeaderBoard1_rcbSeason_Input",
-            "LeaderBoard1_rcbMonth_Input",
-            "LeaderBoard1_rcbMin_Input",
-            "LeaderBoard1_rcbSeason1_Input",
-            "LeaderBoard1_rcbSeason2_Input",
-            "LeaderBoard1_rcbAge1_Input",
-            "LeaderBoard1_rcbAge2_Input"
-        ]
-        for i in ids:
-            elems = self.tree.xpath("//@id")
-            self.assertIn(i, elems)
-            self.assertEqual(
-                elems.count(i), 1, elems.count(i)
-            )
-
-    def test_config_dropdown_options_ids(self):
-        ids = [
-            "LeaderBoard1_rcbLeague_DropDown",
-            "LeaderBoard1_rcbTeam_DropDown",
-            "LeaderBoard1_rcbSeason_DropDown",
-            "LeaderBoard1_rcbMonth_DropDown",
-            "LeaderBoard1_rcbMin_DropDown",
-            "LeaderBoard1_rcbSeason1_DropDown",
-            "LeaderBoard1_rcbSeason2_DropDown",
-            "LeaderBoard1_rcbAge1_DropDown",
-            "LeaderBoard1_rcbAge2_DropDown"
-        ]
-        for i in ids:
-            elems = self.tree.xpath(
-                f"//div[@id='{i}']//div//ul//li"
-            )
+    def test_configure_dropdown_selectors(self):
+        selectors = {
+            "league": "#LeaderBoard1_rcbLeague_DropDown",
+            "team": "#LeaderBoard1_rcbTeam_DropDown",
+            "single_season": "#LeaderBoard1_rcbSeason_DropDown",
+            "split": "#LeaderBoard1_rcbMonth_DropDown",
+            "min_pa": "#LeaderBoard1_rcbMin_DropDown",
+            "season1": "#LeaderBoard1_rcbSeason1_DropDown",
+            "season2": "#LeaderBoard1_rcbSeason2_DropDown",
+            "age1": "#LeaderBoard1_rcbAge1_DropDown",
+            "age2": "#LeaderBoard1_rcbAge2_DropDown"
+        }
+        for cat in selectors:
+            elems = self.soup.select(f"{selectors[cat]} > div > ul > li")
             self.assertTrue(elems)
 
-    def test_config_selection_ids(self):
-        ids = [
-            "LeaderBoard1_tsGroup",
-            "LeaderBoard1_tsStats",
-            "LeaderBoard1_tsPosition",
-            "LeaderBoard1_tsType"
-        ]
-        for i in ids:
-            elems = self.tree.xpath(
-                f"//div[@id='{i}']//div//ul//li"
-            )
+    def test_configure_selection_selectors(self):
+        selectors = {
+            "group": "#LeaderBoard1_tsGroup",
+            "stat": "#LeaderBoard1_tsStats",
+            "position": "#LeaderBoard1_tsPosition",
+            "type": "#LeaderBoard1_tsType"
+        }
+        for cat in selectors:
+            elems = self.soup.select(f"{selectors[cat]} li")
             self.assertTrue(elems)
 
-    def test_submit_form_id(self):
-        ids = [
-            "LeaderBoard1_btnMSeason",
-            "LeaderBoard1_cmdAge"
-        ]
-        for i in ids:
-            elems = self.tree.xpath("//@id")
-            self.assertIn(i, elems)
-            self.assertEqual(
-                elems.count(i), 1, elems.count(i)
-            )
+    def test_configure_selection_expand_sublevel(self):
+        elems = self.soup.select("#LeaderBoard1_tsType a[href='#']")
+        self.assertEqual(len(elems), 1)
 
     def test_export_id(self):
-        self.assertIn(
-            "LeaderBoard1_cmdCSV",
-            self.tree.xpath("//@id")
-        )
+        elems = self.soup.select("#LeaderBoard1_cmdCSV")
+        self.assertEqual(len(elems), 1)
 
 
 class TestSplitsLeaderboards(unittest.TestCase):
 
-    options = Options()
-    options.headless = True
-    browser = webdriver.Firefox(options=options)
-
     @classmethod
     def setUpClass(cls):
+        cls.page = browser.new_page()
         cls.address = "https://www.fangraphs.com/leaders/splits-leaderboards"
-        cls.browser.get(cls.address)
-        WebDriverWait(
-            cls.browser, 5
-        ).until(expected_conditions.presence_of_element_located(
-            (By.CSS_SELECTOR, "#react-drop-test div")
-        ))
+        cls.page.goto(cls.address, timeout=0)
         cls.soup = bs4.BeautifulSoup(
-            cls.browser.page_source, features="lxml"
+            cls.page.content(), features="lxml"
         )
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.browser.quit()
-        os.system("taskkill /F /IM firefox.exe")
 
     def test_selections_selectors(self):
         selectors = {
@@ -541,34 +462,20 @@ class TestSplitsLeaderboards(unittest.TestCase):
             self.assertEqual(len(item_elems), 24)
 
 
-@unittest.SkipTest
 class TestSeasonStatGrid(unittest.TestCase):
-
-    options = Options()
-    options.headless = True
-    browser = webdriver.Firefox(options=options)
 
     @classmethod
     def setUpClass(cls):
+        cls.page = browser.new_page()
         cls.address = "https://www.fangraphs.com/leaders/season-stat-grid"
-        cls.browser.get(cls.address)
-        WebDriverWait(
-            cls.browser, 5
-        ).until(expected_conditions.presence_of_element_located(
-            (By.ID, "root-season-grid")
-        ))
+        cls.page.goto(cls.address, timeout=0)
         cls.soup = bs4.BeautifulSoup(
-            cls.browser.page_source, features="lxml"
+            cls.page.content(), features="lxml"
         )
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.browser.quit()
-        os.system("taskkill /F /IM firefox.exe")
 
     def test_base_address(self):
         self.assertEqual(
-            urlopen(self.address).getcode(), 200
+            requests.get(self.address).status_code, 200
         )
 
     def test_selections_selectors(self):
@@ -744,4 +651,6 @@ class TestSeasonStatGrid(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    with sync_playwright() as play:
+        browser = play.chromium.launch()
+        unittest.main()
