@@ -1,6 +1,12 @@
 #! python3
 # FanGraphs/exceptions.py
 
+"""
+The warnings and exceptions used by modules in the package.
+================================================================================
+"""
+
+
 class FilterUpdateIncapabilityWarning(Warning):
 
     def __init__(self):

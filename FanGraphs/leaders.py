@@ -2,7 +2,25 @@
 # FanGraphs/leaders.py
 
 """
+Web scraper for the **Leaders** tab of the `FanGraphs website`_.
+Each page which is covered has its own class for scraping it.
+Below are each of the covered pages with the corresponding class:
 
+- `Major League Leaderboards`_: :py:class:`MajorLeagueLeaderboards`
+- `Splits Leaderboards`_: :py:class:`SplitsLeaderboards`
+- `Season Stat Grid`_: :py:class:`SeasonStatGrid`
+- `60-Game Span Leaderboards`_: :py:class:`GameSpanLeaderboards`
+- `KBO Leaders`_: :py:class:`InternationalLeaderboards`
+- `Combined WAR Leaderboards`_: :py:class:`WARLeaderboards`
+
+.. _FanGraphs website: https://fangraphs.com
+.. _Major League Leaderboards: https://fangraphs.com/leaders.aspx
+.. _Splits Leaderboards: https://fangraphs.com/leaders/splits-leaderboards
+.. _Season Stat Grid: https://fangraphs.com/leaders/season-stat-grid
+.. _60-Game Span Leaderboards: https://www.fangraphs.com/leaders/special/60-game-span
+.. _KBO Leaders: https://www.fangraphs.com/leaders/international
+.. _Combined WAR Leaderboards: https://www.fangraphs.com/warleaders.aspx
+================================================================================
 """
 
 import csv
@@ -1119,7 +1137,7 @@ class GameSpanLeaderboards:
         pass
 
 
-class KBOLeaderboards:
+class InternationalLeaderboards:
 
     def __init__(self):
         pass
