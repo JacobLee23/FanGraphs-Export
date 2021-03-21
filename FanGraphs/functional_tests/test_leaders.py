@@ -1,5 +1,5 @@
 #! python3
-# functional_tests.py
+# functional_tests/test_leaders.py
 
 import csv
 import os
@@ -7,11 +7,8 @@ import random
 import requests
 import unittest
 
-from FanGraphs import exceptions
-from FanGraphs import leaders
-
-
-unittest.TestLoader.sortTestMethodsUsing = None
+from .. import exceptions
+from .. import leaders
 
 
 class TestExceptions(unittest.TestCase):
