@@ -233,16 +233,16 @@ class TestSplitsLeaderboards:
         assert os.path.exists(os.path.join("out", "test.csv"))
 
 
-class TestSeasonStatGrid(unittest.TestCase):
+class TestSeasonStatGrid:
 
     parser = leaders.SeasonStatGrid()
 
     @classmethod
-    def setUpClass(cls):
+    def setup_class(cls):
         cls.base_url = cls.parser.page.url
 
     @classmethod
-    def tearDownClass(cls):
+    def teardown_class(cls):
         for file in os.listdir("out"):
             os.remove(os.path.join("out", file))
         os.rmdir("out")
@@ -250,17 +250,15 @@ class TestSeasonStatGrid(unittest.TestCase):
         os.system("taskkill /F /IM firefox.exe")
 
     def test_init(self):
-        self.assertEqual(
-            requests.get(self.parser.address).status_code, 200
-        )
-        self.assertTrue(os.path.exists("out"))
-        self.assertTrue(self.parser.page)
-        self.assertTrue(self.parser.soup)
+        res = requests.get(self.parser.address)
+        assert res.status_code == 200
+        assert os.path.exists("out")
+        assert self.parser.page
+        assert self.parser.soup
 
     def test_list_queries(self):
-        self.assertEqual(
-            len(self.parser.list_queries()), 13
-        )
+        queries = self.parser.list_queries()
+        assert len(queries) == 13
 
     def test_list_options(self):
         option_count = {
@@ -270,10 +268,8 @@ class TestSeasonStatGrid(unittest.TestCase):
             "plate_discipline": 25, "value": 11
         }
         for query in option_count:
-            self.assertEqual(
-                len(self.parser.list_options(query)), option_count[query],
-                query
-            )
+            options = self.parser.list_options(query)
+            assert len(options) == option_count[query], query
 
     def test_current_option(self):
         current_options = {
@@ -284,10 +280,8 @@ class TestSeasonStatGrid(unittest.TestCase):
             "plate_discipline": "None", "value": "WAR"
         }
         for query in current_options:
-            self.assertEqual(
-                self.parser.current_option(query), current_options[query],
-                query
-            )
+            option = self.parser.current_option(query)
+            assert option == current_options[query], query
 
     def test_configure(self):
         self.parser.reset()
@@ -296,35 +290,23 @@ class TestSeasonStatGrid(unittest.TestCase):
             option = self.parser.list_options(query)[-1]
             self.parser.configure(query, option)
             if query not in ["end_season"]:
-                self.assertEqual(
-                    self.parser.current_option(query), option,
-                    query
-                )
+                assert self.parser.current_option(query) == option, query
             self.parser.reset()
 
     def test_export(self):
         self.parser.reset()
         self.parser.export("test.csv", size="30")
-        self.assertTrue(
-            os.path.exists(os.path.join("out", "test.csv"))
-        )
+        assert os.path.exists(os.path.join("out", "test.csv"))
         with open(os.path.join("out", "test.csv")) as file:
             reader = csv.reader(file)
             data = list(reader)
-        self.assertEqual(
-            len(data), 31
-        )
-        self.assertTrue(
-            all([len(r) == 12 for r in data])
-        )
+        assert len(data) == 31
+        assert all([len(r) == 12 for r in data])
 
     def test_reset(self):
         self.parser.page.goto("https://google.com")
         self.parser.reset()
-        self.assertEqual(
-            self.parser.page.url,
-            self.base_url
-        )
+        assert self.parser.page.url == self.base_url
 
 
 if __name__ == "__main__":
