@@ -116,16 +116,16 @@ class TestMajorLeagueLeaderboards:
         assert os.path.exists(os.path.join("out", "test.csv"))
 
 
-class TestSplitsLeaderboards(unittest.TestCase):
+class TestSplitsLeaderboards:
 
     parser = leaders.SplitsLeaderboards()
 
     @classmethod
-    def setUpClass(cls):
+    def setup_class(cls):
         cls.base_url = cls.parser.page.url
 
     @classmethod
-    def tearDownClass(cls):
+    def teardown_class(cls):
         cls.parser.quit()
         for file in os.listdir("out"):
             os.remove(os.path.join("out", file))
@@ -136,33 +136,25 @@ class TestSplitsLeaderboards(unittest.TestCase):
         """
         SplitsLeaderboards.__init__
         """
-        self.assertEqual(
-            requests.get(self.parser.address).status_code, 200
-        )
-        self.assertTrue(os.path.exists("out"))
-        self.assertTrue(self.parser.page)
-        self.assertTrue(self.parser.soup)
+        res = requests.get(self.parser.address)
+        assert res.status_code == 200
+        assert os.path.exists("out")
+        assert self.parser.page
+        assert self.parser.soup
 
     def test_01(self):
         """
         SplitsLeaderboards.list_queries
         """
-        # SeasonStatGrid.list_queries
-        self.assertEqual(
-            len(self.parser.list_queries()), 20
-        )
+        assert len(self.parser.list_queries()) == 20
 
     def test_02(self):
         """
         SplitsLeaderboards.list_filter_groups
         """
         groups = self.parser.list_filter_groups()
-        self.assertEqual(
-            len(groups), 4
-        )
-        self.assertEqual(
-            groups, ["Quick Splits", "Splits", "Filters", "Show All"]
-        )
+        assert len(groups) == 4
+        assert groups == ["Quick Splits", "Splits", "Filters", "Show All"]
 
     def test_03(self):
         """
@@ -178,10 +170,8 @@ class TestSplitsLeaderboards(unittest.TestCase):
             "split_teams": 2, "auto_pt": 2
         }
         for query in option_count:
-            self.assertEqual(
-                len(self.parser.list_options(query)), option_count[query],
-                query
-            )
+            options = self.parser.list_options(query)
+            assert len(options) == option_count[query], query
 
     def test_04(self):
         """
@@ -197,10 +187,8 @@ class TestSplitsLeaderboards(unittest.TestCase):
             "split_teams": ["False"], "auto_pt": ["False"]
         }
         for query in current_options:
-            self.assertEqual(
-                self.parser.current_option(query), current_options[query],
-                query
-            )
+            option = self.parser.current_option(query)
+            assert option == current_options[query]
 
     def test_05(self):
         """
@@ -208,14 +196,9 @@ class TestSplitsLeaderboards(unittest.TestCase):
         """
         queries = self.parser.list_queries()
         for query in queries:
-            if query in ["type"]:
-                continue
             option = self.parser.list_options(query)[-1]
             self.parser.configure(query, option, autoupdate=True)
-            self.assertIn(
-                option, self.parser.current_option(query),
-                query
-            )
+            assert option in self.parser.current_option(query), query
             self.parser.reset()
 
     def test_06(self):
@@ -231,9 +214,8 @@ class TestSplitsLeaderboards(unittest.TestCase):
             'vs_lhh_as_rhp', 'vs_lhh_as_lhp', 'vs_rhh', 'vs_rhh_home',
             'vs_rhh_away', 'vs_rhh_as_rhp', 'vs_rhh_as_lhp'
         ]
-        self.assertEqual(
-            self.parser.list_quick_splits(), quick_splits
-        )
+        qsplits = self.parser.list_quick_splits()
+        assert qsplits == quick_splits
 
     def test_07(self):
         """
@@ -241,21 +223,14 @@ class TestSplitsLeaderboards(unittest.TestCase):
         """
         for qsplit in self.parser.list_quick_splits():
             self.parser.configure_quick_split(qsplit)
-            self.assertTrue(
-                self.parser.current_option("handedness"),
-                qsplit
-            )
+            assert self.parser.current_option("handedness"), qsplit
 
     def test_08(self):
         """
         SplitsLeaderboards.export
         """
         self.parser.export("test.csv", size="30")
-        self.assertTrue(
-            os.path.exists(
-                os.path.join("out", "test.csv")
-            )
-        )
+        assert os.path.exists(os.path.join("out", "test.csv"))
 
 
 class TestSeasonStatGrid(unittest.TestCase):
