@@ -83,20 +83,39 @@ class TestMajorLeagueLeaderboards:
         [__selections, __dropdown_options]
     )
     def test_list_options(self, selectors: dict):
+        elem_count = {
+            "group": 3, "stat": 3, "position": 13, "type": 19,
+            "league": 3, "team": 31, "single_season": 151, "split": 67,
+            "min_pa": 60, "season1": 151, "season2": 151, "age1": 45, "age2": 45,
+            "split_teams": 2, "active_roster": 2, "hof": 2, "split_seasons": 2,
+            "rookies": 2
+        }
         for query, sel in selectors.items():
             elems = self.soup.select(f"{sel} li")
+            assert len(elems) == elem_count[query], query
             assert all([isinstance(e.getText(), str) for e in elems]), query
 
-    def test_current_option_selections_selectors(self):
+    def test_current_option_selections(self):
+        elem_text = {
+            "group": "Player Stats", "stat": "Batting", "position": "All",
+            "type": "Dashboard"
+        }
         for query, sel in self.__selections.items():
             elem = self.soup.select(f"{sel} .rtsLink.rtsSelected")
             assert len(elem) == 1, query
             assert isinstance(elem[0].getText(), str), query
+            assert elem[0].getText() == elem_text[query]
 
-    def test_current_option_dropdowns_selectors(self):
+    def test_current_option_dropdowns(self):
+        elem_value = {
+            "league": "All Leagues", "team": "All Teams", "single_season": "2020",
+            "split": "Full Season", "min_pa": "Qualified", "season1": "2020",
+            "season2": "2020", "age1": "14", "age2": "58"
+        }
         for query, sel in self.__dropdowns.items():
             elem = self.soup.select(sel)[0]
             assert elem.get("value") is not None, query
+            assert elem_value[query] == elem.get("value")
 
     def test_expand_sublevel_selector(self):
         elems = self.soup.select("#LeaderBoard1_tsType a[href='#']")
