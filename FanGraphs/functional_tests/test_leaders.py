@@ -4,71 +4,50 @@
 import csv
 import os
 import random
-import requests
 import unittest
+
+import pytest
+import requests
 
 from .. import exceptions
 from .. import leaders
 
 
-class TestExceptions(unittest.TestCase):
+class TestExceptions:
 
-    def test_major_league_leaderboards(self):
-        parser = leaders.MajorLeagueLeaderboards()
+    @pytest.mark.parametrize(
+        "page_class",
+        [leaders.MajorLeagueLeaderboards,
+         leaders.SplitsLeaderboards,
+         leaders.SeasonStatGrid]
+    )
+    def test_class_exceptions(self, page_class):
+        with pytest.raises(exceptions.UnknownBrowserException):
+            page_class(browser="nonexistent browser")
+        parser = page_class()
 
-        with self.assertRaises(
-            exceptions.InvalidFilterQueryException
-        ):
+        with pytest.raises(exceptions.InvalidFilterQueryException):
             parser.list_options("nonexistent query")
-
-        with self.assertRaises(
-            exceptions.InvalidFilterQueryException
-        ):
+        with pytest.raises(exceptions.InvalidFilterQueryException):
             parser.current_option("nonexistent query")
-
-        with self.assertRaises(
-            exceptions.InvalidFilterQueryException
-        ):
+        with pytest.raises(exceptions.InvalidFilterQueryException):
             parser.configure("nonexistent query", "nonexistent option")
-
-        parser.quit()
-
-    def test_season_stat_grid(self):
-        parser = leaders.SeasonStatGrid()
-
-        with self.assertRaises(
-            exceptions.InvalidFilterQueryException
-        ):
-            parser.list_options("nonexistent query")
-
-        with self.assertRaises(
-            exceptions.InvalidFilterQueryException
-        ):
-            parser.current_option("nonexistent query")
-
-        with self.assertRaises(
-            exceptions.InvalidFilterQueryException
-        ):
-            parser.configure("nonexistent query", "nonexistent option")
-
-        with self.assertRaises(
-            exceptions.InvalidFilterOptionException
-        ):
-            parser.configure("Stat", "nonexistent option")
+        with pytest.raises(exceptions.InvalidFilterOptionException):
+            parser.configure("Type", "nonexistent option")
 
         parser.quit()
 
 
-class TestMajorLeagueLeaderboards(unittest.TestCase):
+class TestMajorLeagueLeaderboards:
 
     parser = leaders.MajorLeagueLeaderboards()
 
     @classmethod
-    def setUpClass(cls):
+    def setup_class(cls):
         cls.base_url = cls.parser.page.url
 
     @classmethod
-    def tearDownClass(cls):
+    def teardown_class(cls):
         cls.parser.quit()
         for file in os.listdir("out"):
             os.remove(os.path.join("out", file))
@@ -76,18 +55,15 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
         os.system("taskkill /F /IM firefox.exe")
 
     def test_init(self):
-        self.assertEqual(
-            requests.get(self.parser.address).status_code, 200
-        )
-        self.assertTrue(self.parser.page)
-        self.assertTrue(self.parser.soup)
+        res = requests.get(self.parser.address)
+        assert res.status_code == 200
+        assert self.parser.page
+        assert self.parser.soup
 
     def test_list_queries(self):
         queries = self.parser.list_queries()
-        self.assertIsInstance(queries, list)
-        self.assertTrue(
-            all([isinstance(q, str) for q in queries])
-        )
+        assert isinstance(queries, list)
+        assert all([isinstance(q, str) for q in queries])
 
     def test_list_options(self):
         query_count = {
@@ -99,16 +75,9 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
         }
         for query in query_count:
             options = self.parser.list_options(query)
-            self.assertIsInstance(options, list)
-            self.assertTrue(
-                all([isinstance(o, str) for o in options])
-                or all([isinstance(o, bool) for o in options])
-            )
-            self.assertEqual(
-                len(options),
-                query_count[query],
-                (query, len(options))
-            )
+            assert isinstance(options, list)
+            assert all([isinstance(o, (list, bool)) for o in options])
+            assert len(options) == query_count[query], query
 
     def test_current_option(self):
         query_options = {
@@ -121,11 +90,7 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
         }
         for query in query_options:
             option = self.parser.current_option(query)
-            self.assertEqual(
-                option,
-                query_options[query],
-                (query, option)
-            )
+            assert option == query_options[query], query
 
     def test_configure(self):
         queries = [
@@ -138,26 +103,17 @@ class TestMajorLeagueLeaderboards(unittest.TestCase):
             self.parser.configure(query, option)
             if query not in ["season1", "season2", "age1", "age2"]:
                 current = self.parser.current_option(query)
-                self.assertEqual(
-                    option,
-                    current,
-                    (query, option, current)
-                )
+                assert option == current, query
             self.parser.reset()
 
     def test_reset(self):
         self.parser.page.goto("https://google.com")
         self.parser.reset()
-        self.assertEqual(
-            self.parser.page.url,
-            self.base_url
-        )
+        assert self.parser.page.url == self.base_url
 
     def test_export(self):
         self.parser.export("test.csv")
-        self.assertTrue(
-            os.path.exists(os.path.join("out", "test.csv"))
-        )
+        assert os.path.exists(os.path.join("out", "test.csv"))
 
 
 class TestSplitsLeaderboards(unittest.TestCase):

@@ -120,7 +120,7 @@ class MajorLeagueLeaderboards:
         self.page = self.__browser.new_page(
             accept_downloads=True
         )
-        self.page.goto(self.address)
+        self.page.goto(self.address, timeout=0)
 
         self.soup = None
         self.__refresh_parser()
