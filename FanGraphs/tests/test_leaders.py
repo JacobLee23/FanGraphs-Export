@@ -117,16 +117,20 @@ class TestMajorLeagueLeaderboards:
             assert elem.get("value") is not None, query
             assert elem_value[query] == elem.get("value")
 
-    def test_expand_sublevel_selector(self):
+    def test_expand_sublevel(self):
         elems = self.soup.select("#LeaderBoard1_tsType a[href='#']")
         assert len(elems) == 1
 
-    def test_export_selector(self):
+    def test_export(self):
         elems = self.soup.select("#LeaderBoard1_cmdCSV")
         assert len(elems) == 1
 
 
 class TestSplitsLeaderboards:
+    """
+    Tests the attributes and methods in :py:class:`FanGraphs.leaders.SplitsLeaderboards`.
+    *Note: The docstrings in each test identifies the attribute/method being tested*.
+    """
 
     __selections = {
         "group": [
@@ -201,6 +205,9 @@ class TestSplitsLeaderboards:
 
     @classmethod
     def setup_class(cls):
+        """
+        Initializes ``bs4.BeautifulSoup4`` object using ``playwright``.
+        """
         with sync_playwright() as p:
             browser = p.chromium.launch()
             page = browser.new_page()
@@ -211,10 +218,101 @@ class TestSplitsLeaderboards:
             browser.close()
 
     def test_address(self):
+        """
+        Class attribute ``SplitsLeaderboards.address``.
+        """
         res = requests.get(self.address)
         assert res.status_code == 200
 
-    def test_selections_selectors(self):
+    def test_list_options_selections(self):
+        """
+        Instance method ``SplitsLeaderboards.list_options``.
+
+        Tests the selectors in:
+
+        - ``SplitsLeaderboards.__selections``
+        """
+        elem_count = {
+            "group": 4, "stat": 2, "type": 3
+        }
+        for query, sel_list in self.__selections.items():
+            elems = [self.soup.select(s)[0] for s in sel_list]
+            assert len(elems) == elem_count[query]
+            assert all([e.getText() for e in elems])
+
+    @pytest.mark.parametrize(
+        "selectors",
+        [__dropdowns, __splits]
+    )
+    def test_list_options(self, selectors: dict[str, str]):
+        """
+        Instance method ``SplitsLeaderboards.list_options``.
+
+        Tests the selectors in:
+
+        - ``SplitsLeaderboards.__dropdowns``
+        - ``SplitsLeaderboards.__splits``
+
+        :param selectors: CSS selectors
+        """
+        elem_count = {
+            "time_filter": 10, "preset_range": 12, "groupby": 5,
+            "handedness": 4, "home_away": 2, "batted_ball": 15,
+            "situation": 7, "count": 11, "batting_order": 9, "position": 12,
+            "inning": 10, "leverage": 3, "shifts": 3, "team": 32,
+            "opponent": 32,
+        }
+        for query, sel in selectors.items():
+            elems = self.soup.select(f"{sel} li")
+            assert len(elems) == elem_count[query]
+
+    def test_current_option_selections(self):
+        """
+        Instance method ``SplitsLeaderboards.current_option``.
+
+        Tests the selectors in:
+
+        - ``SplitsLeaderboards.__selections``
+        """
+        elem_text = {
+            "group": "Player", "stat": "Batting", "type": "Standard"
+        }
+        for query, sel_list in self.__selections.items():
+            elems = []
+            for sel in sel_list:
+                elem = self.soup.select(sel)[0]
+                assert elem.get("class") is not None
+                elems.append(elem)
+            active = ["isActive" in e.get("class") for e in elems]
+            assert active.count(True) == 1, query
+            text = [e.getText() for e in elems]
+            assert elem_text[query] in text
+
+    @pytest.mark.parametrize(
+        "selectors",
+        [__dropdowns, __splits, __switches]
+    )
+    def test_current_option(self, selectors: dict[str, str]):
+        """
+        Instance method ``SplitsLeaderboards.current_option``.
+
+        Tests the selectors in:
+
+        - ``SplitsLeaderboards.__dropdowns``
+        - ``SplitsLeaderboards.__splits``
+        - ``SplitsLeaderboards.__switches``
+
+        :param selectors: CSS selectors
+        """
+        for query, sel in selectors.items():
+            elems = self.soup.select(f"{sel} li")
+            for elem in elems:
+                assert elem.get("class") is not None
+
+    def test_configure_selection(self):
+        """
+        Private instance method ``SplitsLeaderboards.__configure_selection``.
+        """
         for query, sel_list in self.__selections.items():
             for sel in sel_list:
                 elems = self.soup.select(sel)
@@ -222,62 +320,87 @@ class TestSplitsLeaderboards:
 
     @pytest.mark.parametrize(
         "selectors",
-        [__dropdowns, __splits, __quick_splits, __switches]
+        [__dropdowns, __splits, __switches]
     )
-    def test_selectors(self, selectors: dict):
+    def test_configure(self, selectors: dict[str, str]):
+        """
+        Private instance method ``SplitsLeaderboards.__configure_dropdown``.
+        Private instance method ``SplitsLeaderboards.__configure_split``.
+        Private instance method ``SplitsLeaderboards.__configure_switch``.
+
+        :param selectors: CSS Selectors
+        """
         for query, sel in selectors.items():
             elems = self.soup.select(sel)
             assert len(elems) == 1, query
 
-    def test_reset_filters_selector(self):
-        elems = self.soup.select("#stack-buttons .fgButton.small:nth-last-child(1)")
-        assert len(elems) == 1
+    def test_update(self):
+        """
+        Instance method ``SplitsLeaderboards.update``.
+        """
+        elems = self.soup.select("#button-update")
+        assert len(elems) == 0
 
-    def test_configure_filter_group_selector(self):
+    def test_list_filter_groups(self):
+        """
+        Instance method ``SplitsLeaderboards.list_filter_groups``.
+        """
+        elems = self.soup.select(".fgBin.splits-bin-controller div")
+        assert len(elems) == 4
+        options = ["Quick Splits", "Splits", "Filters", "Show All"]
+        assert [e.getText() for e in elems] == options
+
+    def test_configure_filter_group(self):
+        """
+        Instance method ``SplitsLeaderboards.configure_filter_group``.
+        """
         groups = ["Quick Splits", "Splits", "Filters", "Show All"]
         elems = self.soup.select(".fgBin.splits-bin-controller div")
         assert len(elems) == 4
         assert [e.getText() for e in elems] == groups
 
-    def test_update_button_selector(self):
-        elems = self.soup.select("#button-update")
-        assert len(elems) == 0
-
-    def test_current_option_selections(self):
-        for query, sel_list in self.__selections.items():
-            class_attrs = []
-            for sel in sel_list:
-                elem = self.soup.select(sel)[0]
-                assert elem.get("class") is not None
-                class_attrs.append(elem.get("class"))
-            active = ["isActive" in a for a in class_attrs]
-            assert active.count(True) == 1, query
-
-    @pytest.mark.parametrize(
-        "selectors",
-        [__dropdowns, __splits, __switches]
-    )
-    def test_current_option(self, selectors: dict):
-        for query, sel in selectors.items():
-            elems = self.soup.select(f"{sel} li")
-            for elem in elems:
-                assert elem.get("class") is not None
-
-    def test_expand_table_dropdown_selector(self):
-        elems = self.soup.select(".table-page-control:nth-child(3) select")
+    def test_reset_filters(self):
+        """
+        Instance method ``SplitsLeaderboards.reset_filters``.
+        """
+        elems = self.soup.select("#stack-buttons .fgButton.small:nth-last-child(1)")
         assert len(elems) == 1
 
-    def test_expand_table_dropdown_options_selector(self):
-        options = ["30", "50", "100", "200", "Infinity"]
-        elems = self.soup.select(".table-page-control:nth-child(3) select option")
-        assert len(elems) == 5
-        assert [e.getText() for e in elems] == options
+    def test_configure_quick_split(self):
+        """
+        Instance method ``SplitsLeaderboards.configure_quick_split``.
+        """
+        for qsplit, sel in self.__quick_splits.items():
+            elems = self.soup.select(sel)
+            assert len(elems) == 1, qsplit
 
-    def test_table_headers_selector(self):
+    def test_expand_table(self):
+        """
+        Private instance method ``SplitsLeaderboards.__expand_table``.
+        """
+        elems = self.soup.select(".table-page-control:nth-child(3) select")
+        assert len(elems) == 1
+        options = ["30", "50", "100", "200", "Infinity"]
+        assert [e.getText() for e in elems[0].select("option")] == options
+
+    def test_sortby(self):
+        """
+        Private instance method ``SplitsLeaderboards.__sortby``.
+        """
         elems = self.soup.select(".table-scroll thead tr th")
         assert len(elems) == 24
 
-    def test_table_rows_selector(self):
+    def test_write_table_headers(self):
+        """
+        Private instance method ``SplitsLeaderboards.__write_table_headers``.
+        """
+        elems = self.soup.select(".table-scroll thead tr th")
+        assert len(elems) == 24
+
+    def test_write_table_rows(self):
+        """
+        Private instance method ``SplitsLeaderboards.__write_table_rows``.
+        """
         elems = self.soup.select(".table-scroll tbody tr")
         assert len(elems) == 30
         for elem in elems:
@@ -326,22 +449,24 @@ class TestSeasonStatGrid:
         res = requests.get(self.address)
         assert res.status_code == 200
 
-    def test_selections_selectors(self):
+    def test_selectors_selections(self):
         for query, sel_list in self.__selections.items():
             for sel in sel_list:
                 elems = self.soup.select(sel)
                 assert len(elems) == 1, query
 
-    def test_dropdown_selectors(self):
+    def test_selectors_dropdowns(self):
         for query, sel in self.__dropdowns.items():
             elems = self.soup.select(sel)
             assert len(elems) == 1, query
 
     def test_list_options_selections(self):
+        elem_count = {
+            "stat": 2, "group": 3
+        }
         for query, sel_list in self.__selections.items():
-            elems = [
-                self.soup.select(s)[0] for s in sel_list
-            ]
+            elems = [self.soup.select(s)[0] for s in sel_list]
+            assert len(elems) == elem_count[query]
             assert all([e.getText() for e in elems])
 
     def test_list_options_dropdowns(self):

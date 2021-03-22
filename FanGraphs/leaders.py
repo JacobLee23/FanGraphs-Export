@@ -497,21 +497,27 @@ class SplitsLeaderboards:
     def current_option(self, query: str):
         """
         Retrieves the option(s) which the filter query is currently set to.
-        *Note: Some dropdown- and split-class filter queries can be configured to multiple options.
-        Since this is the case, a list is returned, even though there may only be one option.*
+
+        Most dropdown- and split-class filter queries can be configured to multiple options.
+        For those filter classes, a list is returned, while other filter classes return a string.
+
+        - Selection-class: ``str``
+        - Dropdown-class: ``list``
+        - Split-class: ``list``
+        - Switch-class: ``str``
 
         :param query: The filter query being retrieved of its current option
         :return: The option(s) which the filter query is currently set to
-        :rtype: list
+        :rtype: str or list
         :raises FanGraphs.exceptions.InvalidFilterQuery: Argument ``query`` is invalid
         """
         query = query.lower()
-        options = []
+        option = []
         if query in self.__selections:
             for sel in self.__selections[query]:
                 elem = self.soup.select(sel)[0]
                 if "isActive" in elem.get("class"):
-                    options = [elem.getText()]
+                    option = elem.getText()
                     break
         elif query in self.__dropdowns:
             elems = self.soup.select(
@@ -519,20 +525,20 @@ class SplitsLeaderboards:
             )
             for elem in elems:
                 if "highlight-selection" in elem.get("class"):
-                    options.append(elem.getText())
+                    option.append(elem.getText())
         elif query in self.__splits:
             elems = self.soup.select(
                 f"{self.__splits[query]} ul li"
             )
             for elem in elems:
                 if "highlight-selection" in elem.get("class"):
-                    options.append(elem.getText())
+                    option.append(elem.getText())
         elif query in self.__switches:
             elem = self.soup.select(self.__switches[query])
-            options = ["True" if "isActive" in elem[0].get("class") else "False"]
+            option = "True" if "isActive" in elem[0].get("class") else "False"
         else:
             raise FanGraphs.exceptions.InvalidFilterQueryException(query)
-        return options
+        return option
 
     def configure(self, query: str, option: str, *, autoupdate=False):
         """
@@ -610,7 +616,7 @@ class SplitsLeaderboards:
         elem = self.page.query_selector_all(f"{self.__splits[query]} ul li")[index]
         elem.click()
 
-    def __configure_switch(self, query, option):
+    def __configure_switch(self, query: str, option: str):
         """
         Configures a switch-class filter query ``query`` to an option ``option``.
 
@@ -654,8 +660,7 @@ class SplitsLeaderboards:
         :return: Names of the groups of filter queries
         :rtype: list
         """
-        selector = ".fgBin.splits-bin-controller div"
-        elems = self.soup.select(selector)
+        elems = self.soup.select(".fgBin.splits-bin-controller div")
         groups = [e.getText() for e in elems]
         return groups
 
@@ -780,16 +785,14 @@ class SplitsLeaderboards:
         Sorts the data by the appropriate table header.
 
         :param sortby: The table header to sort the data by
-        :param reverse: If ``True``, the organizatino of the data will be reversed
+        :param reverse: If ``True``, the organization of the data will be reversed
         """
-        selector = ".table-scroll thead tr th"
-        elems = self.soup.select(selector)
+        elems = self.soup.select(".table-scroll thead tr th")
         options = [e.getText() for e in elems]
         index = options.index(sortby)
-        option = self.page.query_selector_all(selector)[index]
-        option.click()
+        elems[index].click()
         if reverse:
-            option.click()
+            elems[index].click()
 
     def __write_table_headers(self, writer: csv.writer):
         """
@@ -797,8 +800,7 @@ class SplitsLeaderboards:
 
         :param writer: The ``csv.writer`` object
         """
-        selector = ".table-scroll thead tr th"
-        elems = self.soup.select(selector)
+        elems = self.soup.select(".table-scroll thead tr th")
         headers = [e.getText() for e in elems]
         writer.writerow(headers)
 
@@ -808,8 +810,7 @@ class SplitsLeaderboards:
 
         :param writer: The ``csv.writer`` object
         """
-        selector = ".table-scroll tbody tr"
-        row_elems = self.soup.select(selector)
+        row_elems = self.soup.select(".table-scroll tbody tr")
         for row in row_elems:
             elems = row.select("td")
             items = [e.getText() for e in elems]
