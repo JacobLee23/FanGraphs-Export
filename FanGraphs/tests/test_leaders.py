@@ -109,12 +109,81 @@ class TestMajorLeagueLeaderboards:
         assert len(elems) == 1
 
 
-class TestSplitsLeaderboards(unittest.TestCase):
+class TestSplitsLeaderboards:
 
-    address = "https://www.fangraphs.com/leaders/splits-leaderboards"
+    __selections = {
+        "group": [
+            ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(1)",
+            ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(2)",
+            ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(3)",
+            ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(4)"
+        ],
+        "stat": [
+            ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(6)",
+            ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(7)"
+        ],
+        "type": [
+            "#root-buttons-stats > div:nth-child(1)",
+            "#root-buttons-stats > div:nth-child(2)",
+            "#root-buttons-stats > div:nth-child(3)"
+        ]
+    }
+    __dropdowns = {
+        "time_filter": "#root-menu-time-filter > .fg-dropdown.splits.multi-choice",
+        "preset_range": "#root-menu-time-filter > .fg-dropdown.splits.single-choice",
+        "groupby": ".fg-dropdown.group-by"
+    }
+    __splits = {
+        "handedness": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(1)",
+        "home_away": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(2)",
+        "batted_ball": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(3)",
+        "situation": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(4)",
+        "count": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(5)",
+        "batting_order": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(1)",
+        "position": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(2)",
+        "inning": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(3)",
+        "leverage": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(4)",
+        "shifts": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(5)",
+        "team": ".fgBin:nth-child(3) > .fg-dropdown.splits.multi-choice:nth-child(1)",
+        "opponent": ".fgBin:nth-child(3) > .fg-dropdown.splits.multi-choice:nth-child(2)",
+    }
+    __quick_splits = {
+        "batting_home": ".quick-splits > div:nth-child(1) > div:nth-child(2) > .fgButton:nth-child(1)",
+        "batting_away": ".quick-splits > div:nth-child(1) > div:nth-child(2) > .fgButton:nth-child(2)",
+        "vs_lhp": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(1)",
+        "vs_lhp_home": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(2)",
+        "vs_lhp_away": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(3)",
+        "vs_lhp_as_lhh": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(4)",
+        "vs_lhp_as_rhh": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(5)",
+        "vs_rhp": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(1)",
+        "vs_rhp_home": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(2)",
+        "vs_rhp_away": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(3)",
+        "vs_rhp_as_lhh": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(4)",
+        "vs_rhp_as_rhh": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(5)",
+        "pitching_as_sp": ".quick-splits > div:nth-child(2) > div:nth-child(1) .fgButton:nth-child(1)",
+        "pitching_as_rp": ".quick-splits > div:nth-child(2) > div:nth-child(1) .fgButton:nth-child(2)",
+        "pitching_home": ".quick-splits > div:nth-child(2) > div:nth-child(2) > .fgButton:nth-child(1)",
+        "pitching_away": ".quick-splits > div:nth-child(2) > div:nth-child(2) > .fgButton:nth-child(2)",
+        "vs_lhh": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(1)",
+        "vs_lhh_home": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(2)",
+        "vs_lhh_away": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(3)",
+        "vs_lhh_as_rhp": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(4)",
+        "vs_lhh_as_lhp": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(5)",
+        "vs_rhh": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)",
+        "vs_rhh_home": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)",
+        "vs_rhh_away": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)",
+        "vs_rhh_as_rhp": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)",
+        "vs_rhh_as_lhp": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)"
+    }
+    __switches = {
+        "split_teams": "#stack-buttons > div:nth-child(2)",
+        "auto_pt": "#stack-buttons > div:nth-child(3)"
+    }
+
+    address = "https://fangraphs.com/leaders/splits-leaderboards"
 
     @classmethod
-    def setUpClass(cls):
+    def setup_class(cls):
         with sync_playwright() as p:
             browser = p.chromium.launch()
             page = browser.new_page()
@@ -125,244 +194,73 @@ class TestSplitsLeaderboards(unittest.TestCase):
             browser.close()
 
     def test_selections_selectors(self):
-        selectors = {
-            "group": [
-                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(1)",
-                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(2)",
-                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(3)",
-                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(4)"
-            ],
-            "stat": [
-                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(6)",
-                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(7)"
-            ],
-            "type": [
-                "#root-buttons-stats > div:nth-child(1)",
-                "#root-buttons-stats > div:nth-child(2)",
-                "#root-buttons-stats > div:nth-child(3)"
-            ]
-        }
-        for cat in selectors:
-            for sel in selectors[cat]:
+        for query, sel_list in self.__selections.items():
+            for sel in sel_list:
                 elems = self.soup.select(sel)
-                self.assertEqual(
-                    len(elems), 1, (cat, sel)
-                )
+                assert len(elems) == 1, query
 
-    def test_dropdowns_selectors(self):
-        selectors = {
-            "time_filter": "#root-menu-time-filter > .fg-dropdown.splits.multi-choice",
-            "preset_range": "#root-menu-time-filter > .fg-dropdown.splits.single-choice",
-            "groupby": ".fg-dropdown.group-by"
-        }
-        for cat in selectors:
-            elems = self.soup.select(selectors[cat])
-            self.assertEqual(
-                len(elems), 1, cat
-            )
-
-    def test_splits_selectors(self):
-        selectors = {
-            "handedness": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(1)",
-            "home_away": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(2)",
-            "batted_ball": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(3)",
-            "situation": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(4)",
-            "count": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(5)",
-            "batting_order": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(1)",
-            "position": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(2)",
-            "inning": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(3)",
-            "leverage": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(4)",
-            "shifts": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(5)",
-            "team": ".fgBin:nth-child(3) > .fg-dropdown.splits.multi-choice:nth-child(1)",
-            "opponent": ".fgBin:nth-child(3) > .fg-dropdown.splits.multi-choice:nth-child(2)",
-        }
-        for cat in selectors:
-            elems = self.soup.select(selectors[cat])
-            self.assertEqual(
-                len(elems), 1, cat
-            )
-
-    def test_quick_splits_selectors(self):
-        selectors = {
-            "batting_home": ".quick-splits > div:nth-child(1) > div:nth-child(2) > .fgButton:nth-child(1)",
-            "batting_away": ".quick-splits > div:nth-child(1) > div:nth-child(2) > .fgButton:nth-child(2)",
-            "vs_lhp": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(1)",
-            "vs_lhp_home": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(2)",
-            "vs_lhp_away": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(3)",
-            "vs_lhp_as_lhh": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(4)",
-            "vs_lhp_as_rhh": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(5)",
-            "vs_rhp": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(1)",
-            "vs_rhp_home": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(2)",
-            "vs_rhp_away": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(3)",
-            "vs_rhp_as_lhh": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(4)",
-            "vs_rhp_as_rhh": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(5)",
-            "pitching_as_sp": ".quick-splits > div:nth-child(2) > div:nth-child(1) .fgButton:nth-child(1)",
-            "pitching_as_rp": ".quick-splits > div:nth-child(2) > div:nth-child(1) .fgButton:nth-child(2)",
-            "pitching_home": ".quick-splits > div:nth-child(2) > div:nth-child(2) > .fgButton:nth-child(1)",
-            "pitching_away": ".quick-splits > div:nth-child(2) > div:nth-child(2) > .fgButton:nth-child(2)",
-            "vs_lhh": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(1)",
-            "vs_lhh_home": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(2)",
-            "vs_lhh_away": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(3)",
-            "vs_lhh_as_rhp": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(4)",
-            "vs_lhh_as_lhp": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(5)",
-            "vs_rhh": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)",
-            "vs_rhh_home": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)",
-            "vs_rhh_away": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)",
-            "vs_rhh_as_rhp": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)",
-            "vs_rhh_as_lhp": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)"
-        }
-        for cat in selectors:
-            elems = self.soup.select(selectors[cat])
-            self.assertEqual(
-                len(elems), 1, cat
-            )
-
-    def test_switches_selectors(self):
-        selectors = {
-            "split_teams": "#stack-buttons > div:nth-child(2)",
-            "auto_pt": "#stack-buttons > div:nth-child(3)"
-        }
-        for cat in selectors:
-            elems = self.soup.select(selectors[cat])
-            self.assertEqual(
-                len(elems), 1, cat
-            )
+    @pytest.mark.parametrize(
+        "selectors",
+        [__dropdowns, __splits, __quick_splits, __switches]
+    )
+    def test_selectors(self, selectors: dict):
+        for query, sel in selectors.items():
+            elems = self.soup.select(sel)
+            assert len(elems) == 1, query
 
     def test_reset_filters_selector(self):
-        selector = "#stack-buttons div[class='fgButton small']:nth-last-child(1)"
-        elems = self.soup.select(selector)
-        self.assertEqual(
-            len(elems), 1
-        )
+        elems = self.soup.select("#stack-buttons .fgButton.small:nth-last-child(1)")
+        assert len(elems) == 1
 
     def test_configure_filter_group_selector(self):
         groups = ["Quick Splits", "Splits", "Filters", "Show All"]
-        selector = ".fgBin.splits-bin-controller div"
-        elems = self.soup.select(selector)
-        self.assertEqual(
-            len(elems), 4
-        )
-        self.assertEqual(
-            [e.getText() for e in elems], groups
-        )
+        elems = self.soup.select(".fgBin.splits-bin-controller div")
+        assert len(elems) == 4
+        assert [e.getText() for e in elems] == groups
 
     def test_update_button_selector(self):
-        selector = "#button-update"
-        elems = self.soup.select(selector)
-        self.assertEqual(
-            len(elems), 0
-        )
+        elems = self.soup.select("#button-update")
+        assert len(elems) == 0
 
     def test_current_option_selections(self):
-        selectors = {
-            "group": [
-                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(1)",
-                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(2)",
-                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(3)",
-                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(4)"
-            ],
-            "stat": [
-                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(6)",
-                ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(7)"
-            ],
-            "type": [
-                "#root-buttons-stats > div:nth-child(1)",
-                "#root-buttons-stats > div:nth-child(2)",
-                "#root-buttons-stats > div:nth-child(3)"
-            ]
-        }
-        for query in selectors:
-            class_attributes = []
-            for sel in selectors[query]:
+        for query, sel_list in self.__selections.items():
+            class_attrs = []
+            for sel in sel_list:
                 elem = self.soup.select(sel)[0]
-                self.assertTrue(elem.get("class"))
-                class_attributes.append(elem.get("class"))
-            self.assertEqual(
-                ["isActive" in attr for attr in class_attributes].count(True),
-                1
-            )
+                assert elem.get("class") is not None
+                class_attrs.append(elem.get("class"))
+            active = ["isActive" in a for a in class_attrs]
+            assert active.count(True) == 1, query
 
-    def test_current_option_dropdowns(self):
-        selectors = {
-            "time_filter": "#root-menu-time-filter > .fg-dropdown.splits.multi-choice",
-            "preset_range": "#root-menu-time-filter > .fg-dropdown.splits.single-choice",
-            "groupby": ".fg-dropdown.group-by"
-        }
-        for query in selectors:
-            elems = self.soup.select(f"{selectors[query]} ul li")
+    @pytest.mark.parametrize(
+        "selectors",
+        [__dropdowns, __splits, __switches]
+    )
+    def test_current_option(self, selectors: dict):
+        for query, sel in selectors.items():
+            elems = self.soup.select(f"{sel} li")
             for elem in elems:
-                self.assertTrue(elem.get("class"))
-
-    def test_current_option_splits(self):
-        selectors = {
-            "handedness": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(1)",
-            "home_away": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(2)",
-            "batted_ball": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(3)",
-            "situation": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(4)",
-            "count": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(5)",
-            "batting_order": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(1)",
-            "position": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(2)",
-            "inning": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(3)",
-            "leverage": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(4)",
-            "shifts": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(5)",
-            "team": ".fgBin:nth-child(3) > .fg-dropdown.splits.multi-choice:nth-child(1)",
-            "opponent": ".fgBin:nth-child(3) > .fg-dropdown.splits.multi-choice:nth-child(2)",
-        }
-        for query in selectors:
-            elems = self.soup.select(f"{selectors[query]} ul li")
-            for elem in elems:
-                self.assertTrue(elem.get("class"))
-
-    def test_current_option_switches(self):
-        selectors = {
-            "split_teams": "#stack-buttons > div:nth-child(2)",
-            "auto_pt": "#stack-buttons > div:nth-child(3)"
-        }
-        for query in selectors:
-            elem = self.soup.select(selectors[query])[0]
-            self.assertTrue(elem.get("class"))
+                assert elem.get("class") is not None
 
     def test_expand_table_dropdown_selector(self):
-        selector = ".table-page-control:nth-child(3) select"
-        elems = self.soup.select(selector)
-        self.assertEqual(
-            len(elems), 1
-        )
+        elems = self.soup.select(".table-page-control:nth-child(3) select")
+        assert len(elems) == 1
 
-    def test_expand_table_dropdown_options_selectors(self):
+    def test_expand_table_dropdown_options_selector(self):
         options = ["30", "50", "100", "200", "Infinity"]
-        selector = ".table-page-control:nth-child(3) select option"
-        elems = self.soup.select(selector)
-        self.assertEqual(
-            len(elems), 5
-        )
-        self.assertEqual(
-            [e.getText() for e in elems], options
-        )
+        elems = self.soup.select(".table-page-control:nth-child(3) select option")
+        assert len(elems) == 5
+        assert [e.getText() for e in elems] == options
 
-    def test_sortby_option_selectors(self):
-        selector = ".table-scroll thead tr th"
-        elems = self.soup.select(selector)
-        self.assertEqual(
-            len(elems), 24
-        )
+    def test_table_headers_selector(self):
+        elems = self.soup.select(".table-scroll thead tr th")
+        assert len(elems) == 24
 
-    def test_write_table_headers_selector(self):
-        selector = ".table-scroll thead tr th"
-        elems = self.soup.select(selector)
-        self.assertEqual(
-            len(elems), 24
-        )
-
-    def test_write_table_rows_selector(self):
-        selector = ".table-scroll tbody tr"
-        elems = self.soup.select(selector)
-        self.assertEqual(
-            len(elems), 30
-        )
+    def test_table_rows_selector(self):
+        elems = self.soup.select(".table-scroll tbody tr")
+        assert len(elems) == 30
         for elem in elems:
-            item_elems = elem.select("td")
-            self.assertEqual(len(item_elems), 24)
+            assert len(elem.select("td")) == 24
 
 
 class TestSeasonStatGrid(unittest.TestCase):
