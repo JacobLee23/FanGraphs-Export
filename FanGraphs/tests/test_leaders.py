@@ -1,8 +1,6 @@
 #! python3
 # tests/test_leaders.py
 
-import unittest
-
 import bs4
 from playwright.sync_api import sync_playwright
 import pytest
@@ -193,6 +191,10 @@ class TestSplitsLeaderboards:
             )
             browser.close()
 
+    def test_address(self):
+        res = requests.get(self.address)
+        assert res.status_code == 200
+
     def test_selections_selectors(self):
         for query, sel_list in self.__selections.items():
             for sel in sel_list:
@@ -263,12 +265,35 @@ class TestSplitsLeaderboards:
             assert len(elem.select("td")) == 24
 
 
-class TestSeasonStatGrid(unittest.TestCase):
-
-    address = "https://www.fangraphs.com/leaders/season-stat-grid"
+class TestSeasonStatGrid:
+    __selections = {
+        "stat": [
+            "div[class*='fgButton button-green']:nth-child(1)",
+            "div[class*='fgButton button-green']:nth-child(2)"
+        ],
+        "type": [
+            "div[class*='fgButton button-green']:nth-child(4)",
+            "div[class*='fgButton button-green']:nth-child(5)",
+            "div[class*='fgButton button-green']:nth-child(6)"
+        ]
+    }
+    __dropdowns = {
+        "start_season": ".row-season > div:nth-child(2)",
+        "end_season": ".row-season > div:nth-child(4)",
+        "popular": ".season-grid-controls-dropdown-row-stats > div:nth-child(1)",
+        "standard": ".season-grid-controls-dropdown-row-stats > div:nth-child(2)",
+        "advanced": ".season-grid-controls-dropdown-row-stats > div:nth-child(3)",
+        "statcast": ".season-grid-controls-dropdown-row-stats > div:nth-child(4)",
+        "batted_ball": ".season-grid-controls-dropdown-row-stats > div:nth-child(5)",
+        "win_probability": ".season-grid-controls-dropdown-row-stats > div:nth-child(6)",
+        "pitch_type": ".season-grid-controls-dropdown-row-stats > div:nth-child(7)",
+        "plate_discipline": ".season-grid-controls-dropdown-row-stats > div:nth-child(8)",
+        "value": ".season-grid-controls-dropdown-row-stats > div:nth-child(9)"
+    }
+    address = "https://fangraphs.com/leaders/season-stat-grid"
 
     @classmethod
-    def setUpClass(cls):
+    def setup_class(cls):
         with sync_playwright() as p:
             browser = p.chromium.launch()
             page = browser.new_page()
@@ -278,178 +303,72 @@ class TestSeasonStatGrid(unittest.TestCase):
             )
             browser.close()
 
-    def test_base_address(self):
-        self.assertEqual(
-            requests.get(self.address).status_code, 200
-        )
+    def test_address(self):
+        res = requests.get(self.address)
+        assert res.status_code == 200
 
     def test_selections_selectors(self):
-        selectors = {
-            "stat": [
-                "div[class*='fgButton button-green']:nth-child(1)",
-                "div[class*='fgButton button-green']:nth-child(2)"
-            ],
-            "type": [
-                "div[class*='fgButton button-green']:nth-child(4)",
-                "div[class*='fgButton button-green']:nth-child(5)",
-                "div[class*='fgButton button-green']:nth-child(6)"
-            ]
-        }
-        for cat in selectors:
-            for sel in selectors[cat]:
+        for query, sel_list in self.__selections.items():
+            for sel in sel_list:
                 elems = self.soup.select(sel)
-                self.assertEqual(
-                    len(elems), 1, (cat, sel)
-                )
+                assert len(elems) == 1, query
 
     def test_dropdown_selectors(self):
-        selectors = {
-            "start_season": ".row-season > div:nth-child(2)",
-            "end_season": ".row-season > div:nth-child(4)",
-            "popular": ".season-grid-controls-dropdown-row-stats > div:nth-child(1)",
-            "standard": ".season-grid-controls-dropdown-row-stats > div:nth-child(2)",
-            "advanced": ".season-grid-controls-dropdown-row-stats > div:nth-child(3)",
-            "statcast": ".season-grid-controls-dropdown-row-stats > div:nth-child(4)",
-            "batted_ball": ".season-grid-controls-dropdown-row-stats > div:nth-child(5)",
-            "win_probability": ".season-grid-controls-dropdown-row-stats > div:nth-child(6)",
-            "pitch_type": ".season-grid-controls-dropdown-row-stats > div:nth-child(7)",
-            "plate_discipline": ".season-grid-controls-dropdown-row-stats > div:nth-child(8)",
-            "value": ".season-grid-controls-dropdown-row-stats > div:nth-child(9)"
-        }
-        for cat in selectors:
-            elems = self.soup.select(selectors[cat])
-            self.assertEqual(
-                len(elems), 1, cat
-            )
+        for query, sel in self.__dropdowns.items():
+            elems = self.soup.select(sel)
+            assert len(elems) == 1, query
 
     def test_list_options_selections(self):
-        selectors = {
-            "stat": [
-                "div[class*='fgButton button-green']:nth-child(1)",
-                "div[class*='fgButton button-green']:nth-child(2)"
-            ],
-            "type": [
-                "div[class*='fgButton button-green']:nth-child(4)",
-                "div[class*='fgButton button-green']:nth-child(5)",
-                "div[class*='fgButton button-green']:nth-child(6)"
-            ]
-        }
-        for cat in selectors:
+        for query, sel_list in self.__selections.items():
             elems = [
-                self.soup.select(sel)[0]
-                for sel in selectors[cat]
+                self.soup.select(s)[0] for s in sel_list
             ]
-            options = [e.getText() for e in elems]
-            self.assertEqual(
-                len(options), len(selectors[cat])
-            )
+            assert all([e.getText() for e in elems])
 
     def test_list_options_dropdowns(self):
-        selectors = {
-            "start_season": ".row-season > div:nth-child(2)",
-            "end_season": ".row-season > div:nth-child(4)",
-            "popular": ".season-grid-controls-dropdown-row-stats > div:nth-child(1)",
-            "standard": ".season-grid-controls-dropdown-row-stats > div:nth-child(2)",
-            "advanced": ".season-grid-controls-dropdown-row-stats > div:nth-child(3)",
-            "statcast": ".season-grid-controls-dropdown-row-stats > div:nth-child(4)",
-            "batted_ball": ".season-grid-controls-dropdown-row-stats > div:nth-child(5)",
-            "win_probability": ".season-grid-controls-dropdown-row-stats > div:nth-child(6)",
-            "pitch_type": ".season-grid-controls-dropdown-row-stats > div:nth-child(7)",
-            "plate_discipline": ".season-grid-controls-dropdown-row-stats > div:nth-child(8)",
-            "value": ".season-grid-controls-dropdown-row-stats > div:nth-child(9)"
-        }
         elem_count = {
             "start_season": 71, "end_season": 71, "popular": 6,
             "standard": 20, "advanced": 17, "statcast": 8, "batted_ball": 24,
             "win_probability": 10, "pitch_type": 25, "plate_discipline": 25,
             "value": 11
         }
-        for cat in selectors:
-            elems = self.soup.select(
-                f"{selectors[cat]} li"
-            )
-            self.assertEqual(
-                len(elems), elem_count[cat]
-            )
-            self.assertTrue(
-                all([e.getText() for e in elems])
-            )
+        for query, sel in self.__dropdowns.items():
+            elems = self.soup.select(f"{sel} li")
+            assert len(elems) == elem_count[query], query
+            assert all([e.getText() for e in elems])
 
     def test_current_option_selections(self):
         selector = "div[class='fgButton button-green active isActive']"
         elems = self.soup.select(selector)
-        self.assertEqual(
-            len(elems), 2
-        )
+        assert len(elems) == 2
 
     def test_current_options_dropdowns(self):
-        selectors = {
-            "start_season": ".row-season > div:nth-child(2)",
-            "end_season": ".row-season > div:nth-child(4)",
-            "popular": ".season-grid-controls-dropdown-row-stats > div:nth-child(1)",
-            "standard": ".season-grid-controls-dropdown-row-stats > div:nth-child(2)",
-            "advanced": ".season-grid-controls-dropdown-row-stats > div:nth-child(3)",
-            "statcast": ".season-grid-controls-dropdown-row-stats > div:nth-child(4)",
-            "batted_ball": ".season-grid-controls-dropdown-row-stats > div:nth-child(5)",
-            "win_probability": ".season-grid-controls-dropdown-row-stats > div:nth-child(6)",
-            "pitch_type": ".season-grid-controls-dropdown-row-stats > div:nth-child(7)",
-            "plate_discipline": ".season-grid-controls-dropdown-row-stats > div:nth-child(8)",
-            "value": ".season-grid-controls-dropdown-row-stats > div:nth-child(9)"
-        }
-        for cat in selectors:
+        for query, sel in self.__dropdowns.items():
             elems = self.soup.select(
-                f"{selectors[cat]} li[class$='highlight-selection']"
+                f"{sel} li[class$='highlight-selection']"
             )
-            if cat in ["start_season", "end_season", "popular", "value"]:
-                self.assertEqual(
-                    len(elems), 1, cat
-                )
-                self.assertIsNotNone(
-                    elems[0].getText()
-                )
+            if query in ["start_season", "end_season", "popular", "value"]:
+                assert len(elems) == 1, query
+                assert elems[0].getText() is not None
             else:
-                self.assertEqual(
-                    len(elems), 0, cat
-                )
+                assert len(elems) == 0, query
 
     def test_expand_table_dropdown_selector(self):
-        selector = ".table-page-control:nth-child(3) select"
-        elems = self.soup.select(selector)
-        self.assertEqual(
-            len(elems), 1
-        )
+        elems = self.soup.select(".table-page-control:nth-child(3) select")
+        assert len(elems) == 1
 
-    def test_expand_table_dropdown_options_selectors(self):
+    def test_expand_table_dropdown_options_selector(self):
         options = ["30", "50", "100", "200", "Infinity"]
-        selector = ".table-page-control:nth-child(3) select option"
-        elems = self.soup.select(selector)
-        self.assertEqual(
-            len(elems), 5
-        )
-        self.assertEqual(
-            [e.getText() for e in elems], options
-        )
+        elems = self.soup.select(".table-page-control:nth-child(3) select option")
+        assert len(elems) == 5
+        assert [e.getText() for e in elems] == options
 
-    def test_sortby_option_selectors(self):
-        selector = ".table-scroll thead tr th"
-        elems = self.soup.select(selector)
-        self.assertEqual(
-            len(elems), 12
-        )
+    def test_table_headers_selector(self):
+        elems = self.soup.select(".table-scroll thead tr th")
+        assert len(elems) == 12
 
-    def test_write_table_headers_selector(self):
-        selector = ".table-scroll thead tr th"
-        elems = self.soup.select(selector)
-        self.assertEqual(
-            len(elems), 12
-        )
-
-    def test_write_table_rows_selector(self):
-        selector = ".table-scroll tbody tr"
-        elems = self.soup.select(selector)
-        self.assertEqual(
-            len(elems), 30
-        )
+    def test_table_rows_selector(self):
+        elems = self.soup.select(".table-scroll tbody tr")
+        assert len(elems) == 30
         for elem in elems:
-            item_elems = elem.select("td")
-            self.assertEqual(len(item_elems), 12)
+            assert len(elem.select("td")) == 12
