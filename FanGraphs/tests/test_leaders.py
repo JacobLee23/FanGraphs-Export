@@ -8,6 +8,10 @@ import requests
 
 
 class TestMajorLeagueLeaderboards:
+    """
+    Tests the attributes and methods in :py:class:`FanGraphs.leaders.MajorLeagueLeaderboards`.
+    The docstring in each test identifies the attribute(s)/method(s) being tested.
+    """
 
     __selections = {
         "group": "#LeaderBoard1_tsGroup",
@@ -65,18 +69,11 @@ class TestMajorLeagueLeaderboards:
             browser.close()
 
     def test_address(self):
+        """
+        Class attribute ``MajorLeagueLeaderboards.address``.
+        """
         res = requests.get(self.address)
         assert res.status_code == 200
-
-    @pytest.mark.parametrize(
-        "selectors",
-        [__selections, __dropdowns, __dropdown_options,
-         __checkboxes, __buttons]
-    )
-    def test_selectors(self, selectors: dict):
-        for query, sel in selectors.items():
-            elems = self.soup.select(sel)
-            assert len(elems) == 1, query
 
     @pytest.mark.parametrize(
         "selectors",
@@ -96,6 +93,13 @@ class TestMajorLeagueLeaderboards:
             assert all([isinstance(e.getText(), str) for e in elems]), query
 
     def test_current_option_selections(self):
+        """
+        Instance method ``MajorLeagueLeaderboards.current_option``.
+
+        Uses the selectors in:
+
+        - ``MajorLeagueLeaderboards.__selections``
+        """
         elem_text = {
             "group": "Player Stats", "stat": "Batting", "position": "All",
             "type": "Dashboard"
@@ -107,6 +111,13 @@ class TestMajorLeagueLeaderboards:
             assert elem[0].getText() == elem_text[query]
 
     def test_current_option_dropdowns(self):
+        """
+        Instance method ``MajorLeagueLeaderboards.current_option``.
+
+        Uses the selectors in:
+
+        - ``MajorLeagueLeaderboards.__dropdowns``
+        """
         elem_value = {
             "league": "All Leagues", "team": "All Teams", "single_season": "2020",
             "split": "Full Season", "min_pa": "Qualified", "season1": "2020",
@@ -117,11 +128,35 @@ class TestMajorLeagueLeaderboards:
             assert elem.get("value") is not None, query
             assert elem_value[query] == elem.get("value")
 
+    @pytest.mark.parametrize(
+        "selectors",
+        [__selections, __dropdowns, __dropdown_options,
+         __checkboxes, __buttons]
+    )
+    def test_configure(self, selectors: dict):
+        """
+        Private instance method ``MajorLeagueLeaderboards.__configure_selection``.
+        Private instance method ``MajorLeagueLeaderboards.__configure_dropdown``.
+        Private instance method ``MajorLeagueLeaderboards.__configure_checkbox``.
+        Private instance method ``MajorLeagueLeaderboards.__click_button``.
+
+        :param selectors: CSS Selectors
+        """
+        for query, sel in selectors.items():
+            elems = self.soup.select(sel)
+            assert len(elems) == 1, query
+
     def test_expand_sublevel(self):
+        """
+        Statement in private instance method ``MajorLeagueLeaderboards.__configure_selection``.
+        """
         elems = self.soup.select("#LeaderBoard1_tsType a[href='#']")
         assert len(elems) == 1
 
     def test_export(self):
+        """
+        Instance method ``MajorLeagueLeaderboards.export``.
+        """
         elems = self.soup.select("#LeaderBoard1_cmdCSV")
         assert len(elems) == 1
 
@@ -129,7 +164,7 @@ class TestMajorLeagueLeaderboards:
 class TestSplitsLeaderboards:
     """
     Tests the attributes and methods in :py:class:`FanGraphs.leaders.SplitsLeaderboards`.
-    *Note: The docstrings in each test identifies the attribute/method being tested*.
+    The docstring in each test indentifies the attribute(s)/method(s) being tested.
     """
 
     __selections = {
@@ -228,7 +263,7 @@ class TestSplitsLeaderboards:
         """
         Instance method ``SplitsLeaderboards.list_options``.
 
-        Tests the selectors in:
+        Uses the selectors in:
 
         - ``SplitsLeaderboards.__selections``
         """
@@ -248,7 +283,7 @@ class TestSplitsLeaderboards:
         """
         Instance method ``SplitsLeaderboards.list_options``.
 
-        Tests the selectors in:
+        Uses the selectors in:
 
         - ``SplitsLeaderboards.__dropdowns``
         - ``SplitsLeaderboards.__splits``
@@ -270,7 +305,7 @@ class TestSplitsLeaderboards:
         """
         Instance method ``SplitsLeaderboards.current_option``.
 
-        Tests the selectors in:
+        Uses the selectors in:
 
         - ``SplitsLeaderboards.__selections``
         """
@@ -296,7 +331,7 @@ class TestSplitsLeaderboards:
         """
         Instance method ``SplitsLeaderboards.current_option``.
 
-        Tests the selectors in:
+        Uses the selectors in:
 
         - ``SplitsLeaderboards.__dropdowns``
         - ``SplitsLeaderboards.__splits``
