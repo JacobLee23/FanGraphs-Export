@@ -247,6 +247,7 @@ class TestSplitsLeaderboards:
             browser = p.chromium.launch()
             page = browser.new_page()
             page.goto(cls.address, timeout=0)
+            page.wait_for_selector(".fg-data-grid.undefined")
             cls.soup = bs4.BeautifulSoup(
                 page.content(), features="lxml"
             )
@@ -443,6 +444,10 @@ class TestSplitsLeaderboards:
 
 
 class TestSeasonStatGrid:
+    """
+    Tests the attributes and methods in :py:class:`FanGraphs.leaders.SeasonStatGrid`.
+    The docstring in each test indentifies the attribute(s)/method(s) being tested.
+    """
     __selections = {
         "stat": [
             "div[class*='fgButton button-green']:nth-child(1)",
@@ -475,29 +480,29 @@ class TestSeasonStatGrid:
             browser = p.chromium.launch()
             page = browser.new_page()
             page.goto(cls.address, timeout=0)
+            page.wait_for_selector(".fg-data-grid.undefined")
             cls.soup = bs4.BeautifulSoup(
                 page.content(), features="lxml"
             )
             browser.close()
 
     def test_address(self):
+        """
+        Class attribute ``SeasonStatGrid.address``
+        """
         res = requests.get(self.address)
         assert res.status_code == 200
 
-    def test_selectors_selections(self):
-        for query, sel_list in self.__selections.items():
-            for sel in sel_list:
-                elems = self.soup.select(sel)
-                assert len(elems) == 1, query
-
-    def test_selectors_dropdowns(self):
-        for query, sel in self.__dropdowns.items():
-            elems = self.soup.select(sel)
-            assert len(elems) == 1, query
-
     def test_list_options_selections(self):
+        """
+        Instance method ``SeasonStatGrid.list_options``.
+
+        Uses the following class attributes:
+
+        - ``SeasonStatGrid.__selections``
+        """
         elem_count = {
-            "stat": 2, "group": 3
+            "stat": 2, "group": 3, "type": 3
         }
         for query, sel_list in self.__selections.items():
             elems = [self.soup.select(s)[0] for s in sel_list]
@@ -505,6 +510,13 @@ class TestSeasonStatGrid:
             assert all([e.getText() for e in elems])
 
     def test_list_options_dropdowns(self):
+        """
+        Instance method ``SeasonStatGrid.list_options``.
+
+        Uses the following class attributes:
+
+        - ``SeasonStatGrid.__dropdowns``
+        """
         elem_count = {
             "start_season": 71, "end_season": 71, "popular": 6,
             "standard": 20, "advanced": 17, "statcast": 8, "batted_ball": 24,
@@ -517,11 +529,25 @@ class TestSeasonStatGrid:
             assert all([e.getText() for e in elems])
 
     def test_current_option_selections(self):
+        """
+        Instance method ``SeasonStatGrid.current_option``.
+
+        Tests the following class attributes:
+
+        - ``SeasonStatGrid.__selections``
+        """
         selector = "div[class='fgButton button-green active isActive']"
         elems = self.soup.select(selector)
         assert len(elems) == 2
 
     def test_current_options_dropdowns(self):
+        """
+        Instance method ``SeasonStatGrid.current_option``.
+
+        Uses the following class attributes:
+
+        - ``SeasonStatGrid.__dropdowns``
+        """
         for query, sel in self.__dropdowns.items():
             elems = self.soup.select(
                 f"{sel} li[class$='highlight-selection']"
@@ -532,21 +558,43 @@ class TestSeasonStatGrid:
             else:
                 assert len(elems) == 0, query
 
-    def test_expand_table_dropdown_selector(self):
+    def test_configure_selection(self):
+        """
+        Private instance method ``SeasonStatGrid.__configure_selection``.
+        """
+        for query, sel_list in self.__selections.items():
+            for sel in sel_list:
+                elems = self.soup.select(sel)
+                assert len(elems) == 1, query
+
+    def test_configure_dropdown(self):
+        """
+        Private instance method ``SeasonStatGrid.__configure_dropdown``.
+        """
+        for query, sel in self.__dropdowns.items():
+            elems = self.soup.select(sel)
+            assert len(elems) == 1, query
+
+    def test_expand_table(self):
+        """
+        Private instance method ``SeasonStatGrid.__expand_table``
+        """
         elems = self.soup.select(".table-page-control:nth-child(3) select")
         assert len(elems) == 1
-
-    def test_expand_table_dropdown_options_selector(self):
         options = ["30", "50", "100", "200", "Infinity"]
-        elems = self.soup.select(".table-page-control:nth-child(3) select option")
-        assert len(elems) == 5
-        assert [e.getText() for e in elems] == options
+        assert [e.getText() for e in elems[0].select("option")] == options
 
-    def test_table_headers_selector(self):
+    def test_write_table_headers(self):
+        """
+        Private instance method ``SeasonStatGrid.__write_table_headers``.
+        """
         elems = self.soup.select(".table-scroll thead tr th")
         assert len(elems) == 12
 
-    def test_table_rows_selector(self):
+    def test_write_table_rows(self):
+        """
+        Private instance method ``SeasonStatGrid.__write_table_rows``.
+        """
         elems = self.soup.select(".table-scroll tbody tr")
         assert len(elems) == 30
         for elem in elems:

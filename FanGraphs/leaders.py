@@ -433,6 +433,7 @@ class SplitsLeaderboards:
         self.__browser = browser_ctx.launch()
         self.page = self.__browser.new_page()
         self.page.goto(self.address, timeout=0)
+        self.page.wait_for_selector(".fg-data-grid.undefined")
 
         self.soup = None
         self.__refresh_parser()
@@ -896,6 +897,7 @@ class SeasonStatGrid:
         self.__browser = browser_ctx.launch()
         self.page = self.__browser.new_page()
         self.page.goto(self.address)
+        self.page.wait_for_selector(".fg-data-grid.undefined")
 
         self.soup = None
         self.__refresh_parsers()
