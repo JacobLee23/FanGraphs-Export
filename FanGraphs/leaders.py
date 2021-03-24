@@ -33,9 +33,29 @@ from playwright.sync_api import sync_playwright
 import FanGraphs.exceptions
 
 
-class __Scraper:
+class __Utils:
 
     def __init__(self, browser, address):
+        """
+        :param browser: The name of the browser to use (Chromium, Firefox, WebKit)
+        :param address: The base URL address of the FanGraphs page
+
+        .. py:attribute:: address
+
+            The base URL address of the FanGraphs page
+
+            :type: str
+
+        .. py:attribute:: page
+            The generated synchronous ``Playwright`` page for browser automation.
+
+            :type: playwright.sync_api._generated.Page
+
+        .. py:attribute:: soup
+            The ``BeautifulSoup4`` HTML parser for scraping the webpage.
+
+            :type: bs4.BeautifulSoup
+        """
         self.address = address
         os.makedirs("out", exist_ok=True)
 
@@ -57,22 +77,93 @@ class __Scraper:
         self.soup = None
 
     def __refresh_parser(self):
+        """
+        Re-initializes the ``bs4.BeautifulSoup`` object stored in :py:attr:`soup`.
+        Called when a page refresh is expected
+        """
         self.soup = bs4.BeautifulSoup(
             self.page.content(), features="lxml"
         )
 
+    def __close_ad(self):
+        """
+        Closes the ad which may interfere with clicking other page elements.
+        """
+        elem = self.page.query_selector(".ezmob-footer-close")
+        if elem:
+            elem.click()
+
+    def __expand_table(self, *, size="Infinity"):
+        """
+        Expands the data table to the appropriate number of rows
+
+        :param size: The maximum number of rows the table should have.
+        The number of rows is preset (30, 50, 100, 200, Infinity).
+        """
+        selector = ".table-page-control:nth-child(3) select"
+        dropdown = self.page.query_selector(selector)
+        dropdown.click()
+        elems = self.soup.select(f"{selector} option")
+        options = [e.getText() for e in elems]
+        size = "Infinity" if size not in options else size
+        index = options.index(size)
+        option = self.page.query_selector_all(f"{selector} option")[index]
+        option.click()
+
+    def __sortby(self, sortby, *, reverse=False):
+        """
+        Sorts the data by the appropriate table header.
+
+        :param sortby: The table header to sort the data by
+        :param reverse: If ``True``, the organization of the data will be reversed
+        """
+        elems = self.soup.select(".table-scroll thead tr th")
+        options = [e.getText() for e in elems]
+        index = options.index(sortby)
+        elems[index].click()
+        if reverse:
+            elems[index].click()
+
+    def __write_table_headers(self, writer: csv.writer):
+        """
+        Writes the data table headers to the CSV file.
+
+        :param writer: The ``csv.writer`` object
+        """
+        elems = self.soup.select(".table-scroll thead tr th")
+        headers = [e.getText() for e in elems]
+        writer.writerow(headers)
+
+    def __write_table_rows(self, writer: csv.writer):
+        """
+        Iterates through the rows of the data table and writes the data in each row to the CSV file.
+
+        :param writer: The ``csv.writer`` object
+        """
+        row_elems = self.soup.select(".table-scroll tbody tr")
+        for row in row_elems:
+            elems = row.select("td")
+            items = [e.getText() for e in elems]
+            writer.writerow(items)
+
     def reset(self, *, waitfor=""):
+        """
+        Navigates to the webpage corresponding to :py:attr:`address`.
+        """
         self.page.goto(self.address)
         if waitfor:
             self.page.wait_for_selector(waitfor)
         self.__refresh_parser()
 
     def quit(self):
+        """
+        Terminates the underlying ``Playwright`` browser context.
+        """
         self.__browser.close()
         self.__play.stop()
 
 
-class MajorLeagueLeaderboards(__Scraper):
+class MajorLeagueLeaderboards(__Utils):
     """
     Parses the FanGraphs Major League Leaderboards page.
     Note that the Splits Leaderboard is not covered.
@@ -131,16 +222,6 @@ class MajorLeagueLeaderboards(__Scraper):
     def __init__(self, browser="chromium"):
         """
         :param browser: The name of the browser to use (Chromium, Firefox, WebKit)
-
-        .. py:attribute:: page
-            The generated synchronous ``Playwright`` page for browser automation.
-
-            :type: playwright.sync_api._generated.Page
-
-        .. py:attribute:: soup
-            The ``BeautifulSoup4`` HTML parser for scraping the webpage.
-
-            :type: bs4.BeautifulSoup
         """
         super().__init__(browser, self.address)
         self.reset()
@@ -292,14 +373,6 @@ class MajorLeagueLeaderboards(__Scraper):
             self.__buttons[query]
         )
 
-    def __close_ad(self):
-        """
-        Closes the ad which may interfere with clicking other page elements.
-        """
-        elem = self.page.query_selector(".ezmob-footer-close")
-        if elem:
-            elem.click()
-
     def export(self, path=""):
         """
         Uses the **Export Data** button on the webpage to export the current leaderboard.
@@ -321,7 +394,7 @@ class MajorLeagueLeaderboards(__Scraper):
         os.rename(download_path, path)
 
 
-class SplitsLeaderboards(__Scraper):
+class SplitsLeaderboards(__Utils):
     """
     Parses the FanGraphs Splits Leaderboards page.
 
@@ -405,16 +478,6 @@ class SplitsLeaderboards(__Scraper):
     def __init__(self, *, browser="chromium"):
         """
         :param browser: The name of the browser to use (Chromium, Firefox, WebKit)
-
-        .. py:attribute:: page
-            The generated synchronous ``playwright`` page for browser automation.
-
-            :type: playwright.sync_api._generated.Page
-
-        .. py:attribute:: soup
-            The ``BeautifulSoup4`` HTML parser for scraping the webpage.
-
-            :type: bs4.BeautifulSoup
         """
         super().__init__(browser, self.address)
         self.reset(waitfor=".fg-data-grid.undefined")
@@ -603,14 +666,6 @@ class SplitsLeaderboards(__Scraper):
         if option != self.current_option(query)[0].title():
             self.page.click(self.__switches[query])
 
-    def __close_ad(self):
-        """
-        Closes the ad which may interfere with clicking other page elements.
-        """
-        elem = self.page.query_selector(".ezmob-footer-close")
-        if elem and elem.is_visible():
-            elem.click()
-
     def update(self):
         """
         Clicks the **Update** button of the page.
@@ -737,61 +792,8 @@ class SplitsLeaderboards(__Scraper):
             self.__write_table_headers(writer)
             self.__write_table_rows(writer)
 
-    def __expand_table(self, *, size="Infinity"):
-        """
-        Expands the data table to the appropriate number of rows
 
-        :param size: The maximum number of rows the table should have.
-        The number of rows is preset (30, 50, 100, 200, Infinity).
-        """
-        selector = ".table-page-control:nth-child(3) select"
-        dropdown = self.page.query_selector(selector)
-        dropdown.click()
-        elems = self.soup.select(f"{selector} option")
-        options = [e.getText() for e in elems]
-        size = "Infinity" if size not in options else size
-        index = options.index(size)
-        option = self.page.query_selector_all(f"{selector} option")[index]
-        option.click()
-
-    def __sortby(self, sortby, *, reverse=False):
-        """
-        Sorts the data by the appropriate table header.
-
-        :param sortby: The table header to sort the data by
-        :param reverse: If ``True``, the organization of the data will be reversed
-        """
-        elems = self.soup.select(".table-scroll thead tr th")
-        options = [e.getText() for e in elems]
-        index = options.index(sortby)
-        elems[index].click()
-        if reverse:
-            elems[index].click()
-
-    def __write_table_headers(self, writer: csv.writer):
-        """
-        Writes the data table headers to the CSV file.
-
-        :param writer: The ``csv.writer`` object
-        """
-        elems = self.soup.select(".table-scroll thead tr th")
-        headers = [e.getText() for e in elems]
-        writer.writerow(headers)
-
-    def __write_table_rows(self, writer: csv.writer):
-        """
-        Iterates through the rows of the data table and writes the data in each row to the CSV file.
-
-        :param writer: The ``csv.writer`` object
-        """
-        row_elems = self.soup.select(".table-scroll tbody tr")
-        for row in row_elems:
-            elems = row.select("td")
-            items = [e.getText() for e in elems]
-            writer.writerow(items)
-
-
-class SeasonStatGrid(__Scraper):
+class SeasonStatGrid(__Utils):
     """
     Scrapes the FanGraphs Season Stat Grid webpage.
 
@@ -831,16 +833,6 @@ class SeasonStatGrid(__Scraper):
     def __init__(self, *, browser="chromium"):
         """
         :param browser: The name of the browser to use (Chromium, Firefox, WebKit)
-
-        .. py:attribute:: page
-            The generated synchronous ``playwright`` page for browser automation.
-
-            :type: playwright.sync_api._generated.Page
-
-        .. py:attribute:: soup
-            The ``BeautifulSoup4`` HTML parser for scraping the webpage.
-
-            :type: bs4.BeautifulSoup
         """
         super().__init__(browser, self.address)
         self.reset(waitfor=".fg-data-grid.undefined")
@@ -959,14 +951,6 @@ class SeasonStatGrid(__Scraper):
         elem = self.page.query_selector_all(f"{self.__dropdowns[query]} ul li")[index]
         elem.click()
 
-    def __close_ad(self):
-        """
-        Closes the ad which may interfere with interactions with other page elements
-        """
-        elem = self.page.query_selector(".ezmob-footer-close")
-        if elem and elem.is_visible():
-            elem.click()
-
     def export(self, path="", *, size="Infinity", sortby="Name", reverse=False):
         """
         Scrapes and saves the data from the table of the current leaderboards.
@@ -996,65 +980,8 @@ class SeasonStatGrid(__Scraper):
             self.__write_table_headers(writer)
             self.__write_table_rows(writer)
 
-    def __expand_table(self, *, size="Infinity"):
-        """
-        Expands the data table to the appropriate number of rows
 
-        :param size: The maximum number of rows the table should have.
-        The number of rows is preset (30, 50, 100, 200, Infinity).
-        """
-        selector = ".table-page-control:nth-child(3) select"
-        dropdown = self.page.query_selector(selector)
-        dropdown.click()
-        elems = self.soup.select(f"{selector} option")
-        options = [e.getText() for e in elems]
-        size = "Infinity" if size not in options else size
-        index = options.index(size)
-        option = self.page.query_selector_all(f"{selector} option")[index]
-        option.click()
-
-    def __sortby(self, sortby, *, reverse=False):
-        """
-        Sorts the data by the appropriate table header.
-
-        :param sortby: The table header to sort the data by
-        :param reverse: If ``True``, the organizatino of the data will be reversed
-        """
-        selector = ".table-scroll thead tr th"
-        elems = self.soup.select(selector)
-        options = [e.getText() for e in elems]
-        index = options.index(sortby)
-        option = self.page.query_selector_all(selector)[index]
-        option.click()
-        if reverse:
-            option.click()
-
-    def __write_table_headers(self, writer: csv.writer):
-        """
-        Writes the data table headers to the CSV file.
-
-        :param writer: The ``csv.writer`` object
-        """
-        selector = ".table-scroll thead tr th"
-        elems = self.soup.select(selector)
-        headers = [e.getText() for e in elems]
-        writer.writerow(headers)
-
-    def __write_table_rows(self, writer: csv.writer):
-        """
-        Iterates through the rows of the data table and writes the data in each row to the CSV file.
-
-        :param writer: The ``csv.writer`` object
-        """
-        selector = ".table-scroll tbody tr"
-        row_elems = self.soup.select(selector)
-        for row in row_elems:
-            elems = row.select("td")
-            items = [e.getText() for e in elems]
-            writer.writerow(items)
-
-
-class GameSpanLeaderboards(__Scraper):
+class GameSpanLeaderboards(__Utils):
     """
     Scrape the FanGraphs 60-Game Span Leaderboards
 
@@ -1069,6 +996,9 @@ class GameSpanLeaderboards(__Scraper):
     address = "https://fangraphs.com/leaders/special/60-game-span"
 
     def __init__(self, browser="chromium"):
+        """
+        :param browser: The name of the browser to use (Chromium, Firefox, WebKit)
+        """
         super().__init__(browser, self.address)
         self.reset()
 
