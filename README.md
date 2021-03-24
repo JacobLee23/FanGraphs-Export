@@ -64,35 +64,35 @@ FanGraphs webpage groups:
 
 FanGraphs Leaders pages:
 
-- [MajorLeagueLeaderboards](https://fangraphs.com/leaders.aspx)
-- [SplitsLeaderboards](https://fangraphs.com/leaders/splits-leaderboards)
-- [SeasonStatGrid](https://fangraphs.com/leaders/season-stat-grid)
+- [Major League Leaderboards](https://fangraphs.com/leaders.aspx)
+- [Splits Leaderboards](https://fangraphs.com/leaders/splits-leaderboards)
+- [Season Stat Grid](https://fangraphs.com/leaders/season-stat-grid)
+- [60-Game Span Leaderboards](https://fangraphs.com/leaders/special/game-span)
 
 ```python
 from FanGraphs import leaders
 mll = leaders.MajorLeagueLeaderboards()
 splits = leaders.SplitsLeaderboards()
 ssg = leaders.SeasonStatGrid()
+gsl = leaders.GameSpanLeaderboards()
 ```
 
 ## Tests
 
-To run all tests, run:
+To run all tests, run `pytest FanGraphs`
 
-```commandline
-pytest FanGraphs
-```
-
-To run the tests for a specific module, run:
-
-```commandline
-pytest FanGraphs/test_module_name
-```
-
-For example, for testing the `FanGraphs.leaders` module:
+To run the tests for a specific module, run `pytest FanGraphs/test_module_name`.
+For example,
 
 ```commandline
 pytest FanGraphs/test_leaders
+```
+
+To run the tests for a specific class, run `pytest -k "TestClassName"`.
+For example,
+
+```commandline
+pytest -k "TestMajorLeagueLeaderboards"
 ```
 
 ## License
