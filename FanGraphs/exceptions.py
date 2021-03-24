@@ -7,23 +7,22 @@ The warnings and exceptions used by modules in the package.
 """
 
 
-class FilterUpdateIncapabilityWarning(Warning):
-
+class FilterUpdateIncapability(Warning):
+    """
+    Raised when the filter queries cannot be updated.
+    This usually occurs when no filter queries have been configured since the last update.
+    """
     def __init__(self):
-        """
-        Raised when the filter queries cannot be updated.
-        This usually occurs when no filter queries have been configured since the last update.
-        """
         self.message = "No filter query configurations to update"
         super().__init__(self.message)
 
 
-class UnknownBrowserException(Exception):
-
+class UnknownBrowser(Exception):
+    """
+    Raised when the browser name given is not recognized.
+    """
     def __init__(self, browser):
         """
-        Raised when the browser name given is not recognized.
-
         :param browser: The name of the browser used
         """
         self.browser = browser
@@ -31,12 +30,12 @@ class UnknownBrowserException(Exception):
         super().__init__(self.message)
 
 
-class InvalidFilterQueryException(Exception):
-
+class InvalidFilterQuery(Exception):
+    """
+    Raised when an invalid filter query is used.
+    """
     def __init__(self, query):
         """
-        Raised when an invalid filter query is used.
-
         :param query: The filter query used
         """
         self.query = query
@@ -44,12 +43,12 @@ class InvalidFilterQueryException(Exception):
         super().__init__(self.message)
 
 
-class InvalidFilterOptionException(Exception):
-
+class InvalidFilterOption(Exception):
+    """
+    Raised when a filter query is configured to a nonexistend option.
+    """
     def __init__(self, query, option):
         """
-        Raised when a filter query is configured to a nonexistend option
-
         :param query: The filter query used
         :param option: The option which the filter query was configured to
         """
@@ -59,11 +58,12 @@ class InvalidFilterOptionException(Exception):
 
 
 class InvalidQuickSplitException(Exception):
-
+    """
+    Raised when an invalid quick split is usedd
+    """
     def __init__(self, quick_split):
         """
-
-        :param quick_split:
+        :param quick_split: The quick split used
         """
         self.quick_split = quick_split
         self.message = f"No quick split '{self.quick_split}` could be found"

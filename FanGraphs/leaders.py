@@ -72,7 +72,7 @@ class ScrapingUtilities:
         }
         browser_ctx = browsers.get(browser.lower())
         if browser_ctx is None:
-            raise FanGraphs.exceptions.UnknownBrowserException(browser.lower())
+            raise FanGraphs.exceptions.UnknownBrowser(browser.lower())
         self.__browser = browser_ctx.launch(
             downloads_path=os.path.abspath("out")
         )
@@ -106,10 +106,6 @@ class ScrapingUtilities:
         Navigates to :py:attr:`page` to :py:attr:`address`.
 
         :param waitfor: If specified, the CSS of the selector to wait for.
-        The wait will occur after the page has navigated to the webpage and before the parser is refreshed.
-        See `here`_ for more information.
-
-        .. _here: https://playwright.dev/python/docs/api/class-page/#pagewait_for_selectorselector-kwargs
         """
         self.page.goto(self.address, timeout=0)
         self._refresh_parser(waitfor=waitfor)
@@ -206,7 +202,7 @@ class MajorLeagueLeaderboards(ScrapingUtilities):
         :param query: The filter query
         :return: Options which the filter query can be configured to
         :rtype: list
-        :raises FanGraphs.exceptions.InvalidFilterQuery: Argument ``query`` is invalid
+        :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
         """
         query = query.lower()
         if query in self.__checkboxes:
@@ -218,7 +214,7 @@ class MajorLeagueLeaderboards(ScrapingUtilities):
             elems = self.soup.select(f"{self.__selections[query]} li")
             options = [e.getText() for e in elems]
         else:
-            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
         return options
 
     def current_option(self, query: str):
@@ -228,7 +224,7 @@ class MajorLeagueLeaderboards(ScrapingUtilities):
         :param query: The filter query being retrieved of its current option
         :return: The option which the filter query is currently set to
         :rtype: str
-        :raises FanGraphs.exceptions.InvalidFilterQuery: Argument ``query`` is invalid
+        :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
         """
         query = query.lower()
         if query in self.__checkboxes:
@@ -241,7 +237,7 @@ class MajorLeagueLeaderboards(ScrapingUtilities):
             elem = self.soup.select(f"{self.__selections[query]} .rtsLink.rtsSelected")
             option = elem.getText()
         else:
-            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
         return option
 
     def configure(self, query: str, option: str, *, autoupdate=True):
@@ -250,12 +246,12 @@ class MajorLeagueLeaderboards(ScrapingUtilities):
 
         :param query: The filter query to be configured
         :param option: The option to set the filter query to
-        :param autoupdate: If ``True``, any form submission buttons attached to the filter query will be clicked
-        :raises FanGraphs.exceptions.InvalidFilterQueryException: Argument ``query`` is invalid
+        :param autoupdate: If ``True``, any buttons attached to the filter query will be clicked
+        :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
         """
         query, option = query.lower(), str(option).lower()
         if query not in self.list_queries():
-            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
         self._close_ad()
         if query in self.__selections:
             self.__configure_selection(query, option)
@@ -264,7 +260,7 @@ class MajorLeagueLeaderboards(ScrapingUtilities):
         elif query in self.__checkboxes:
             self.__configure_checkbox(query, option)
         else:
-            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
         if query in self.__buttons and autoupdate:
             self.__click_button(query)
         self._refresh_parser()
@@ -275,13 +271,13 @@ class MajorLeagueLeaderboards(ScrapingUtilities):
 
         :param query: The selection-class filter query to be configured
         :param option: The option to set the filter query to
-        :raises FanGraphs.exceptions.InvalidFilterOptionException: Argument ``option`` is invalid
+        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
         """
         options = [o.lower() for o in self.list_options(query)]
         try:
             index = options.index(option)
-        except ValueError:
-            raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
+        except ValueError as err:
+            raise FanGraphs.exceptions.InvalidFilterOption(query, option) from err
         self.page.click("#LeaderBoard_tsType a[href='#']")
         elem = self.page.query_selector_all(
             f"{self.__selections[query]} li"
@@ -294,13 +290,13 @@ class MajorLeagueLeaderboards(ScrapingUtilities):
 
         :param query: The dropdown-class filter query to be configured
         :param option: The option to set the filter query to
-        :raises FanGraphs.exceptions.InvalidFilterOptionException: Argument ``option`` is invalid
+        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
         """
         options = [o.lower() for o in self.list_options(query)]
         try:
             index = options.index(option)
-        except ValueError:
-            raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
+        except ValueError as err:
+            raise FanGraphs.exceptions.InvalidFilterOption(query, option) from err
         self.page.hover(
             self.__dropdowns[query]
         )
@@ -318,7 +314,7 @@ class MajorLeagueLeaderboards(ScrapingUtilities):
         """
         options = self.list_options(query)
         if option not in options:
-            raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
+            raise FanGraphs.exceptions.InvalidFilterOption(query, option)
         if option != self.current_option(query).title():
             self.page.click(self.__checkboxes[query])
 
@@ -467,7 +463,7 @@ class SplitsLeaderboards(ScrapingUtilities):
         :param query: The filter query
         :return: Options which the filter query can be configured to
         :rtype: list
-        :raises FanGraphs.exceptions.InvalidFilterQuery: Argument ``query`` is invalid
+        :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
         """
         query = query.lower()
         if query in self.__selections:
@@ -487,7 +483,7 @@ class SplitsLeaderboards(ScrapingUtilities):
         elif query in self.__switches:
             options = ["True", "False"]
         else:
-            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
         return options
 
     def current_option(self, query: str):
@@ -505,7 +501,7 @@ class SplitsLeaderboards(ScrapingUtilities):
         :param query: The filter query being retrieved of its current option
         :return: The option(s) which the filter query is currently set to
         :rtype: str or list
-        :raises FanGraphs.exceptions.InvalidFilterQuery: Argument ``query`` is invalid
+        :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
         """
         query = query.lower()
         option = []
@@ -533,7 +529,7 @@ class SplitsLeaderboards(ScrapingUtilities):
             elem = self.soup.select(self.__switches[query])
             option = "True" if "isActive" in elem[0].get("class") else "False"
         else:
-            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
         return option
 
     def configure(self, query: str, option: str, *, autoupdate=False):
@@ -543,7 +539,7 @@ class SplitsLeaderboards(ScrapingUtilities):
         :param query: The filter query to be configured
         :param option: The option to set the filter query to
         :param autoupdate: If ``True``, :py:meth:`update` will be called following configuration
-        :raises FanGraphs.exceptions.InvalidFilterQueryException: Argument ``query`` is invalid
+        :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
         """
         self._close_ad()
         query = query.lower()
@@ -556,7 +552,7 @@ class SplitsLeaderboards(ScrapingUtilities):
         elif query in self.__switches:
             self.__configure_switch(query, option)
         else:
-            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
         if autoupdate:
             self.update()
         self._refresh_parser(waitfor=self.__waitfor)
@@ -567,13 +563,13 @@ class SplitsLeaderboards(ScrapingUtilities):
 
         :param query: The selection-class filter query to be configured
         :param option: The option to set the filter query to
-        :raises FanGraphs.exceptions.InvalidFilterOptionException: Argument ``option`` is invalid
+        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
         """
         options = self.list_options(query)
         try:
             index = options.index(option)
-        except ValueError:
-            raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
+        except ValueError as err:
+            raise FanGraphs.exceptions.InvalidFilterOption(query, option) from err
         self.page.click(self.__selections[query][index])
 
     def __configure_dropdown(self, query: str, option: str):
@@ -582,13 +578,13 @@ class SplitsLeaderboards(ScrapingUtilities):
 
         :param query: The dropdown-class filter query to be configured
         :param option: The option to set the filter query to
-        :raises FanGraphs.exceptions.InvalidFilterOptionException: Argument ``option`` is invalid
+        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
         """
         options = self.list_options(query)
         try:
             index = options.index(option)
-        except ValueError:
-            raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
+        except ValueError as err:
+            raise FanGraphs.exceptions.InvalidFilterOption(query, option) from err
         self.page.hover(self.__dropdowns[query])
         elem = self.page.query_selector_all(f"{self.__dropdowns[query]} ul li")[index]
         elem.click()
@@ -601,13 +597,13 @@ class SplitsLeaderboards(ScrapingUtilities):
 
         :param query: The split-class filter query to be configured
         :param option: The option to configure the filter query to
-        :raises FanGraphs.exceptions.InvalidFilterOptionException: Argument ``option`` is invalid
+        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
         """
         options = self.list_options(query)
         try:
             index = options.index(option)
-        except ValueError:
-            raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
+        except ValueError as err:
+            raise FanGraphs.exceptions.InvalidFilterOption(query, option) from err
         self.page.hover(self.__splits[query])
         elem = self.page.query_selector_all(f"{self.__splits[query]} ul li")[index]
         elem.click()
@@ -618,11 +614,11 @@ class SplitsLeaderboards(ScrapingUtilities):
 
         :param query: The switch-class filter query to be configured
         :param option: The option to configure the filter query to
-        :raises FanGraphs.exceptions.InvalidFilterOptionException: Argument ``option`` is invalid
+        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
         """
         options = self.list_options(query)
         if option not in options:
-            raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
+            raise FanGraphs.exceptions.InvalidFilterOption(query, option)
         if option != self.current_option(query)[0].title():
             self.page.click(self.__switches[query])
 
@@ -631,12 +627,12 @@ class SplitsLeaderboards(ScrapingUtilities):
         Clicks the **Update** button of the page.
         All configured filters are submitted and the page is refreshed.
 
-        :raises FanGraphs.exceptions.FilterUpdateIncapabilityWarning: No filter query configurations to update
+        :raises FanGraphs.exceptions.FilterUpdateIncapability: No filter queries to update
         """
         selector = "#button-update"
         elem = self.page.query_selector(selector)
         if elem is None:
-            raise FanGraphs.exceptions.FilterUpdateIncapabilityWarning()
+            raise FanGraphs.exceptions.FilterUpdateIncapability()
         self._close_ad()
         elem.click()
         self._refresh_parser(waitfor=self.__waitfor)
@@ -708,13 +704,13 @@ class SplitsLeaderboards(ScrapingUtilities):
 
         :param quick_split: The quick split to invoke
         :param autoupdate: If ``True``, :py:meth:`reset_filters` will be called
-        :raises FanGraphs.exceptions.InvalidQuickSplitsException: Argument ``quick_split`` if invalid
+        :raises FanGraphs.exceptions.InvalidQuickSplitsException: Invalid argument ``quick_split``
         """
         quick_split = quick_split.lower()
         try:
             selector = self.__quick_splits[quick_split]
-        except KeyError:
-            raise FanGraphs.exceptions.InvalidQuickSplitException(quick_split)
+        except ValueError as err:
+            raise FanGraphs.exceptions.InvalidQuickSplitException(quick_split) from err
         self._close_ad()
         self.page.click(selector)
         if autoupdate:
@@ -821,7 +817,7 @@ class SeasonStatGrid(ScrapingUtilities):
             )
             options = [e.getText() for e in elems]
         else:
-            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
         return options
 
     def current_option(self, query: str):
@@ -846,7 +842,7 @@ class SeasonStatGrid(ScrapingUtilities):
             )
             option = elems[0].getText() if elems else "None"
         else:
-            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
         return option
 
     def configure(self, query: str, option: str):
@@ -855,8 +851,7 @@ class SeasonStatGrid(ScrapingUtilities):
 
         :param query: The filter query
         :param option: The option to configure ``query`` to
-        :raises FanGraphs.exceptions.InvalidFilterQuery: Argument ``query`` is invalid
-        :raises FanGraphs.exceptions.InvalidFilterOption: Filter ``query`` cannot be configured to ``option``
+        :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
         """
         query = query.lower()
         self._close_ad()
@@ -865,7 +860,7 @@ class SeasonStatGrid(ScrapingUtilities):
         elif query in self.__dropdowns:
             self.__configure_dropdown(query, option)
         else:
-            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
         self._refresh_parser(waitfor=self.__waitfor)
 
     def __configure_selection(self, query: str, option: str):
@@ -874,13 +869,13 @@ class SeasonStatGrid(ScrapingUtilities):
 
         :param query: The filter query
         :param option: The option to configure ``query`` to
-        :raises FanGraphs.exceptions.InvalidFilterOption: Filter ``query`` cannot be configured to ``option``
+        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
         """
         options = self.list_options(query)
         try:
             index = options.index(option)
-        except ValueError:
-            raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
+        except ValueError as err:
+            raise FanGraphs.exceptions.InvalidFilterOption(query, option) from err
         self.page.click(self.__selections[query][index])
 
     def __configure_dropdown(self, query: str, option: str):
@@ -889,13 +884,13 @@ class SeasonStatGrid(ScrapingUtilities):
 
         :param query: The filter query
         :param option: The option to configure ``query`` to
-        :raises FanGraphs.exceptions.InvalidFilterOption: Filter ``query`` cannot be configured to ``option``
+        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
         """
         options = self.list_options(query)
         try:
             index = options.index(option)
-        except ValueError:
-            raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
+        except ValueError as err:
+            raise FanGraphs.exceptions.InvalidFilterOption(query, option) from err
         self.page.hover(self.__dropdowns[query])
         elem = self.page.query_selector_all(f"{self.__dropdowns[query]} ul li")[index]
         elem.click()
@@ -950,7 +945,7 @@ class SeasonStatGrid(ScrapingUtilities):
         with open(path, "w", newline="") as file:
             writer = csv.writer(file)
             self._write_table_headers(writer)
-            for page in range(0, total_pages):
+            for _ in range(0, total_pages):
                 self._write_table_rows(writer)
                 self.page.click(
                     ".table-page-control:nth-last-child(1) > .next"
@@ -1017,7 +1012,7 @@ class GameSpanLeaderboards(ScrapingUtilities):
         :param query: The filter query
         :return: Options which the filter query can be configured to
         :rtype: list
-        :raises FanGraphs.exceptions.InvalidFilterQuery: Argument ``query`` is invalid
+        :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
         """
         query = query.lower()
         if query in self.__selections:
@@ -1030,7 +1025,7 @@ class GameSpanLeaderboards(ScrapingUtilities):
             elems = self.soup.select(f"{self.__dropdowns[query]} > div > a")
             options = [e.getText() for e in elems]
         else:
-            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
         return options
 
     def current_option(self, query: str):
@@ -1040,7 +1035,7 @@ class GameSpanLeaderboards(ScrapingUtilities):
         :param query: The filter query being retrieved of its current option
         :return: The option which the filter query is currently set to
         :rtype: str
-        :raises FanGraphs.exceptions.InvalidFilterQuery: Argument ``query`` is invalid
+        :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
         """
         query = query.lower()
         option = ""
@@ -1056,7 +1051,7 @@ class GameSpanLeaderboards(ScrapingUtilities):
             )[0]
             option = elem.getText()
         else:
-            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
         return option
 
     def configure(self, query: str, option: str):
@@ -1065,7 +1060,7 @@ class GameSpanLeaderboards(ScrapingUtilities):
 
         :param query: The filter query to be configured
         :param option: The option to set the filter query to
-        :raises FanGraphs.exceptions.InvalidFilterQueryException: Argument ``query`` is invalid
+        :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
         """
         query = query.lower()
         self._close_ad()
@@ -1074,7 +1069,7 @@ class GameSpanLeaderboards(ScrapingUtilities):
         elif query in self.__dropdowns:
             self.__configure_dropdown(query, option)
         else:
-            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
         self._refresh_parser(waitfor=self.__waitfor)
 
     def __configure_selection(self, query: str, option: str):
@@ -1083,13 +1078,13 @@ class GameSpanLeaderboards(ScrapingUtilities):
 
         :param query: The selection-class filter query to be configured
         :param option: The option to set the filter query to
-        :raises FanGraphs.exceptions.InvalidFilterOptionException: Argument ``option`` is invalid
+        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
         """
         options = self.list_options(query)
         try:
             index = options.index(option)
-        except ValueError:
-            raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
+        except ValueError as err:
+            raise FanGraphs.exceptions.InvalidFilterOption(query, option) from err
         self.page.click(self.__selections[query][index])
 
     def __configure_dropdown(self, query: str, option: str):
@@ -1098,13 +1093,13 @@ class GameSpanLeaderboards(ScrapingUtilities):
 
         :param query: The dropdown-class filter query to be configured
         :param option: The option to set the filter query to
-        :raises FanGraphs.exceptions.InvalidFilterOptionException: Argument ``option`` is invalid
+        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
         """
         options = self.list_options(query)
         try:
             index = options.index(option)
-        except ValueError:
-            raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
+        except ValueError as err:
+            raise FanGraphs.exceptions.InvalidFilterOption(query, option) from err
         self.page.click(self.__dropdowns[query])
         elem = self.page.query_selector_all(
             f"{self.__dropdowns[query]} > div > a"

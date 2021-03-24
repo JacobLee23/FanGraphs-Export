@@ -64,8 +64,8 @@ class TestMajorLeagueLeaderboards:
 
     @classmethod
     def setup_class(cls):
-        with sync_playwright() as p:
-            browser = p.chromium.launch()
+        with sync_playwright() as play:
+            browser = play.chromium.launch()
             page = browser.new_page()
             page.goto(cls.address, timeout=0)
             cls.soup = bs4.BeautifulSoup(
@@ -247,8 +247,8 @@ class TestSplitsLeaderboards:
         """
         Initializes ``bs4.BeautifulSoup4`` object using ``playwright``.
         """
-        with sync_playwright() as p:
-            browser = p.chromium.launch()
+        with sync_playwright() as play:
+            browser = play.chromium.launch()
             page = browser.new_page()
             page.goto(cls.address, timeout=0)
             page.wait_for_selector(".fg-data-grid.undefined")
@@ -347,7 +347,7 @@ class TestSplitsLeaderboards:
         for query, sel in selectors.items():
             elems = self.soup.select(f"{sel} li")
             for elem in elems:
-                assert elem.get("class") is not None
+                assert elem.get("class") is not None, query
 
     def test_configure_selection(self):
         """
@@ -454,8 +454,8 @@ class TestSeasonStatGrid:
 
     @classmethod
     def setup_class(cls):
-        with sync_playwright() as p:
-            browser = p.chromium.launch()
+        with sync_playwright() as play:
+            browser = play.chromium.launch()
             page = browser.new_page()
             page.goto(cls.address, timeout=0)
             page.wait_for_selector(".fg-data-grid.undefined")
@@ -593,8 +593,8 @@ class TestGameSpanLeaderboards:
 
     @classmethod
     def setup_class(cls):
-        with sync_playwright() as p:
-            browser = p.chromium.launch()
+        with sync_playwright() as play:
+            browser = play.chromium.launch()
             page = browser.new_page()
             page.goto(cls.address, timeout=0)
             page.wait_for_selector(".fg-data-grid.table-type")
@@ -658,12 +658,12 @@ class TestGameSpanLeaderboards:
             elems = []
             for sel in sel_list:
                 elem = self.soup.select(sel)[0]
-                assert elem.get("class") is not None
+                assert elem.get("class") is not None, query
                 elems.append(elem)
             active = ["active" in e.get("class") for e in elems]
             assert active.count(True) == 1, query
             text = [e.getText() for e in elems]
-            assert elem_text[query] in text
+            assert elem_text[query] in text, query
 
     def test_current_option_dropdown(self):
         """
@@ -680,9 +680,9 @@ class TestGameSpanLeaderboards:
         }
         for query, sel in self.__dropdowns.items():
             elems = self.soup.select(f"{sel} > div > span")
-            assert len(elems) == 1
+            assert len(elems) == 1, query
             text = elems[0].getText()
-            assert text == elem_text[query]
+            assert text == elem_text[query], query
 
     def test_configure_selections(self):
         """
@@ -691,7 +691,7 @@ class TestGameSpanLeaderboards:
         for query, sel_list in self.__selections.items():
             for sel in sel_list:
                 elems = self.soup.select(sel)
-                assert len(elems) == 1
+                assert len(elems) == 1, query
 
     def test_configure_dropdown(self):
         """
@@ -699,7 +699,7 @@ class TestGameSpanLeaderboards:
         """
         for query, sel in self.__dropdowns.items():
             elems = self.soup.select(sel)
-            assert len(elems) == 1
+            assert len(elems) == 1, query
 
     def test_export(self):
         """
