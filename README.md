@@ -97,3 +97,6 @@ pytest -k "TestMajorLeagueLeaderboards"
 
 ## License
 
+The code in this repository is licensed under an MIT License.
+
+Copyright (c) 2021 Jacob Lee
