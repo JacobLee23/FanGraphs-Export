@@ -599,3 +599,19 @@ class TestSeasonStatGrid:
         assert len(elems) == 30
         for elem in elems:
             assert len(elem.select("td")) == 12
+
+
+class TestGameSpanLeaderboards:
+    """
+    Tests the attributes and methods in :py:class:`GameSpanLeaderboards`.
+    The docstring in each tests identifies the attribute(s)/method(s) being tested.
+    """
+
+    address = "https://www.fangraphs.com/leaders/special/60-game-span"
+
+    def test_address(self):
+        """
+        Class attribute ``GameSpanLeaderboards.address``.
+        """
+        res = requests.get(self.address)
+        assert res.status_code == 200

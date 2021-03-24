@@ -33,14 +33,46 @@ from playwright.sync_api import sync_playwright
 import FanGraphs.exceptions
 
 
-class MajorLeagueLeaderboards:
+class __Scraper:
+
+    def __init__(self, browser):
+        os.makedirs("out", exist_ok=True)
+
+        self.__play = sync_playwright().start()
+        browsers = {
+            "chromium": self.__play.chromium,
+            "firefox": self.__play.firefox,
+            "webkit": self.__play.webkit
+        }
+        browser_ctx = browsers.get(browser.lower())
+        if browser_ctx is None:
+            raise FanGraphs.exceptions.UnknownBrowserException(browser.lower())
+        self.__browser = browser_ctx.launch(
+            downloads_path=os.path.abspath("out")
+        )
+        self.page = self.__browser.new_page(
+            accept_downloads=True
+        )
+
+    def __refresh_parser(self):
+        soup = bs4.BeautifulSoup(
+            self.page.content(), features="lxml"
+        )
+        return soup
+
+    def quit(self):
+        self.__browser.close()
+        self.__play.stop()
+
+
+class MajorLeagueLeaderboards(__Scraper):
     """
     Parses the FanGraphs Major League Leaderboards page.
     Note that the Splits Leaderboard is not covered.
     Instead, it is covered by :py:class:`SplitsLeaderboards`
 
     .. py:attribute:: address
-        The base URL address of the Major League Leaderboards page
+        The base URL address of the Major League Leaderboards page.
 
         :type: str
         :value: https://fangraphs.com/leaders.aspx
@@ -103,36 +135,9 @@ class MajorLeagueLeaderboards:
 
             :type: bs4.BeautifulSoup
         """
-        os.makedirs("out", exist_ok=True)
-
-        self.__play = sync_playwright().start()
-        browsers = {
-            "chromium": self.__play.chromium,
-            "firefox": self.__play.firefox,
-            "webkit": self.__play.webkit
-        }
-        browser_ctx = browsers.get(browser.lower())
-        if browser_ctx is None:
-            raise FanGraphs.exceptions.UnknownBrowserException(browser.lower())
-        self.__browser = browser_ctx.launch(
-            downloads_path=os.path.abspath("out")
-        )
-        self.page = self.__browser.new_page(
-            accept_downloads=True
-        )
+        super().__init__(browser)
         self.page.goto(self.address, timeout=0)
-
-        self.soup = None
-        self.__refresh_parser()
-
-    def __refresh_parser(self):
-        """
-        Re-initializes the ``bs4.BeautifulSoup`` object stored in :py:attr:`soup`.
-        Called when a page refresh is expected
-        """
-        self.soup = bs4.BeautifulSoup(
-            self.page.content(), features="lxml"
-        )
+        self.soup = self.__refresh_parser()
 
     @classmethod
     def list_queries(cls):
@@ -216,7 +221,7 @@ class MajorLeagueLeaderboards:
             raise FanGraphs.exceptions.InvalidFilterQueryException(query)
         if query in self.__buttons and autoupdate:
             self.__click_button(query)
-        self.__refresh_parser()
+        self.soup = self.__refresh_parser()
 
     def __configure_selection(self, query, option):
         """
@@ -289,19 +294,12 @@ class MajorLeagueLeaderboards:
         if elem:
             elem.click()
 
-    def quit(self):
-        """
-        Terminates the underlying ``Playwright`` browser context.
-        """
-        self.__browser.close()
-        self.__play.stop()
-
     def reset(self):
         """
         Navigates to the webpage corresponding to :py:attr:`address`.
         """
-        self.page.goto(self.address)
-        self.__refresh_parser()
+        self.page.goto(self.address, timeout=0)
+        self.soup = self.__refresh_parser()
 
     def export(self, path=""):
         """
@@ -324,12 +322,12 @@ class MajorLeagueLeaderboards:
         os.rename(download_path, path)
 
 
-class SplitsLeaderboards:
+class SplitsLeaderboards(__Scraper):
     """
     Parses the FanGraphs Splits Leaderboards page.
 
     .. py:attribute:: address
-        The base URL address which corresponds to the Splits Leaderboards page
+        The base URL address which corresponds to the Splits Leaderboards page.
 
         :type: str
         :value: https://fangraphs.com/leaders/splits-leaderboards
@@ -419,36 +417,13 @@ class SplitsLeaderboards:
 
             :type: bs4.BeautifulSoup
         """
-        os.makedirs("out", exist_ok=True)
-
-        self.__play = sync_playwright().start()
-        browsers = {
-            "chromium": self.__play.chromium,
-            "firefox": self.__play.firefox,
-            "webkit": self.__play.webkit
-        }
-        browser_ctx = browsers.get(browser.lower())
-        if browser_ctx is None:
-            raise FanGraphs.exceptions.UnknownBrowserException(browser.lower())
-        self.__browser = browser_ctx.launch()
-        self.page = self.__browser.new_page()
+        super().__init__(browser)
         self.page.goto(self.address, timeout=0)
         self.page.wait_for_selector(".fg-data-grid.undefined")
-
-        self.soup = None
-        self.__refresh_parser()
+        self.soup = self.__refresh_parser()
 
         self.configure_filter_group("Show All")
         self.configure("auto_pt", "False", autoupdate=True)
-
-    def __refresh_parser(self):
-        """
-        Re-initializes the ``bs4.BeautifulSoup`` object stored in :py:attr:`soup`.
-        Called when a page refresh is expected
-        """
-        self.soup = bs4.BeautifulSoup(
-            self.page.content(), features="lxml"
-        )
 
     @classmethod
     def list_queries(cls):
@@ -564,7 +539,7 @@ class SplitsLeaderboards:
             raise FanGraphs.exceptions.InvalidFilterQueryException(query)
         if autoupdate:
             self.update()
-        self.__refresh_parser()
+        self.soup = self.__refresh_parser()
 
     def __configure_selection(self, query: str, option: str):
         """
@@ -652,7 +627,7 @@ class SplitsLeaderboards:
             raise FanGraphs.exceptions.FilterUpdateIncapabilityWarning()
         self.__close_ad()
         elem.click()
-        self.__refresh_parser()
+        self.soup = self.__refresh_parser()
 
     def list_filter_groups(self):
         """
@@ -822,23 +797,16 @@ class SplitsLeaderboards:
         """
         Navigates to the webpage corresponding to :py:attr:`address`.
         """
-        self.page.goto(self.address)
-        self.__refresh_parser()
-
-    def quit(self):
-        """
-        Terminates the underlying ``playwright`` browser context.
-        """
-        self.__browser.close()
-        self.__play.stop()
+        self.page.goto(self.address, timeout=0)
+        self.soup = self.__refresh_parser()
 
 
-class SeasonStatGrid:
+class SeasonStatGrid(__Scraper):
     """
     Scrapes the FanGraphs Season Stat Grid webpage.
 
     .. py:attribute:: address
-        The base URL address of the Season Stat Grid page
+        The base URL address of the Season Stat Grid page.
 
         :type: str
         :value: https://fangraphs.com/season-stat-grid
@@ -884,33 +852,10 @@ class SeasonStatGrid:
 
             :type: bs4.BeautifulSoup
         """
-        os.makedirs("out", exist_ok=True)
-
-        self.__play = sync_playwright().start()
-        browsers = {
-            "chromium": self.__play.chromium,
-            "firefox": self.__play.firefox,
-            "webkit": self.__play.webkit
-        }
-        browser_ctx = browsers.get(browser.lower())
-        if browser_ctx is None:
-            raise FanGraphs.exceptions.UnknownBrowserException(browser.lower())
-        self.__browser = browser_ctx.launch()
-        self.page = self.__browser.new_page()
-        self.page.goto(self.address)
+        super().__init__(browser)
+        self.page.goto(self.address, timeout=0)
         self.page.wait_for_selector(".fg-data-grid.undefined")
-
-        self.soup = None
-        self.__refresh_parsers()
-
-    def __refresh_parsers(self):
-        """
-        Re-initializes the ``bs4.BeautifulSoup`` object stored in :py:attr:`soup`.
-        Called when a page refresh is expected
-        """
-        self.soup = bs4.BeautifulSoup(
-            self.page.content(), features="lxml"
-        )
+        self.soup = self.__refresh_parser()
 
     @classmethod
     def list_queries(cls):
@@ -992,7 +937,7 @@ class SeasonStatGrid:
             self.__configure_dropdown(query, option)
         else:
             raise FanGraphs.exceptions.InvalidFilterQueryException(query)
-        self.__refresh_parsers()
+        self.soup = self.__refresh_parser()
 
     def __configure_selection(self, query: str, option: str):
         """
@@ -1124,21 +1069,32 @@ class SeasonStatGrid:
         """
         Navigates to the webpage corresponding to :py:attr:`address`.
         """
-        self.page.goto(self.address)
-        self.__refresh_parsers()
-
-    def quit(self):
-        """
-        Terminates the underlying ``playwright`` browser context.
-        """
-        self.__browser.close()
-        self.__play.stop()
+        self.page.goto(self.address, timeout=0)
+        self.soup = self.__refresh_parser()
 
 
-class GameSpanLeaderboards:
+class GameSpanLeaderboards(__Scraper):
+    """
+    Scrape the FanGraphs 60-Game Span Leaderboards
 
-    def __init__(self):
-        pass
+    .. py:attribute:: address
+
+        The base URL address of the 60-Game Span Leaderboards page
+
+        :type: str
+        :value: https://fangraphs.com/leaders/special/60-game-span
+    """
+
+    address = "https://fangraphs.com/leaders/special/60-game-span"
+
+    def __init__(self, browser="chromium"):
+        super().__init__(browser)
+        self.page.goto(self.address, timeout=0)
+        self.soup = self.__refresh_parser()
+
+    def reset(self):
+        self.page.goto(self.address, timeout=0)
+        self.soup = self.__refresh_parser()
 
 
 class InternationalLeaderboards:
