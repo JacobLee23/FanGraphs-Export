@@ -1,16 +1,95 @@
 #! python3
 # tests/test_leaders.py
 
+"""
+The docstring in each class identifies the class in :py:mod:`FanGraphs.leaders` being tested.
+The docstring in each test identifies the class attribute(s)/method(s) being tested.
+==============================================================================
+"""
+
 import bs4
 from playwright.sync_api import sync_playwright
 import pytest
 import requests
 
 
+class TestUtils:
+    """
+    :py:class:`FanGraphs.leaders.__Utils`
+    """
+    pages = {
+        "MajorLeagueLeaderboards": "https://fangraphs.com/leaders.aspx",
+        "SplitsLeaderboards": "https://fangraphs.com/leaders/splits-leaderboards",
+        "SeasonStatGrid": "https://fangraphs.com/leaders/season-stat-grid",
+        "GameSpanLeaderboards": "https://fangraphs.com/leaders/60-game-span"
+    }
+    soups = {}
+    with sync_playwright() as play:
+        browser = play.chromium.launch()
+        page = browser.new_page()
+        for key, url in pages.items():
+            page.goto(url, timeout=0)
+            soups[key] = bs4.BeautifulSoup(
+                page.content(), features="lxml"
+            )
+        browser.close()
+
+    @pytest.mark.parametrize(
+        "soup",
+        [soups["SplitsLeaderboards"],
+         soups["SeasonStatGrid"]]
+    )
+    def test_expand_table(self, soup: bs4.BeautifulSoup):
+        """
+        Private instance method ``__Utils.__expand_table``
+        """
+        elems = soup.select(".table-page-control:nth-child(3) select")
+        assert len(elems) == 1
+        options = ["30", "50", "100", "200", "Infinity"]
+        assert [e.getText() for e in elems[0].select("option")] == options
+
+    @pytest.mark.parametrize(
+        "soup",
+        [soups["SplitsLeaderboards"],
+         soups["SeasonStatGrid"]]
+    )
+    def test_sortby(self, soup: bs4.BeautifulSoup):
+        """
+        Private instance method ``SplitsLeaderboards.__sortby``.
+        """
+        elems = soup.select(".table-scroll thead tr th")
+        assert elems
+
+    @pytest.mark.parametrize(
+        "soup",
+        [soups["SplitsLeaderboards"],
+         soups["SeasonStatGrid"]]
+    )
+    def test_write_table_headers(self, soup: bs4.BeautifulSoup):
+        """
+        Private instance method ``__Utils.__write_table_headers``.
+        """
+        elems = soup.select(".table-scroll thead tr th")
+        assert elems
+
+    @pytest.mark.parametrize(
+        "soup",
+        [soups["SplitsLeaderboards"],
+         soups["SeasonStatGrid"]]
+    )
+    def test_write_table_rows(self, soup: bs4.BeautifulSoup):
+        """
+        Private instance method ``__Utils.__write_table_rows``.
+        """
+        elems = soup.select(".table-scroll tbody tr")
+        assert elems
+        for elem in elems:
+            assert elem.select("td")
+
+
 class TestMajorLeagueLeaderboards:
     """
-    Tests the attributes and methods in :py:class:`FanGraphs.leaders.MajorLeagueLeaderboards`.
-    The docstring in each test identifies the attribute(s)/method(s) being tested.
+    :py:class:`FanGraphs.leaders.MajorLeagueLeaderboards`
     """
 
     __selections = {
@@ -163,8 +242,7 @@ class TestMajorLeagueLeaderboards:
 
 class TestSplitsLeaderboards:
     """
-    Tests the attributes and methods in :py:class:`FanGraphs.leaders.SplitsLeaderboards`.
-    The docstring in each test indentifies the attribute(s)/method(s) being tested.
+    :py:class:`FanGraphs.leaders.SplitsLeaderboards`.
     """
 
     __selections = {
@@ -410,43 +488,10 @@ class TestSplitsLeaderboards:
             elems = self.soup.select(sel)
             assert len(elems) == 1, qsplit
 
-    def test_expand_table(self):
-        """
-        Private instance method ``SplitsLeaderboards.__expand_table``.
-        """
-        elems = self.soup.select(".table-page-control:nth-child(3) select")
-        assert len(elems) == 1
-        options = ["30", "50", "100", "200", "Infinity"]
-        assert [e.getText() for e in elems[0].select("option")] == options
-
-    def test_sortby(self):
-        """
-        Private instance method ``SplitsLeaderboards.__sortby``.
-        """
-        elems = self.soup.select(".table-scroll thead tr th")
-        assert len(elems) == 24
-
-    def test_write_table_headers(self):
-        """
-        Private instance method ``SplitsLeaderboards.__write_table_headers``.
-        """
-        elems = self.soup.select(".table-scroll thead tr th")
-        assert len(elems) == 24
-
-    def test_write_table_rows(self):
-        """
-        Private instance method ``SplitsLeaderboards.__write_table_rows``.
-        """
-        elems = self.soup.select(".table-scroll tbody tr")
-        assert len(elems) == 30
-        for elem in elems:
-            assert len(elem.select("td")) == 24
-
 
 class TestSeasonStatGrid:
     """
-    Tests the attributes and methods in :py:class:`FanGraphs.leaders.SeasonStatGrid`.
-    The docstring in each test indentifies the attribute(s)/method(s) being tested.
+    :py:class:`FanGraphs.leaders.SeasonStatGrid`.
     """
     __selections = {
         "stat": [
@@ -575,36 +620,10 @@ class TestSeasonStatGrid:
             elems = self.soup.select(sel)
             assert len(elems) == 1, query
 
-    def test_expand_table(self):
-        """
-        Private instance method ``SeasonStatGrid.__expand_table``
-        """
-        elems = self.soup.select(".table-page-control:nth-child(3) select")
-        assert len(elems) == 1
-        options = ["30", "50", "100", "200", "Infinity"]
-        assert [e.getText() for e in elems[0].select("option")] == options
-
-    def test_write_table_headers(self):
-        """
-        Private instance method ``SeasonStatGrid.__write_table_headers``.
-        """
-        elems = self.soup.select(".table-scroll thead tr th")
-        assert len(elems) == 12
-
-    def test_write_table_rows(self):
-        """
-        Private instance method ``SeasonStatGrid.__write_table_rows``.
-        """
-        elems = self.soup.select(".table-scroll tbody tr")
-        assert len(elems) == 30
-        for elem in elems:
-            assert len(elem.select("td")) == 12
-
 
 class TestGameSpanLeaderboards:
     """
-    Tests the attributes and methods in :py:class:`GameSpanLeaderboards`.
-    The docstring in each tests identifies the attribute(s)/method(s) being tested.
+    :py:class:`GameSpanLeaderboards`.
     """
 
     address = "https://www.fangraphs.com/leaders/special/60-game-span"
