@@ -156,7 +156,7 @@ class __Utils:
 
         .. _here: https://playwright.dev/python/docs/api/class-page/#pagewait_for_selectorselector-kwargs
         """
-        self.page.goto(self.address)
+        self.page.goto(self.address, timeout=0)
         if waitfor:
             self.page.wait_for_selector(waitfor)
         self.__refresh_parser()
@@ -1046,6 +1046,24 @@ class GameSpanLeaderboards(__Utils):
         else:
             raise FanGraphs.exceptions.InvalidFilterQueryException(query)
         return options
+
+    def current_option(self, query: str):
+        query = query.lower()
+        option = ""
+        if query in self.__selections:
+            for sel in self.__selections[query]:
+                elem = self.soup.select(sel)[0]
+                if "active" in elem.get("class"):
+                    option = elem.getText()
+                    break
+        elif query in self.__dropdowns:
+            elem = self.soup.select(
+                f"{self.__dropdowns[query]} > div > span"
+            )[0]
+            option = elem.getText()
+        else:
+            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
+        return option
 
 
 class InternationalLeaderboards:

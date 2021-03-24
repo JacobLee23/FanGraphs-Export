@@ -697,3 +697,44 @@ class TestGameSpanLeaderboards:
             elems = self.soup.select(f"{sel} > div > a")
             assert len(elems) == elem_count[query], query
             assert all([e.getText() for e in elems]), query
+
+    def test_current_option_selections(self):
+        """
+        Instance method ``GameSpanLeaderboards.current_option``.
+
+        Uses the following class attributes:
+
+        - ``GameSpanLeaderboards.__selections``
+        """
+        elem_text = {
+            "stat": "Batters", "type": "Best 60-Game Span"
+        }
+        for query, sel_list in self.__selections.items():
+            elems = []
+            for sel in sel_list:
+                elem = self.soup.select(sel)[0]
+                assert elem.get("class") is not None
+                elems.append(elem)
+            active = ["active" in e.get("class") for e in elems]
+            assert active.count(True) == 1, query
+            text = [e.getText() for e in elems]
+            assert elem_text[query] in text
+
+    def test_current_option_dropdown(self):
+        """
+        Instance method ``GameSpanLeaderboards.current_option``.
+
+        Uses the following class attributes:
+
+        - ``GameSpanLeaderboards.__dropdowns``
+        """
+        elem_text = {
+            "min_pa": "Qualified", "single_season": "Select",
+            "season1": "Select", "season2": "Select",
+            "determine": "WAR"
+        }
+        for query, sel in self.__dropdowns.items():
+            elems = self.soup.select(f"{sel} > div > span")
+            assert len(elems) == 1
+            text = elems[0].getText()
+            assert text == elem_text[query]
