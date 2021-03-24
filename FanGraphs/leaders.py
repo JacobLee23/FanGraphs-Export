@@ -76,11 +76,13 @@ class __Utils:
         )
         self.soup = None
 
-    def _refresh_parser(self):
+    def _refresh_parser(self, *, waitfor=""):
         """
         Re-initializes the ``bs4.BeautifulSoup`` object stored in :py:attr:`soup`.
         Called when a page refresh is expected
         """
+        if waitfor:
+            self.page.wait_for_selector(waitfor)
         self.soup = bs4.BeautifulSoup(
             self.page.content(), features="lxml"
         )
@@ -90,61 +92,10 @@ class __Utils:
         Closes the ad which may interfere with clicking other page elements.
         """
         elem = self.page.query_selector(".ezmob-footer-close")
+        if self.soup.select("#ezmob-wrapper > div[style='display: none;']"):
+            return
         if elem:
             elem.click()
-
-    def _expand_table(self, *, size="Infinity"):
-        """
-        Expands the data table to the appropriate number of rows
-
-        :param size: The maximum number of rows the table should have.
-        The number of rows is preset (30, 50, 100, 200, Infinity).
-        """
-        selector = ".table-page-control:nth-child(3) select"
-        dropdown = self.page.query_selector(selector)
-        dropdown.click()
-        elems = self.soup.select(f"{selector} option")
-        options = [e.getText() for e in elems]
-        size = "Infinity" if size not in options else size
-        index = options.index(size)
-        option = self.page.query_selector_all(f"{selector} option")[index]
-        option.click()
-
-    def _sortby(self, sortby, *, reverse=False):
-        """
-        Sorts the data by the appropriate table header.
-
-        :param sortby: The table header to sort the data by
-        :param reverse: If ``True``, the organization of the data will be reversed
-        """
-        elems = self.soup.select(".table-scroll thead tr th")
-        options = [e.getText() for e in elems]
-        index = options.index(sortby)
-        elems[index].click()
-        if reverse:
-            elems[index].click()
-
-    def _write_table_headers(self, writer: csv.writer):
-        """
-        Writes the data table headers to the CSV file.
-
-        :param writer: The ``csv.writer`` object
-        """
-        elems = self.soup.select(".table-scroll thead tr th")
-        headers = [e.getText() for e in elems]
-        writer.writerow(headers)
-
-    def _write_table_rows(self, writer: csv.writer):
-        """
-        Iterates through the rows of the data table and writes the data in each row to the CSV file.
-
-        :param writer: The ``csv.writer`` object
-        """
-        row_elems = self.soup.select(".table-scroll tbody tr")
-        for row in row_elems:
-            elems = row.select("td")
-            items = [e.getText() for e in elems]
-            writer.writerow(items)
 
     def reset(self, *, waitfor=""):
         """
@@ -157,9 +108,7 @@ class __Utils:
         .. _here: https://playwright.dev/python/docs/api/class-page/#pagewait_for_selectorselector-kwargs
         """
         self.page.goto(self.address, timeout=0)
-        if waitfor:
-            self.page.wait_for_selector(waitfor)
-        self._refresh_parser()
+        self._refresh_parser(waitfor=waitfor)
 
     def quit(self):
         """
@@ -388,11 +337,11 @@ class MajorLeagueLeaderboards(__Utils):
 
         :param path: The path to save the exported data to
         """
+        self._close_ad()
         if not path or os.path.splitext(path)[1] != ".csv":
             path = "out/{}.csv".format(
                 datetime.datetime.now().strftime("%d.%m.%y %H.%M.%S")
             )
-        self._close_ad()
         with self.page.expect_download() as down_info:
             self.page.click("#LeaderBoard1_cmdCSV")
         download = down_info.value
@@ -480,13 +429,14 @@ class SplitsLeaderboards(__Utils):
     }
 
     address = "https://fangraphs.com/leaders/splits-leaderboards"
+    __waitfor = ".fg-data-grid.undefined"
 
     def __init__(self, *, browser="chromium"):
         """
         :param browser: The name of the browser to use (Chromium, Firefox, WebKit)
         """
         super().__init__(browser, self.address)
-        self.reset(waitfor=".fg-data-grid.undefined")
+        self.reset(waitfor=self.__waitfor)
 
         self.configure_filter_group("Show All")
         self.configure("auto_pt", "False", autoupdate=True)
@@ -605,7 +555,7 @@ class SplitsLeaderboards(__Utils):
             raise FanGraphs.exceptions.InvalidFilterQueryException(query)
         if autoupdate:
             self.update()
-        self._refresh_parser()
+        self._refresh_parser(waitfor=self.__waitfor)
 
     def __configure_selection(self, query: str, option: str):
         """
@@ -685,7 +635,7 @@ class SplitsLeaderboards(__Utils):
             raise FanGraphs.exceptions.FilterUpdateIncapabilityWarning()
         self._close_ad()
         elem.click()
-        self._refresh_parser()
+        self._refresh_parser(waitfor=self.__waitfor)
 
     def list_filter_groups(self):
         """
@@ -766,37 +716,25 @@ class SplitsLeaderboards(__Utils):
         if autoupdate:
             self.update()
 
-    def export(self, path="", *, size="Infinity", sortby="", reverse=False):
+    def export(self, path=""):
         """
-        Scrapes and saves the data from the table of the current leaderboards
+        Uses the **Export Data** button on the webpage to export the current leaderboard.
         The data will be exported as a CSV file and the file will be saved to *out/*.
         The file will be saved to the filepath ``path``, if specified.
-        Otherwise, the file will be saved to the filepath *out/%d.%m.%y %H.%M.%S.csv*
+        Otherwise, the file will be saved to the filepath *./out/%d.%m.%y %H.%M.%S.csv*
 
-        *Note: This is a 'manual' export of the data.
-        In other words, the data is scraped from the table.
-        This is unlike other forms of export where a button is clicked.
-        Thus, there will be no record of a download when the data is exported.*
-
-        :param path: The path to save the exported file to
-        :param size: The maximum number of rows of the table to export
-        :param sortby: The table header to sort the data by
-        :param reverse: If ``True``, the organization of the data will be reversed
-        :return:
+        :param path: The path to save the exported data to
         """
-        self.page.hover(".data-export")
         self._close_ad()
-        self._expand_table(size=size)
-        if sortby:
-            self._sortby(sortby.title(), reverse=reverse)
         if not path or os.path.splitext(path)[1] != ".csv":
             path = "{}.csv".format(
                 datetime.datetime.now().strftime("%d.%m.%y %H.%M.%S")
             )
-        with open(os.path.join("out", path), "w", newline="") as file:
-            writer = csv.writer(file)
-            self._write_table_headers(writer)
-            self._write_table_rows(writer)
+        with self.page.expect_download() as down_info:
+            self.page.click(".data-export")
+        download = down_info.value
+        download_path = download.path()
+        os.rename(download_path, path)
 
 
 class SeasonStatGrid(__Utils):
@@ -835,13 +773,14 @@ class SeasonStatGrid(__Utils):
         "value": ".season-grid-controls-dropdown-row-stats > div:nth-child(9)"
     }
     address = "https://fangraphs.com/leaders/season-stat-grid"
+    __waitfor = ".fg-data-grid.undefined"
 
     def __init__(self, *, browser="chromium"):
         """
         :param browser: The name of the browser to use (Chromium, Firefox, WebKit)
         """
         super().__init__(browser, self.address)
-        self.reset(waitfor=".fg-data-grid.undefined")
+        self.reset(waitfor=self.__waitfor)
 
     @classmethod
     def list_queries(cls):
@@ -923,7 +862,7 @@ class SeasonStatGrid(__Utils):
             self.__configure_dropdown(query, option)
         else:
             raise FanGraphs.exceptions.InvalidFilterQueryException(query)
-        self._refresh_parser()
+        self._refresh_parser(waitfor=self.__waitfor)
 
     def __configure_selection(self, query: str, option: str):
         """
@@ -957,7 +896,27 @@ class SeasonStatGrid(__Utils):
         elem = self.page.query_selector_all(f"{self.__dropdowns[query]} ul li")[index]
         elem.click()
 
-    def export(self, path="", *, size="Infinity", sortby="Name", reverse=False):
+    def _write_table_headers(self, writer: csv.writer):
+        """
+        Writes the data table headers to the CSV file.
+        :param writer: The ``csv.writer`` object
+        """
+        elems = self.soup.select(".table-scroll thead tr th")
+        headers = [e.getText() for e in elems]
+        writer.writerow(headers)
+
+    def _write_table_rows(self, writer: csv.writer):
+        """
+        Iterates through the rows of the data table and writes the data in each row to the CSV file.
+        :param writer: The ``csv.writer`` object
+        """
+        row_elems = self.soup.select(".table-scroll tbody tr")
+        for row in row_elems:
+            elems = row.select("td")
+            items = [e.getText() for e in elems]
+            writer.writerow(items)
+
+    def export(self, path=""):
         """
         Scrapes and saves the data from the table of the current leaderboards.
         The data will be exported as a CSV file and the file will be saved to *out/*.
@@ -970,21 +929,26 @@ class SeasonStatGrid(__Utils):
         Thus, there will be no record of a download when the data is exported.*
 
         :param path: The path to save the exported file to
-        :param size: The maximum number of rows of the table to export
-        :param sortby: The table header to sort the data by
-        :param reverse: If ``True``, the organization of the data will be reversed
         """
         self._close_ad()
-        self._expand_table(size=size)
-        self._sortby(sortby.title(), reverse=reverse)
         if not path or os.path.splitext(path)[1] != ".csv":
-            path = "{}.csv".format(
+            path = "out/{}.csv".format(
                 datetime.datetime.now().strftime("%d.%m.%y %H.%M.%S")
             )
-        with open(os.path.join("out", path), "w", newline="") as file:
+        total_pages = int(
+            self.soup.select(
+                ".table-page-control:nth-last-child(1) > .table-control-total"
+            )[0].getText()
+        )
+        with open(path, "w", newline="") as file:
             writer = csv.writer(file)
             self._write_table_headers(writer)
-            self._write_table_rows(writer)
+            for page in range(0, total_pages):
+                self._write_table_rows(writer)
+                self.page.click(
+                    ".table-page-control:nth-last-child(1) > .next"
+                )
+                self._refresh_parser(waitfor=self.__waitfor)
 
 
 class GameSpanLeaderboards(__Utils):
@@ -1017,13 +981,14 @@ class GameSpanLeaderboards(__Utils):
         "determine": ".controls-stats.stat-determined > div:nth-child(1) > .fg-selection-box__selection"
     }
     address = "https://fangraphs.com/leaders/special/60-game-span"
+    __waitfor = ".fg-data-grid.table-type"
 
     def __init__(self, browser="chromium"):
         """
         :param browser: The name of the browser to use (Chromium, Firefox, WebKit)
         """
         super().__init__(browser, self.address)
-        self.reset(waitfor=".fg-data-grid.table-type")
+        self.reset(waitfor=self.__waitfor)
 
     @classmethod
     def list_queries(cls):
@@ -1074,7 +1039,7 @@ class GameSpanLeaderboards(__Utils):
             self.__configure_dropdown(query, option)
         else:
             raise FanGraphs.exceptions.InvalidFilterQueryException(query)
-        self._refresh_parser()
+        self._refresh_parser(waitfor=self.__waitfor)
 
     def __configure_selection(self, query: str, option: str):
         options = self.list_options(query)
@@ -1095,6 +1060,18 @@ class GameSpanLeaderboards(__Utils):
             f"{self.__dropdowns[query]} > div > a"
         )[index]
         elem.click()
+
+    def export(self, path=""):
+        self._close_ad()
+        if not path or os.path.splitext(path)[1] != ".csv":
+            path = "{}.csv".format(
+                datetime.datetime.now().strftime("%d.%m.%y %H.%M.%S")
+            )
+        with self.page.expect_download() as down_info:
+            self.page.click(".data-export")
+        download = down_info.value
+        download_path = download.path()
+        os.rename(download_path, path)
 
 
 class InternationalLeaderboards:
