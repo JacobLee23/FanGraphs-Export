@@ -21,22 +21,79 @@
         <img src="https://img.shields.io/github/license/JLpython-py/FanGraphs-Export" alt="GitHub Repository"/></a>
 </p>
 
-FanGraphs is a popular website among the baseball community.
+FanGraphs is a popular website among the baseball analytic community.
 The website is most well-known for its vast coverage of statistics.
-The `FanGraphs` package contains various modules for scraping and exporting data from various webpages.
-There are not, by any means, intentions to cover the entire website.
-The sheer amount of data makes it too difficult of a task.
-However, there are plans to cover the most popular webpages.
+The `FanGraphs` package contains various modules for scraping and exporting data from the most popoular of webpages.
 
 ## Installation
 
 ## Dependencies
 
+- Python >= 3.6
+- BeautifulSoup4 4.9.3
+- lxml 4.6.3  
+- Playwright 1.9.2
+- Pytest 6.2.2  
+- Requests 2.25.1
+
+To install all the necessary packages, run:
+
+```commandline
+pip install -r requirements.txt
+```
+
+*Note: Per the [Playwright documentation](https://playwright.dev/python/docs/intro/), the browser binaries must be installed.
+To install the browser binaries, run:*
+
+```comandline
+playwright install
+```
+
 ## Documentation
 
 ## Basic Usage
 
+Each group of FanGraphs pages (e.g. Leaders, Projections, etc.) which is covered has an individual module.
+Each webpage in each group of webpages has an individual class covering the page.
+
+FanGraphs webpage groups:
+
+- [Leaders](#Leaders)
+
+### Leaders
+
+FanGraphs Leaders pages:
+
+- [MajorLeagueLeaderboards](https://fangraphs.com/leaders.aspx)
+- [SplitsLeaderboards](https://fangraphs.com/leaders/splits-leaderboards)
+- [SeasonStatGrid](https://fangraphs.com/leaders/season-stat-grid)
+
+```python
+from FanGraphs import leaders
+mll = leaders.MajorLeagueLeaderboards()
+splits = leaders.SplitsLeaderboards()
+ssg = leaders.SeasonStatGrid()
+```
+
 ## Tests
+
+To run all tests, run:
+
+```commandline
+pytest FanGraphs
+```
+
+To run the tests for a specific module, run:
+
+```commandline
+pytest FanGraphs/test_module_name
+```
+
+For example, for testing the `FanGraphs.leaders` module:
+
+```commandline
+pytest FanGraphs/test_leaders
+```
 
 ## License
 

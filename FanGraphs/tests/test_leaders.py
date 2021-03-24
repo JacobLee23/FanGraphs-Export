@@ -280,7 +280,7 @@ class TestSplitsLeaderboards:
         "selectors",
         [__dropdowns, __splits]
     )
-    def test_list_options(self, selectors: dict[str, str]):
+    def test_list_options(self, selectors: dict):
         """
         Instance method ``SplitsLeaderboards.list_options``.
 
@@ -328,7 +328,7 @@ class TestSplitsLeaderboards:
         "selectors",
         [__dropdowns, __splits, __switches]
     )
-    def test_current_option(self, selectors: dict[str, str]):
+    def test_current_option(self, selectors: dict):
         """
         Instance method ``SplitsLeaderboards.current_option``.
 
@@ -358,7 +358,7 @@ class TestSplitsLeaderboards:
         "selectors",
         [__dropdowns, __splits, __switches]
     )
-    def test_configure(self, selectors: dict[str, str]):
+    def test_configure(self, selectors: dict):
         """
         Private instance method ``SplitsLeaderboards.__configure_dropdown``.
         Private instance method ``SplitsLeaderboards.__configure_split``.
