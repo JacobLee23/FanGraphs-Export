@@ -149,6 +149,12 @@ class __Utils:
     def reset(self, *, waitfor=""):
         """
         Navigates to the webpage corresponding to :py:attr:`address`.
+
+        :param waitfor: If specified, the CSS of the selector to wait for.
+        The wait will occur after the page has navigated to the webpage and before the parser is refreshed.
+        See `here`_ for more information.
+
+        .. _here: https://playwright.dev/python/docs/api/class-page/#pagewait_for_selectorselector-kwargs
         """
         self.page.goto(self.address)
         if waitfor:
@@ -992,7 +998,24 @@ class GameSpanLeaderboards(__Utils):
         :type: str
         :value: https://fangraphs.com/leaders/special/60-game-span
     """
-
+    __selections = {
+        "stat": [
+            ".controls-stats > .fgButton:nth-child(1)",
+            ".controls-stats > .fgButton:nth-child(2)"
+        ],
+        "type": [
+            ".controls-board-view > .fgButton:nth-child(1)",
+            ".controls-board-view > .fgButton:nth-child(2)",
+            ".controls-board-view > .fgButton:nth-child(3)"
+        ]
+    }
+    __dropdowns = {
+        "min_pa": ".controls-stats:nth-child(1) > div:nth-child(3) > .fg-selection-box__selection",
+        "single_season": ".controls-stats:nth-child(2) > div:nth-child(1) > .fg-selection-box__selection",
+        "season1": ".controls-stats:nth-child(2) > div:nth-child(2) > .fg-selection-box__selection",
+        "season2": ".controls-stats:nth-child(2) > div:nth-child(3) > .fg-selection-box__selection",
+        "determine": ".controls-stats.stat-determined > div:nth-child(1) > .fg-selection-box__selection"
+    }
     address = "https://fangraphs.com/leaders/special/60-game-span"
 
     def __init__(self, browser="chromium"):
@@ -1000,7 +1023,29 @@ class GameSpanLeaderboards(__Utils):
         :param browser: The name of the browser to use (Chromium, Firefox, WebKit)
         """
         super().__init__(browser, self.address)
-        self.reset()
+        self.reset(waitfor=".fg-data-grid.table-type")
+
+    @classmethod
+    def list_queries(cls):
+        queries = []
+        queries.extend(list(cls.__selections))
+        queries.extend(list(cls.__dropdowns))
+        return queries
+
+    def list_options(self, query):
+        query = query.lower()
+        if query in self.__selections:
+            elems = [
+                self.soup.select(s)[0]
+                for s in self.__selections[query]
+            ]
+            options = [e.getText() for e in elems]
+        elif query in self.__dropdowns:
+            elems = self.soup.select(f"{self.__dropdowns[query]} > div > a")
+            options = [e.getText() for e in elems]
+        else:
+            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
+        return options
 
 
 class InternationalLeaderboards:

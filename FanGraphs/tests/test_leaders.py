@@ -625,8 +625,38 @@ class TestGameSpanLeaderboards:
     """
     :py:class:`GameSpanLeaderboards`.
     """
+    __selections = {
+        "stat": [
+            ".controls-stats > .fgButton:nth-child(1)",
+            ".controls-stats > .fgButton:nth-child(2)"
+        ],
+        "type": [
+            ".controls-board-view > .fgButton:nth-child(1)",
+            ".controls-board-view > .fgButton:nth-child(2)",
+            ".controls-board-view > .fgButton:nth-child(3)"
+        ]
+    }
+    __dropdowns = {
+        "min_pa": ".controls-stats:nth-child(1) > div:nth-child(3) > .fg-selection-box__selection",
+        "single_season": ".controls-stats:nth-child(2) > div:nth-child(1) > .fg-selection-box__selection",
+        "season1": ".controls-stats:nth-child(2) > div:nth-child(2) > .fg-selection-box__selection",
+        "season2": ".controls-stats:nth-child(2) > div:nth-child(3) > .fg-selection-box__selection",
+        "determine": ".controls-stats.stat-determined > div:nth-child(1) > .fg-selection-box__selection"
+    }
 
     address = "https://www.fangraphs.com/leaders/special/60-game-span"
+
+    @classmethod
+    def setup_class(cls):
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            page = browser.new_page()
+            page.goto(cls.address, timeout=0)
+            page.wait_for_selector(".fg-data-grid.table-type")
+            cls.soup = bs4.BeautifulSoup(
+                page.content(), features="lxml"
+            )
+            browser.close()
 
     def test_address(self):
         """
@@ -634,3 +664,36 @@ class TestGameSpanLeaderboards:
         """
         res = requests.get(self.address)
         assert res.status_code == 200
+
+    def test_list_options_selections(self):
+        """
+        Instance method ``GameSpanLeaderboards.list_options``.
+
+        Uses the following class attributes:
+
+        - ``GameSpanLeaderboards.__selections``
+        """
+        elem_count = {
+            "stat": 2, "type": 3
+        }
+        for query, sel_list in self.__selections.items():
+            elems = [self.soup.select(s)[0] for s in sel_list]
+            assert len(elems) == elem_count[query], query
+            assert all([e.getText() for e in elems]), query
+
+    def test_list_options_dropdowns(self):
+        """
+        Instance method ``GameSpanLeaderboards.list_options``.
+
+        Uses the following class attributes:
+
+        - ``GameSpanLeaderboards.__dropdowns``
+        """
+        elem_count = {
+            "min_pa": 9, "single_season": 46, "season1": 46, "season2": 46,
+            "determine": 11
+        }
+        for query, sel in self.__dropdowns.items():
+            elems = self.soup.select(f"{sel} > div > a")
+            assert len(elems) == elem_count[query], query
+            assert all([e.getText() for e in elems]), query
