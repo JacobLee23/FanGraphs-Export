@@ -1,6 +1,12 @@
 #! python3
 # tests/test_leaders.py
 
+"""
+The docstring in each class identifies the class in :py:mod:`FanGraphs.leaders` being tested.
+The docstring in each test identifies the class attribute(s)/method(s) being tested.
+==============================================================================
+"""
+
 import bs4
 from playwright.sync_api import sync_playwright
 import pytest
@@ -9,8 +15,7 @@ import requests
 
 class TestMajorLeagueLeaderboards:
     """
-    Tests the attributes and methods in :py:class:`FanGraphs.leaders.MajorLeagueLeaderboards`.
-    The docstring in each test identifies the attribute(s)/method(s) being tested.
+    :py:class:`FanGraphs.leaders.MajorLeagueLeaderboards`
     """
 
     __selections = {
@@ -59,8 +64,8 @@ class TestMajorLeagueLeaderboards:
 
     @classmethod
     def setup_class(cls):
-        with sync_playwright() as p:
-            browser = p.chromium.launch()
+        with sync_playwright() as play:
+            browser = play.chromium.launch()
             page = browser.new_page()
             page.goto(cls.address, timeout=0)
             cls.soup = bs4.BeautifulSoup(
@@ -163,8 +168,7 @@ class TestMajorLeagueLeaderboards:
 
 class TestSplitsLeaderboards:
     """
-    Tests the attributes and methods in :py:class:`FanGraphs.leaders.SplitsLeaderboards`.
-    The docstring in each test indentifies the attribute(s)/method(s) being tested.
+    :py:class:`FanGraphs.leaders.SplitsLeaderboards`.
     """
 
     __selections = {
@@ -243,8 +247,8 @@ class TestSplitsLeaderboards:
         """
         Initializes ``bs4.BeautifulSoup4`` object using ``playwright``.
         """
-        with sync_playwright() as p:
-            browser = p.chromium.launch()
+        with sync_playwright() as play:
+            browser = play.chromium.launch()
             page = browser.new_page()
             page.goto(cls.address, timeout=0)
             page.wait_for_selector(".fg-data-grid.undefined")
@@ -343,7 +347,7 @@ class TestSplitsLeaderboards:
         for query, sel in selectors.items():
             elems = self.soup.select(f"{sel} li")
             for elem in elems:
-                assert elem.get("class") is not None
+                assert elem.get("class") is not None, query
 
     def test_configure_selection(self):
         """
@@ -410,43 +414,17 @@ class TestSplitsLeaderboards:
             elems = self.soup.select(sel)
             assert len(elems) == 1, qsplit
 
-    def test_expand_table(self):
+    def test_export(self):
         """
-        Private instance method ``SplitsLeaderboards.__expand_table``.
+        Instance method ``SplitsLeaderboards.export``.
         """
-        elems = self.soup.select(".table-page-control:nth-child(3) select")
+        elems = self.soup.select(".data-export")
         assert len(elems) == 1
-        options = ["30", "50", "100", "200", "Infinity"]
-        assert [e.getText() for e in elems[0].select("option")] == options
-
-    def test_sortby(self):
-        """
-        Private instance method ``SplitsLeaderboards.__sortby``.
-        """
-        elems = self.soup.select(".table-scroll thead tr th")
-        assert len(elems) == 24
-
-    def test_write_table_headers(self):
-        """
-        Private instance method ``SplitsLeaderboards.__write_table_headers``.
-        """
-        elems = self.soup.select(".table-scroll thead tr th")
-        assert len(elems) == 24
-
-    def test_write_table_rows(self):
-        """
-        Private instance method ``SplitsLeaderboards.__write_table_rows``.
-        """
-        elems = self.soup.select(".table-scroll tbody tr")
-        assert len(elems) == 30
-        for elem in elems:
-            assert len(elem.select("td")) == 24
 
 
 class TestSeasonStatGrid:
     """
-    Tests the attributes and methods in :py:class:`FanGraphs.leaders.SeasonStatGrid`.
-    The docstring in each test indentifies the attribute(s)/method(s) being tested.
+    :py:class:`FanGraphs.leaders.SeasonStatGrid`.
     """
     __selections = {
         "stat": [
@@ -476,8 +454,8 @@ class TestSeasonStatGrid:
 
     @classmethod
     def setup_class(cls):
-        with sync_playwright() as p:
-            browser = p.chromium.launch()
+        with sync_playwright() as play:
+            browser = play.chromium.launch()
             page = browser.new_page()
             page.goto(cls.address, timeout=0)
             page.wait_for_selector(".fg-data-grid.undefined")
@@ -575,27 +553,157 @@ class TestSeasonStatGrid:
             elems = self.soup.select(sel)
             assert len(elems) == 1, query
 
-    def test_expand_table(self):
+    def test_export(self):
+        total_pages = self.soup.select(
+            ".table-page-control:nth-last-child(1) > .table-control-total"
+        )
+        assert len(total_pages) == 1
+        assert total_pages[0].getText().isdecimal()
+        arrow = self.soup.select(
+            ".table-page-control:nth-last-child(1) > .next"
+        )
+        assert len(arrow) == 1
+        assert arrow[0].getText() == "chevron_right"
+
+
+class TestGameSpanLeaderboards:
+    """
+    :py:class:`GameSpanLeaderboards`.
+    """
+    __selections = {
+        "stat": [
+            ".controls-stats > .fgButton:nth-child(1)",
+            ".controls-stats > .fgButton:nth-child(2)"
+        ],
+        "type": [
+            ".controls-board-view > .fgButton:nth-child(1)",
+            ".controls-board-view > .fgButton:nth-child(2)",
+            ".controls-board-view > .fgButton:nth-child(3)"
+        ]
+    }
+    __dropdowns = {
+        "min_pa": ".controls-stats:nth-child(1) > div:nth-child(3) > .fg-selection-box__selection",
+        "single_season": ".controls-stats:nth-child(2) > div:nth-child(1) > .fg-selection-box__selection",
+        "season1": ".controls-stats:nth-child(2) > div:nth-child(2) > .fg-selection-box__selection",
+        "season2": ".controls-stats:nth-child(2) > div:nth-child(3) > .fg-selection-box__selection",
+        "determine": ".controls-stats.stat-determined > div:nth-child(1) > .fg-selection-box__selection"
+    }
+
+    address = "https://www.fangraphs.com/leaders/special/60-game-span"
+
+    @classmethod
+    def setup_class(cls):
+        with sync_playwright() as play:
+            browser = play.chromium.launch()
+            page = browser.new_page()
+            page.goto(cls.address, timeout=0)
+            page.wait_for_selector(".fg-data-grid.table-type")
+            cls.soup = bs4.BeautifulSoup(
+                page.content(), features="lxml"
+            )
+            browser.close()
+
+    def test_address(self):
         """
-        Private instance method ``SeasonStatGrid.__expand_table``
+        Class attribute ``GameSpanLeaderboards.address``.
         """
-        elems = self.soup.select(".table-page-control:nth-child(3) select")
+        res = requests.get(self.address)
+        assert res.status_code == 200
+
+    def test_list_options_selections(self):
+        """
+        Instance method ``GameSpanLeaderboards.list_options``.
+
+        Uses the following class attributes:
+
+        - ``GameSpanLeaderboards.__selections``
+        """
+        elem_count = {
+            "stat": 2, "type": 3
+        }
+        for query, sel_list in self.__selections.items():
+            elems = [self.soup.select(s)[0] for s in sel_list]
+            assert len(elems) == elem_count[query], query
+            assert all([e.getText() for e in elems]), query
+
+    def test_list_options_dropdowns(self):
+        """
+        Instance method ``GameSpanLeaderboards.list_options``.
+
+        Uses the following class attributes:
+
+        - ``GameSpanLeaderboards.__dropdowns``
+        """
+        elem_count = {
+            "min_pa": 9, "single_season": 46, "season1": 46, "season2": 46,
+            "determine": 11
+        }
+        for query, sel in self.__dropdowns.items():
+            elems = self.soup.select(f"{sel} > div > a")
+            assert len(elems) == elem_count[query], query
+            assert all([e.getText() for e in elems]), query
+
+    def test_current_option_selections(self):
+        """
+        Instance method ``GameSpanLeaderboards.current_option``.
+
+        Uses the following class attributes:
+
+        - ``GameSpanLeaderboards.__selections``
+        """
+        elem_text = {
+            "stat": "Batters", "type": "Best 60-Game Span"
+        }
+        for query, sel_list in self.__selections.items():
+            elems = []
+            for sel in sel_list:
+                elem = self.soup.select(sel)[0]
+                assert elem.get("class") is not None, query
+                elems.append(elem)
+            active = ["active" in e.get("class") for e in elems]
+            assert active.count(True) == 1, query
+            text = [e.getText() for e in elems]
+            assert elem_text[query] in text, query
+
+    def test_current_option_dropdown(self):
+        """
+        Instance method ``GameSpanLeaderboards.current_option``.
+
+        Uses the following class attributes:
+
+        - ``GameSpanLeaderboards.__dropdowns``
+        """
+        elem_text = {
+            "min_pa": "Qualified", "single_season": "Select",
+            "season1": "Select", "season2": "Select",
+            "determine": "WAR"
+        }
+        for query, sel in self.__dropdowns.items():
+            elems = self.soup.select(f"{sel} > div > span")
+            assert len(elems) == 1, query
+            text = elems[0].getText()
+            assert text == elem_text[query], query
+
+    def test_configure_selections(self):
+        """
+        Private instance method ``GameSpanLeaderboards.__configure_selection``.
+        """
+        for query, sel_list in self.__selections.items():
+            for sel in sel_list:
+                elems = self.soup.select(sel)
+                assert len(elems) == 1, query
+
+    def test_configure_dropdown(self):
+        """
+        Private instance method ``GameSpanLeaderboards.__configure_dropdown``.
+        """
+        for query, sel in self.__dropdowns.items():
+            elems = self.soup.select(sel)
+            assert len(elems) == 1, query
+
+    def test_export(self):
+        """
+        Instance method ``GameSpanLeaderboards.export``.
+        """
+        elems = self.soup.select(".data-export")
         assert len(elems) == 1
-        options = ["30", "50", "100", "200", "Infinity"]
-        assert [e.getText() for e in elems[0].select("option")] == options
-
-    def test_write_table_headers(self):
-        """
-        Private instance method ``SeasonStatGrid.__write_table_headers``.
-        """
-        elems = self.soup.select(".table-scroll thead tr th")
-        assert len(elems) == 12
-
-    def test_write_table_rows(self):
-        """
-        Private instance method ``SeasonStatGrid.__write_table_rows``.
-        """
-        elems = self.soup.select(".table-scroll tbody tr")
-        assert len(elems) == 30
-        for elem in elems:
-            assert len(elem.select("td")) == 12

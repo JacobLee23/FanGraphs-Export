@@ -33,14 +33,99 @@ from playwright.sync_api import sync_playwright
 import FanGraphs.exceptions
 
 
-class MajorLeagueLeaderboards:
+class ScrapingUtilities:
+    """
+    Manages the various objects used for scraping the FanGraphs webpages.
+
+    Intializes and manages ``Playwright`` browsers and pages.
+    Intializes and manages ``bs4.BeautifulSoup`` objects.
+    """
+    def __init__(self, browser, address):
+        """
+        :param browser: The name of the browser to use (Chromium, Firefox, WebKit)
+        :param address: The base URL address of the FanGraphs page
+
+        .. py:attribute:: address
+
+            The base URL address of the FanGraphs page
+
+            :type: str
+
+        .. py:attribute:: page
+            The generated synchronous ``Playwright`` page for browser automation.
+
+            :type: playwright.sync_api._generated.Page
+
+        .. py:attribute:: soup
+            The ``BeautifulSoup4`` HTML parser for scraping the webpage.
+
+            :type: bs4.BeautifulSoup
+        """
+        self.address = address
+        os.makedirs("out", exist_ok=True)
+
+        self.__play = sync_playwright().start()
+        browsers = {
+            "chromium": self.__play.chromium,
+            "firefox": self.__play.firefox,
+            "webkit": self.__play.webkit
+        }
+        browser_ctx = browsers.get(browser.lower())
+        if browser_ctx is None:
+            raise FanGraphs.exceptions.UnknownBrowser(browser.lower())
+        self.__browser = browser_ctx.launch(
+            downloads_path=os.path.abspath("out")
+        )
+        self.page = self.__browser.new_page(
+            accept_downloads=True
+        )
+        self.soup = None
+
+    def _refresh_parser(self, *, waitfor=""):
+        """
+        Re-initializes the ``bs4.BeautifulSoup`` object stored in :py:attr:`soup`.
+        """
+        if waitfor:
+            self.page.wait_for_selector(waitfor)
+        self.soup = bs4.BeautifulSoup(
+            self.page.content(), features="lxml"
+        )
+
+    def _close_ad(self):
+        """
+        Closes the ad which may interfere with clicking other page elements.
+        """
+        elem = self.page.query_selector(".ezmob-footer-close")
+        if self.soup.select("#ezmob-wrapper > div[style='display: none;']"):
+            return
+        if elem:
+            elem.click()
+
+    def reset(self, *, waitfor=""):
+        """
+        Navigates to :py:attr:`page` to :py:attr:`address`.
+
+        :param waitfor: If specified, the CSS of the selector to wait for.
+        """
+        self.page.goto(self.address, timeout=0)
+        self._refresh_parser(waitfor=waitfor)
+
+    def quit(self):
+        """
+        Terminates the ``Playwright`` browser and context manager.
+        """
+        self.__browser.close()
+        self.__play.stop()
+
+
+class MajorLeagueLeaderboards(ScrapingUtilities):
     """
     Parses the FanGraphs Major League Leaderboards page.
     Note that the Splits Leaderboard is not covered.
     Instead, it is covered by :py:class:`SplitsLeaderboards`
 
     .. py:attribute:: address
-        The base URL address of the Major League Leaderboards page
+        The base URL address of the Major League Leaderboards page.
 
         :type: str
         :value: https://fangraphs.com/leaders.aspx
@@ -92,47 +177,9 @@ class MajorLeagueLeaderboards:
     def __init__(self, browser="chromium"):
         """
         :param browser: The name of the browser to use (Chromium, Firefox, WebKit)
-
-        .. py:attribute:: page
-            The generated synchronous ``Playwright`` page for browser automation.
-
-            :type: playwright.sync_api._generated.Page
-
-        .. py:attribute:: soup
-            The ``BeautifulSoup4`` HTML parser for scraping the webpage.
-
-            :type: bs4.BeautifulSoup
         """
-        os.makedirs("out", exist_ok=True)
-
-        self.__play = sync_playwright().start()
-        browsers = {
-            "chromium": self.__play.chromium,
-            "firefox": self.__play.firefox,
-            "webkit": self.__play.webkit
-        }
-        browser_ctx = browsers.get(browser.lower())
-        if browser_ctx is None:
-            raise FanGraphs.exceptions.UnknownBrowserException(browser.lower())
-        self.__browser = browser_ctx.launch(
-            downloads_path=os.path.abspath("out")
-        )
-        self.page = self.__browser.new_page(
-            accept_downloads=True
-        )
-        self.page.goto(self.address, timeout=0)
-
-        self.soup = None
-        self.__refresh_parser()
-
-    def __refresh_parser(self):
-        """
-        Re-initializes the ``bs4.BeautifulSoup`` object stored in :py:attr:`soup`.
-        Called when a page refresh is expected
-        """
-        self.soup = bs4.BeautifulSoup(
-            self.page.content(), features="lxml"
-        )
+        super().__init__(browser, self.address)
+        self.reset()
 
     @classmethod
     def list_queries(cls):
@@ -150,12 +197,12 @@ class MajorLeagueLeaderboards:
 
     def list_options(self, query: str):
         """
-        Lists the possible options which the filter query can be configured to.
+        Lists the possible options which a filter query can be configured to.
 
         :param query: The filter query
         :return: Options which the filter query can be configured to
         :rtype: list
-        :raises FanGraphs.exceptions.InvalidFilterQuery: Argument ``query`` is invalid
+        :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
         """
         query = query.lower()
         if query in self.__checkboxes:
@@ -167,17 +214,17 @@ class MajorLeagueLeaderboards:
             elems = self.soup.select(f"{self.__selections[query]} li")
             options = [e.getText() for e in elems]
         else:
-            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
         return options
 
     def current_option(self, query: str):
         """
-        Retrieves the option which the filter query is currently set to.
+        Retrieves the option which a filter query is currently set to.
 
         :param query: The filter query being retrieved of its current option
         :return: The option which the filter query is currently set to
         :rtype: str
-        :raises FanGraphs.exceptions.InvalidFilterQuery: Argument ``query`` is invalid
+        :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
         """
         query = query.lower()
         if query in self.__checkboxes:
@@ -190,22 +237,22 @@ class MajorLeagueLeaderboards:
             elem = self.soup.select(f"{self.__selections[query]} .rtsLink.rtsSelected")
             option = elem.getText()
         else:
-            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
         return option
 
     def configure(self, query: str, option: str, *, autoupdate=True):
         """
-        Configures a filter query ``query`` to a specified option ``option``.
+        Configures a filter query to a specified option.
 
         :param query: The filter query to be configured
         :param option: The option to set the filter query to
-        :param autoupdate: If ``True``, any form submission buttons attached to the filter query will be clicked
-        :raises FanGraphs.exceptions.InvalidFilterQueryException: Argument ``query`` is invalid
+        :param autoupdate: If ``True``, any buttons attached to the filter query will be clicked
+        :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
         """
         query, option = query.lower(), str(option).lower()
         if query not in self.list_queries():
-            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
-        self.__close_ad()
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+        self._close_ad()
         if query in self.__selections:
             self.__configure_selection(query, option)
         elif query in self.__dropdowns:
@@ -213,24 +260,24 @@ class MajorLeagueLeaderboards:
         elif query in self.__checkboxes:
             self.__configure_checkbox(query, option)
         else:
-            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
         if query in self.__buttons and autoupdate:
             self.__click_button(query)
-        self.__refresh_parser()
+        self._refresh_parser()
 
     def __configure_selection(self, query, option):
         """
-        Configures a selection-class filter query ``query`` to an option ``option``
+        Configures a selection-class filter query to an option.
 
         :param query: The selection-class filter query to be configured
         :param option: The option to set the filter query to
-        :raises FanGraphs.exceptions.InvalidFilterOptionException: Argument ``option`` is invalid
+        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
         """
         options = [o.lower() for o in self.list_options(query)]
         try:
             index = options.index(option)
-        except ValueError:
-            raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
+        except ValueError as err:
+            raise FanGraphs.exceptions.InvalidFilterOption(query, option) from err
         self.page.click("#LeaderBoard_tsType a[href='#']")
         elem = self.page.query_selector_all(
             f"{self.__selections[query]} li"
@@ -239,17 +286,17 @@ class MajorLeagueLeaderboards:
 
     def __configure_dropdown(self, query, option):
         """
-        Configures a dropdown-class filter query ``query`` to an option ``option``
+        Configures a dropdown-class filter query to an option.
 
         :param query: The dropdown-class filter query to be configured
         :param option: The option to set the filter query to
-        :raises FanGraphs.exceptions.InvalidFilterOptionException: Argument ``option`` is invalid
+        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
         """
         options = [o.lower() for o in self.list_options(query)]
         try:
             index = options.index(option)
-        except ValueError:
-            raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
+        except ValueError as err:
+            raise FanGraphs.exceptions.InvalidFilterOption(query, option) from err
         self.page.hover(
             self.__dropdowns[query]
         )
@@ -260,14 +307,14 @@ class MajorLeagueLeaderboards:
 
     def __configure_checkbox(self, query, option):
         """
-        Configures a checkbox-class filter query ``query`` to an option ``option``.
+        Configures a checkbox-class filter query to an option.
 
         :param query: The checkbox-class filter query to be configured
         :param option: The option to set the filter query to
         """
         options = self.list_options(query)
         if option not in options:
-            raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
+            raise FanGraphs.exceptions.InvalidFilterOption(query, option)
         if option != self.current_option(query).title():
             self.page.click(self.__checkboxes[query])
 
@@ -281,28 +328,6 @@ class MajorLeagueLeaderboards:
             self.__buttons[query]
         )
 
-    def __close_ad(self):
-        """
-        Closes the ad which may interfere with clicking other page elements.
-        """
-        elem = self.page.query_selector(".ezmob-footer-close")
-        if elem:
-            elem.click()
-
-    def quit(self):
-        """
-        Terminates the underlying ``Playwright`` browser context.
-        """
-        self.__browser.close()
-        self.__play.stop()
-
-    def reset(self):
-        """
-        Navigates to the webpage corresponding to :py:attr:`address`.
-        """
-        self.page.goto(self.address)
-        self.__refresh_parser()
-
     def export(self, path=""):
         """
         Uses the **Export Data** button on the webpage to export the current leaderboard.
@@ -312,11 +337,11 @@ class MajorLeagueLeaderboards:
 
         :param path: The path to save the exported data to
         """
+        self._close_ad()
         if not path or os.path.splitext(path)[1] != ".csv":
             path = "out/{}.csv".format(
                 datetime.datetime.now().strftime("%d.%m.%y %H.%M.%S")
             )
-        self.__close_ad()
         with self.page.expect_download() as down_info:
             self.page.click("#LeaderBoard1_cmdCSV")
         download = down_info.value
@@ -324,12 +349,12 @@ class MajorLeagueLeaderboards:
         os.rename(download_path, path)
 
 
-class SplitsLeaderboards:
+class SplitsLeaderboards(ScrapingUtilities):
     """
     Parses the FanGraphs Splits Leaderboards page.
 
     .. py:attribute:: address
-        The base URL address which corresponds to the Splits Leaderboards page
+        The base URL address which corresponds to the Splits Leaderboards page.
 
         :type: str
         :value: https://fangraphs.com/leaders/splits-leaderboards
@@ -404,51 +429,17 @@ class SplitsLeaderboards:
     }
 
     address = "https://fangraphs.com/leaders/splits-leaderboards"
+    __waitfor = ".fg-data-grid.undefined"
 
     def __init__(self, *, browser="chromium"):
         """
         :param browser: The name of the browser to use (Chromium, Firefox, WebKit)
-
-        .. py:attribute:: page
-            The generated synchronous ``playwright`` page for browser automation.
-
-            :type: playwright.sync_api._generated.Page
-
-        .. py:attribute:: soup
-            The ``BeautifulSoup4`` HTML parser for scraping the webpage.
-
-            :type: bs4.BeautifulSoup
         """
-        os.makedirs("out", exist_ok=True)
-
-        self.__play = sync_playwright().start()
-        browsers = {
-            "chromium": self.__play.chromium,
-            "firefox": self.__play.firefox,
-            "webkit": self.__play.webkit
-        }
-        browser_ctx = browsers.get(browser.lower())
-        if browser_ctx is None:
-            raise FanGraphs.exceptions.UnknownBrowserException(browser.lower())
-        self.__browser = browser_ctx.launch()
-        self.page = self.__browser.new_page()
-        self.page.goto(self.address, timeout=0)
-        self.page.wait_for_selector(".fg-data-grid.undefined")
-
-        self.soup = None
-        self.__refresh_parser()
+        super().__init__(browser, self.address)
+        self.reset(waitfor=self.__waitfor)
 
         self.configure_filter_group("Show All")
         self.configure("auto_pt", "False", autoupdate=True)
-
-    def __refresh_parser(self):
-        """
-        Re-initializes the ``bs4.BeautifulSoup`` object stored in :py:attr:`soup`.
-        Called when a page refresh is expected
-        """
-        self.soup = bs4.BeautifulSoup(
-            self.page.content(), features="lxml"
-        )
 
     @classmethod
     def list_queries(cls):
@@ -467,12 +458,12 @@ class SplitsLeaderboards:
 
     def list_options(self, query: str):
         """
-        Lists the possible options which the filter query can be configured to.
+        Lists the possible options which a filter query can be configured to.
 
         :param query: The filter query
         :return: Options which the filter query can be configured to
         :rtype: list
-        :raises FanGraphs.exceptions.InvalidFilterQuery: Argument ``query`` is invalid
+        :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
         """
         query = query.lower()
         if query in self.__selections:
@@ -492,12 +483,12 @@ class SplitsLeaderboards:
         elif query in self.__switches:
             options = ["True", "False"]
         else:
-            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
         return options
 
     def current_option(self, query: str):
         """
-        Retrieves the option(s) which the filter query is currently set to.
+        Retrieves the option(s) which a filter query is currently set to.
 
         Most dropdown- and split-class filter queries can be configured to multiple options.
         For those filter classes, a list is returned, while other filter classes return a string.
@@ -510,7 +501,7 @@ class SplitsLeaderboards:
         :param query: The filter query being retrieved of its current option
         :return: The option(s) which the filter query is currently set to
         :rtype: str or list
-        :raises FanGraphs.exceptions.InvalidFilterQuery: Argument ``query`` is invalid
+        :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
         """
         query = query.lower()
         option = []
@@ -538,19 +529,19 @@ class SplitsLeaderboards:
             elem = self.soup.select(self.__switches[query])
             option = "True" if "isActive" in elem[0].get("class") else "False"
         else:
-            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
         return option
 
     def configure(self, query: str, option: str, *, autoupdate=False):
         """
-        Configures a filter query ``query`` to a specified option ``option``.
+        Configures a filter query to a specified option.
 
         :param query: The filter query to be configured
         :param option: The option to set the filter query to
         :param autoupdate: If ``True``, :py:meth:`update` will be called following configuration
-        :raises FanGraphs.exceptions.InvalidFilterQueryException: Argument ``query`` is invalid
+        :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
         """
-        self.__close_ad()
+        self._close_ad()
         query = query.lower()
         if query in self.__selections:
             self.__configure_selection(query, option)
@@ -561,98 +552,90 @@ class SplitsLeaderboards:
         elif query in self.__switches:
             self.__configure_switch(query, option)
         else:
-            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
         if autoupdate:
             self.update()
-        self.__refresh_parser()
+        self._refresh_parser(waitfor=self.__waitfor)
 
     def __configure_selection(self, query: str, option: str):
         """
-        Configures a selection-class filter query ``query`` to an option ``option``
+        Configures a selection-class filter query to an option.
 
         :param query: The selection-class filter query to be configured
         :param option: The option to set the filter query to
-        :raises FanGraphs.exceptions.InvalidFilterOptionException: Argument ``option`` is invalid
+        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
         """
         options = self.list_options(query)
         try:
             index = options.index(option)
-        except ValueError:
-            raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
+        except ValueError as err:
+            raise FanGraphs.exceptions.InvalidFilterOption(query, option) from err
         self.page.click(self.__selections[query][index])
 
     def __configure_dropdown(self, query: str, option: str):
         """
-        Configures a dropdown-class filter query ``query`` to an option ``option``.
+        Configures a dropdown-class filter query to an option.
 
         :param query: The dropdown-class filter query to be configured
         :param option: The option to set the filter query to
-        :raises FanGraphs.exceptions.InvalidFilterOptionException: Argument ``option`` is invalid
+        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
         """
         options = self.list_options(query)
         try:
             index = options.index(option)
-        except ValueError:
-            raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
+        except ValueError as err:
+            raise FanGraphs.exceptions.InvalidFilterOption(query, option) from err
         self.page.hover(self.__dropdowns[query])
         elem = self.page.query_selector_all(f"{self.__dropdowns[query]} ul li")[index]
         elem.click()
 
     def __configure_split(self, query: str, option: str):
         """
-        Configures a split-class filter query ``query`` to an option ``option``.
+        Configures a split-class filter query to an option.
         Split-class filter queries are separated from dropdown-class filter queries.
         This is solely because of the CSS selectors used.
 
         :param query: The split-class filter query to be configured
         :param option: The option to configure the filter query to
-        :raises FanGraphs.exceptions.InvalidFilterOptionException: Argument ``option`` is invalid
+        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
         """
         options = self.list_options(query)
         try:
             index = options.index(option)
-        except ValueError:
-            raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
+        except ValueError as err:
+            raise FanGraphs.exceptions.InvalidFilterOption(query, option) from err
         self.page.hover(self.__splits[query])
         elem = self.page.query_selector_all(f"{self.__splits[query]} ul li")[index]
         elem.click()
 
     def __configure_switch(self, query: str, option: str):
         """
-        Configures a switch-class filter query ``query`` to an option ``option``.
+        Configures a switch-class filter query to an option.
 
         :param query: The switch-class filter query to be configured
         :param option: The option to configure the filter query to
-        :raises FanGraphs.exceptions.InvalidFilterOptionException: Argument ``option`` is invalid
+        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
         """
         options = self.list_options(query)
         if option not in options:
-            raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
+            raise FanGraphs.exceptions.InvalidFilterOption(query, option)
         if option != self.current_option(query)[0].title():
             self.page.click(self.__switches[query])
-
-    def __close_ad(self):
-        """
-        Closes the ad which may interfere with clicking other page elements.
-        """
-        elem = self.page.query_selector(".ezmob-footer-close")
-        if elem and elem.is_visible():
-            elem.click()
 
     def update(self):
         """
         Clicks the **Update** button of the page.
         All configured filters are submitted and the page is refreshed.
 
-        :raises FanGraphs.exceptions.FilterUpdateIncapabilityWarning: No filter query configurations to update
+        :raises FanGraphs.exceptions.FilterUpdateIncapability: No filter queries to update
         """
         selector = "#button-update"
         elem = self.page.query_selector(selector)
         if elem is None:
-            raise FanGraphs.exceptions.FilterUpdateIncapabilityWarning()
-        self.__close_ad()
+            raise FanGraphs.exceptions.FilterUpdateIncapability()
+        self._close_ad()
         elem.click()
-        self.__refresh_parser()
+        self._refresh_parser(waitfor=self.__waitfor)
 
     def list_filter_groups(self):
         """
@@ -667,7 +650,7 @@ class SplitsLeaderboards:
 
     def configure_filter_group(self, group="Show All"):
         """
-        Configures the available filters to the specified group of filters
+        Configures the available filters to a specified group of filters
 
         :param group: The name of the group of filters
         """
@@ -678,7 +661,7 @@ class SplitsLeaderboards:
             index = options.index(group)
         except ValueError:
             raise Exception
-        self.__close_ad()
+        self._close_ad()
         elem = self.page.query_selector_all(selector)[index]
         elem.click()
 
@@ -699,7 +682,7 @@ class SplitsLeaderboards:
         elem = self.page.query_selector(selector)
         if elem is None:
             return
-        self.__close_ad()
+        self._close_ad()
         elem.click()
 
     @classmethod
@@ -721,124 +704,45 @@ class SplitsLeaderboards:
 
         :param quick_split: The quick split to invoke
         :param autoupdate: If ``True``, :py:meth:`reset_filters` will be called
-        :raises FanGraphs.exceptions.InvalidQuickSplitsException: Argument ``quick_split`` if invalid
+        :raises FanGraphs.exceptions.InvalidQuickSplitsException: Invalid argument ``quick_split``
         """
         quick_split = quick_split.lower()
         try:
             selector = self.__quick_splits[quick_split]
-        except KeyError:
-            raise FanGraphs.exceptions.InvalidQuickSplitException(quick_split)
-        self.__close_ad()
+        except ValueError as err:
+            raise FanGraphs.exceptions.InvalidQuickSplitException(quick_split) from err
+        self._close_ad()
         self.page.click(selector)
         if autoupdate:
             self.update()
 
-    def export(self, path="", *, size="Infinity", sortby="", reverse=False):
+    def export(self, path=""):
         """
-        Scrapes and saves the data from the table of the current leaderboards
+        Uses the **Export Data** button on the webpage to export the current leaderboard.
         The data will be exported as a CSV file and the file will be saved to *out/*.
         The file will be saved to the filepath ``path``, if specified.
-        Otherwise, the file will be saved to the filepath *out/%d.%m.%y %H.%M.%S.csv*
+        Otherwise, the file will be saved to the filepath *./out/%d.%m.%y %H.%M.%S.csv*
 
-        *Note: This is a 'manual' export of the data.
-        In other words, the data is scraped from the table.
-        This is unlike other forms of export where a button is clicked.
-        Thus, there will be no record of a download when the data is exported.*
-
-        :param path: The path to save the exported file to
-        :param size: The maximum number of rows of the table to export
-        :param sortby: The table header to sort the data by
-        :param reverse: If ``True``, the organization of the data will be reversed
-        :return:
+        :param path: The path to save the exported data to
         """
-        self.page.hover(".data-export")
-        self.__close_ad()
-        self.__expand_table(size=size)
-        if sortby:
-            self.__sortby(sortby.title(), reverse=reverse)
+        self._close_ad()
         if not path or os.path.splitext(path)[1] != ".csv":
             path = "{}.csv".format(
                 datetime.datetime.now().strftime("%d.%m.%y %H.%M.%S")
             )
-        with open(os.path.join("out", path), "w", newline="") as file:
-            writer = csv.writer(file)
-            self.__write_table_headers(writer)
-            self.__write_table_rows(writer)
-
-    def __expand_table(self, *, size="Infinity"):
-        """
-        Expands the data table to the appropriate number of rows
-
-        :param size: The maximum number of rows the table should have.
-        The number of rows is preset (30, 50, 100, 200, Infinity).
-        """
-        selector = ".table-page-control:nth-child(3) select"
-        dropdown = self.page.query_selector(selector)
-        dropdown.click()
-        elems = self.soup.select(f"{selector} option")
-        options = [e.getText() for e in elems]
-        size = "Infinity" if size not in options else size
-        index = options.index(size)
-        option = self.page.query_selector_all(f"{selector} option")[index]
-        option.click()
-
-    def __sortby(self, sortby, *, reverse=False):
-        """
-        Sorts the data by the appropriate table header.
-
-        :param sortby: The table header to sort the data by
-        :param reverse: If ``True``, the organization of the data will be reversed
-        """
-        elems = self.soup.select(".table-scroll thead tr th")
-        options = [e.getText() for e in elems]
-        index = options.index(sortby)
-        elems[index].click()
-        if reverse:
-            elems[index].click()
-
-    def __write_table_headers(self, writer: csv.writer):
-        """
-        Writes the data table headers to the CSV file.
-
-        :param writer: The ``csv.writer`` object
-        """
-        elems = self.soup.select(".table-scroll thead tr th")
-        headers = [e.getText() for e in elems]
-        writer.writerow(headers)
-
-    def __write_table_rows(self, writer: csv.writer):
-        """
-        Iterates through the rows of the data table and writes the data in each row to the CSV file.
-
-        :param writer: The ``csv.writer`` object
-        """
-        row_elems = self.soup.select(".table-scroll tbody tr")
-        for row in row_elems:
-            elems = row.select("td")
-            items = [e.getText() for e in elems]
-            writer.writerow(items)
-
-    def reset(self):
-        """
-        Navigates to the webpage corresponding to :py:attr:`address`.
-        """
-        self.page.goto(self.address)
-        self.__refresh_parser()
-
-    def quit(self):
-        """
-        Terminates the underlying ``playwright`` browser context.
-        """
-        self.__browser.close()
-        self.__play.stop()
+        with self.page.expect_download() as down_info:
+            self.page.click(".data-export")
+        download = down_info.value
+        download_path = download.path()
+        os.rename(download_path, path)
 
 
-class SeasonStatGrid:
+class SeasonStatGrid(ScrapingUtilities):
     """
     Scrapes the FanGraphs Season Stat Grid webpage.
 
     .. py:attribute:: address
-        The base URL address of the Season Stat Grid page
+        The base URL address of the Season Stat Grid page.
 
         :type: str
         :value: https://fangraphs.com/season-stat-grid
@@ -869,48 +773,14 @@ class SeasonStatGrid:
         "value": ".season-grid-controls-dropdown-row-stats > div:nth-child(9)"
     }
     address = "https://fangraphs.com/leaders/season-stat-grid"
+    __waitfor = ".fg-data-grid.undefined"
 
     def __init__(self, *, browser="chromium"):
         """
         :param browser: The name of the browser to use (Chromium, Firefox, WebKit)
-
-        .. py:attribute:: page
-            The generated synchronous ``playwright`` page for browser automation.
-
-            :type: playwright.sync_api._generated.Page
-
-        .. py:attribute:: soup
-            The ``BeautifulSoup4`` HTML parser for scraping the webpage.
-
-            :type: bs4.BeautifulSoup
         """
-        os.makedirs("out", exist_ok=True)
-
-        self.__play = sync_playwright().start()
-        browsers = {
-            "chromium": self.__play.chromium,
-            "firefox": self.__play.firefox,
-            "webkit": self.__play.webkit
-        }
-        browser_ctx = browsers.get(browser.lower())
-        if browser_ctx is None:
-            raise FanGraphs.exceptions.UnknownBrowserException(browser.lower())
-        self.__browser = browser_ctx.launch()
-        self.page = self.__browser.new_page()
-        self.page.goto(self.address)
-        self.page.wait_for_selector(".fg-data-grid.undefined")
-
-        self.soup = None
-        self.__refresh_parsers()
-
-    def __refresh_parsers(self):
-        """
-        Re-initializes the ``bs4.BeautifulSoup`` object stored in :py:attr:`soup`.
-        Called when a page refresh is expected
-        """
-        self.soup = bs4.BeautifulSoup(
-            self.page.content(), features="lxml"
-        )
+        super().__init__(browser, self.address)
+        self.reset(waitfor=self.__waitfor)
 
     @classmethod
     def list_queries(cls):
@@ -927,7 +797,7 @@ class SeasonStatGrid:
 
     def list_options(self, query: str):
         """
-        Lists the possible options which the filter query can be configured to.
+        Lists the possible options which a filter query can be configured to.
 
         :param query: The filter query
         :return: Options which the filter query can be configured to
@@ -947,12 +817,12 @@ class SeasonStatGrid:
             )
             options = [e.getText() for e in elems]
         else:
-            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
         return options
 
     def current_option(self, query: str):
         """
-        Retrieves the option which the filter query is currently configured to.
+        Retrieves the option which a filter query is currently configured to.
 
         :param query: The filter query
         :return: The option which the filter query is currently configured to
@@ -972,27 +842,26 @@ class SeasonStatGrid:
             )
             option = elems[0].getText() if elems else "None"
         else:
-            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
         return option
 
     def configure(self, query: str, option: str):
         """
-        Configures the filter query to the specified option.
+        Configures a filter query to a specified option.
 
         :param query: The filter query
         :param option: The option to configure ``query`` to
-        :raises FanGraphs.exceptions.InvalidFilterQuery: Argument ``query`` is invalid
-        :raises FanGraphs.exceptions.InvalidFilterOption: Filter ``query`` cannot be configured to ``option``
+        :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
         """
         query = query.lower()
-        self.__close_ad()
+        self._close_ad()
         if query in self.__selections:
             self.__configure_selection(query, option)
         elif query in self.__dropdowns:
             self.__configure_dropdown(query, option)
         else:
-            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
-        self.__refresh_parsers()
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+        self._refresh_parser(waitfor=self.__waitfor)
 
     def __configure_selection(self, query: str, option: str):
         """
@@ -1000,13 +869,13 @@ class SeasonStatGrid:
 
         :param query: The filter query
         :param option: The option to configure ``query`` to
-        :raises FanGraphs.exceptions.InvalidFilterOption: Filter ``query`` cannot be configured to ``option``
+        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
         """
         options = self.list_options(query)
         try:
             index = options.index(option)
-        except ValueError:
-            raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
+        except ValueError as err:
+            raise FanGraphs.exceptions.InvalidFilterOption(query, option) from err
         self.page.click(self.__selections[query][index])
 
     def __configure_dropdown(self, query: str, option: str):
@@ -1015,26 +884,41 @@ class SeasonStatGrid:
 
         :param query: The filter query
         :param option: The option to configure ``query`` to
-        :raises FanGraphs.exceptions.InvalidFilterOption: Filter ``query`` cannot be configured to ``option``
+        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
         """
         options = self.list_options(query)
         try:
             index = options.index(option)
-        except ValueError:
-            raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
+        except ValueError as err:
+            raise FanGraphs.exceptions.InvalidFilterOption(query, option) from err
         self.page.hover(self.__dropdowns[query])
         elem = self.page.query_selector_all(f"{self.__dropdowns[query]} ul li")[index]
         elem.click()
 
-    def __close_ad(self):
+    def _write_table_headers(self, writer: csv.writer):
         """
-        Closes the ad which may interfere with interactions with other page elements
-        """
-        elem = self.page.query_selector(".ezmob-footer-close")
-        if elem and elem.is_visible():
-            elem.click()
+        Writes the headers of the data table to the CSV file.
 
-    def export(self, path="", *, size="Infinity", sortby="Name", reverse=False):
+        :param writer: The ``csv.writer`` object
+        """
+        elems = self.soup.select(".table-scroll thead tr th")
+        headers = [e.getText() for e in elems]
+        writer.writerow(headers)
+
+    def _write_table_rows(self, writer: csv.writer):
+        """
+        Iterates through the rows of the current data table.
+        The data in each row is written to the CSV file.
+
+        :param writer: The ``csv.writer`` object
+        """
+        row_elems = self.soup.select(".table-scroll tbody tr")
+        for row in row_elems:
+            elems = row.select("td")
+            items = [e.getText() for e in elems]
+            writer.writerow(items)
+
+    def export(self, path=""):
         """
         Scrapes and saves the data from the table of the current leaderboards.
         The data will be exported as a CSV file and the file will be saved to *out/*.
@@ -1047,98 +931,200 @@ class SeasonStatGrid:
         Thus, there will be no record of a download when the data is exported.*
 
         :param path: The path to save the exported file to
-        :param size: The maximum number of rows of the table to export
-        :param sortby: The table header to sort the data by
-        :param reverse: If ``True``, the organization of the data will be reversed
         """
-        self.__close_ad()
-        self.__expand_table(size=size)
-        self.__sortby(sortby.title(), reverse=reverse)
+        self._close_ad()
+        if not path or os.path.splitext(path)[1] != ".csv":
+            path = "out/{}.csv".format(
+                datetime.datetime.now().strftime("%d.%m.%y %H.%M.%S")
+            )
+        total_pages = int(
+            self.soup.select(
+                ".table-page-control:nth-last-child(1) > .table-control-total"
+            )[0].getText()
+        )
+        with open(path, "w", newline="") as file:
+            writer = csv.writer(file)
+            self._write_table_headers(writer)
+            for _ in range(0, total_pages):
+                self._write_table_rows(writer)
+                self.page.click(
+                    ".table-page-control:nth-last-child(1) > .next"
+                )
+                self._refresh_parser(waitfor=self.__waitfor)
+
+
+class GameSpanLeaderboards(ScrapingUtilities):
+    """
+    Scrape the FanGraphs 60-Game Span Leaderboards
+
+    .. py:attribute:: address
+
+        The base URL address of the 60-Game Span Leaderboards page
+
+        :type: str
+        :value: https://fangraphs.com/leaders/special/60-game-span
+    """
+    __selections = {
+        "stat": [
+            ".controls-stats > .fgButton:nth-child(1)",
+            ".controls-stats > .fgButton:nth-child(2)"
+        ],
+        "type": [
+            ".controls-board-view > .fgButton:nth-child(1)",
+            ".controls-board-view > .fgButton:nth-child(2)",
+            ".controls-board-view > .fgButton:nth-child(3)"
+        ]
+    }
+    __dropdowns = {
+        "min_pa": ".controls-stats:nth-child(1) > div:nth-child(3) > .fg-selection-box__selection",
+        "single_season": ".controls-stats:nth-child(2) > div:nth-child(1) > .fg-selection-box__selection",
+        "season1": ".controls-stats:nth-child(2) > div:nth-child(2) > .fg-selection-box__selection",
+        "season2": ".controls-stats:nth-child(2) > div:nth-child(3) > .fg-selection-box__selection",
+        "determine": ".controls-stats.stat-determined > div:nth-child(1) > .fg-selection-box__selection"
+    }
+    address = "https://fangraphs.com/leaders/special/60-game-span"
+    __waitfor = ".fg-data-grid.table-type"
+
+    def __init__(self, browser="chromium"):
+        """
+        :param browser: The name of the browser to use (Chromium, Firefox, WebKit)
+        """
+        super().__init__(browser, self.address)
+        self.reset(waitfor=self.__waitfor)
+
+    @classmethod
+    def list_queries(cls):
+        """
+        Lists the possible filter queries which can be used to modify search results.
+
+        :return: Filter queries which can be used to modify search results
+        :rtype: list
+        """
+        queries = []
+        queries.extend(list(cls.__selections))
+        queries.extend(list(cls.__dropdowns))
+        return queries
+
+    def list_options(self, query: str):
+        """
+        Lists the possible options which a filter query can be configured to.
+
+        :param query: The filter query
+        :return: Options which the filter query can be configured to
+        :rtype: list
+        :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
+        """
+        query = query.lower()
+        if query in self.__selections:
+            elems = [
+                self.soup.select(s)[0]
+                for s in self.__selections[query]
+            ]
+            options = [e.getText() for e in elems]
+        elif query in self.__dropdowns:
+            elems = self.soup.select(f"{self.__dropdowns[query]} > div > a")
+            options = [e.getText() for e in elems]
+        else:
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+        return options
+
+    def current_option(self, query: str):
+        """
+        Retrieves the option which a filter query is currently set to.
+
+        :param query: The filter query being retrieved of its current option
+        :return: The option which the filter query is currently set to
+        :rtype: str
+        :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
+        """
+        query = query.lower()
+        option = ""
+        if query in self.__selections:
+            for sel in self.__selections[query]:
+                elem = self.soup.select(sel)[0]
+                if "active" in elem.get("class"):
+                    option = elem.getText()
+                    break
+        elif query in self.__dropdowns:
+            elem = self.soup.select(
+                f"{self.__dropdowns[query]} > div > span"
+            )[0]
+            option = elem.getText()
+        else:
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+        return option
+
+    def configure(self, query: str, option: str):
+        """
+        Configures a filter query to a specified option.
+
+        :param query: The filter query to be configured
+        :param option: The option to set the filter query to
+        :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
+        """
+        query = query.lower()
+        self._close_ad()
+        if query in self.__selections:
+            self.__configure_selection(query, option)
+        elif query in self.__dropdowns:
+            self.__configure_dropdown(query, option)
+        else:
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+        self._refresh_parser(waitfor=self.__waitfor)
+
+    def __configure_selection(self, query: str, option: str):
+        """
+        Configures a selection-class filter query to an option.
+
+        :param query: The selection-class filter query to be configured
+        :param option: The option to set the filter query to
+        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
+        """
+        options = self.list_options(query)
+        try:
+            index = options.index(option)
+        except ValueError as err:
+            raise FanGraphs.exceptions.InvalidFilterOption(query, option) from err
+        self.page.click(self.__selections[query][index])
+
+    def __configure_dropdown(self, query: str, option: str):
+        """
+        Configures a dropdown-class filter query to an option.
+
+        :param query: The dropdown-class filter query to be configured
+        :param option: The option to set the filter query to
+        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
+        """
+        options = self.list_options(query)
+        try:
+            index = options.index(option)
+        except ValueError as err:
+            raise FanGraphs.exceptions.InvalidFilterOption(query, option) from err
+        self.page.click(self.__dropdowns[query])
+        elem = self.page.query_selector_all(
+            f"{self.__dropdowns[query]} > div > a"
+        )[index]
+        elem.click()
+
+    def export(self, path=""):
+        """
+        Uses the **Export Data** button on the webpage to export the current leaderboard.
+        The data will be exported as a CSV file and the file will be saved to *out/*.
+        The file will be saved to the filepath ``path``, if specified.
+        Otherwise, the file will be saved to the filepath *./out/%d.%m.%y %H.%M.%S.csv*
+
+        :param path: The path to save the exported data to
+        """
+        self._close_ad()
         if not path or os.path.splitext(path)[1] != ".csv":
             path = "{}.csv".format(
                 datetime.datetime.now().strftime("%d.%m.%y %H.%M.%S")
             )
-        with open(os.path.join("out", path), "w", newline="") as file:
-            writer = csv.writer(file)
-            self.__write_table_headers(writer)
-            self.__write_table_rows(writer)
-
-    def __expand_table(self, *, size="Infinity"):
-        """
-        Expands the data table to the appropriate number of rows
-
-        :param size: The maximum number of rows the table should have.
-        The number of rows is preset (30, 50, 100, 200, Infinity).
-        """
-        selector = ".table-page-control:nth-child(3) select"
-        dropdown = self.page.query_selector(selector)
-        dropdown.click()
-        elems = self.soup.select(f"{selector} option")
-        options = [e.getText() for e in elems]
-        size = "Infinity" if size not in options else size
-        index = options.index(size)
-        option = self.page.query_selector_all(f"{selector} option")[index]
-        option.click()
-
-    def __sortby(self, sortby, *, reverse=False):
-        """
-        Sorts the data by the appropriate table header.
-
-        :param sortby: The table header to sort the data by
-        :param reverse: If ``True``, the organizatino of the data will be reversed
-        """
-        selector = ".table-scroll thead tr th"
-        elems = self.soup.select(selector)
-        options = [e.getText() for e in elems]
-        index = options.index(sortby)
-        option = self.page.query_selector_all(selector)[index]
-        option.click()
-        if reverse:
-            option.click()
-
-    def __write_table_headers(self, writer: csv.writer):
-        """
-        Writes the data table headers to the CSV file.
-
-        :param writer: The ``csv.writer`` object
-        """
-        selector = ".table-scroll thead tr th"
-        elems = self.soup.select(selector)
-        headers = [e.getText() for e in elems]
-        writer.writerow(headers)
-
-    def __write_table_rows(self, writer: csv.writer):
-        """
-        Iterates through the rows of the data table and writes the data in each row to the CSV file.
-
-        :param writer: The ``csv.writer`` object
-        """
-        selector = ".table-scroll tbody tr"
-        row_elems = self.soup.select(selector)
-        for row in row_elems:
-            elems = row.select("td")
-            items = [e.getText() for e in elems]
-            writer.writerow(items)
-
-    def reset(self):
-        """
-        Navigates to the webpage corresponding to :py:attr:`address`.
-        """
-        self.page.goto(self.address)
-        self.__refresh_parsers()
-
-    def quit(self):
-        """
-        Terminates the underlying ``playwright`` browser context.
-        """
-        self.__browser.close()
-        self.__play.stop()
-
-
-class GameSpanLeaderboards:
-
-    def __init__(self):
-        pass
+        with self.page.expect_download() as down_info:
+            self.page.click(".data-export")
+        download = down_info.value
+        download_path = download.path()
+        os.rename(download_path, path)
 
 
 class InternationalLeaderboards:
