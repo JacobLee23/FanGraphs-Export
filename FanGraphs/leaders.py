@@ -35,7 +35,8 @@ import FanGraphs.exceptions
 
 class __Scraper:
 
-    def __init__(self, browser):
+    def __init__(self, browser, address):
+        self.address = address
         os.makedirs("out", exist_ok=True)
 
         self.__play = sync_playwright().start()
@@ -53,12 +54,18 @@ class __Scraper:
         self.page = self.__browser.new_page(
             accept_downloads=True
         )
+        self.soup = None
 
     def __refresh_parser(self):
-        soup = bs4.BeautifulSoup(
+        self.soup = bs4.BeautifulSoup(
             self.page.content(), features="lxml"
         )
-        return soup
+
+    def reset(self, *, waitfor=""):
+        self.page.goto(self.address)
+        if waitfor:
+            self.page.wait_for_selector(waitfor)
+        self.__refresh_parser()
 
     def quit(self):
         self.__browser.close()
@@ -135,9 +142,8 @@ class MajorLeagueLeaderboards(__Scraper):
 
             :type: bs4.BeautifulSoup
         """
-        super().__init__(browser)
-        self.page.goto(self.address, timeout=0)
-        self.soup = self.__refresh_parser()
+        super().__init__(browser, self.address)
+        self.reset()
 
     @classmethod
     def list_queries(cls):
@@ -221,7 +227,7 @@ class MajorLeagueLeaderboards(__Scraper):
             raise FanGraphs.exceptions.InvalidFilterQueryException(query)
         if query in self.__buttons and autoupdate:
             self.__click_button(query)
-        self.soup = self.__refresh_parser()
+        self.__refresh_parser()
 
     def __configure_selection(self, query, option):
         """
@@ -293,13 +299,6 @@ class MajorLeagueLeaderboards(__Scraper):
         elem = self.page.query_selector(".ezmob-footer-close")
         if elem:
             elem.click()
-
-    def reset(self):
-        """
-        Navigates to the webpage corresponding to :py:attr:`address`.
-        """
-        self.page.goto(self.address, timeout=0)
-        self.soup = self.__refresh_parser()
 
     def export(self, path=""):
         """
@@ -417,10 +416,8 @@ class SplitsLeaderboards(__Scraper):
 
             :type: bs4.BeautifulSoup
         """
-        super().__init__(browser)
-        self.page.goto(self.address, timeout=0)
-        self.page.wait_for_selector(".fg-data-grid.undefined")
-        self.soup = self.__refresh_parser()
+        super().__init__(browser, self.address)
+        self.reset(waitfor=".fg-data-grid.undefined")
 
         self.configure_filter_group("Show All")
         self.configure("auto_pt", "False", autoupdate=True)
@@ -539,7 +536,7 @@ class SplitsLeaderboards(__Scraper):
             raise FanGraphs.exceptions.InvalidFilterQueryException(query)
         if autoupdate:
             self.update()
-        self.soup = self.__refresh_parser()
+        self.__refresh_parser()
 
     def __configure_selection(self, query: str, option: str):
         """
@@ -627,7 +624,7 @@ class SplitsLeaderboards(__Scraper):
             raise FanGraphs.exceptions.FilterUpdateIncapabilityWarning()
         self.__close_ad()
         elem.click()
-        self.soup = self.__refresh_parser()
+        self.__refresh_parser()
 
     def list_filter_groups(self):
         """
@@ -793,13 +790,6 @@ class SplitsLeaderboards(__Scraper):
             items = [e.getText() for e in elems]
             writer.writerow(items)
 
-    def reset(self):
-        """
-        Navigates to the webpage corresponding to :py:attr:`address`.
-        """
-        self.page.goto(self.address, timeout=0)
-        self.soup = self.__refresh_parser()
-
 
 class SeasonStatGrid(__Scraper):
     """
@@ -852,10 +842,8 @@ class SeasonStatGrid(__Scraper):
 
             :type: bs4.BeautifulSoup
         """
-        super().__init__(browser)
-        self.page.goto(self.address, timeout=0)
-        self.page.wait_for_selector(".fg-data-grid.undefined")
-        self.soup = self.__refresh_parser()
+        super().__init__(browser, self.address)
+        self.reset(waitfor=".fg-data-grid.undefined")
 
     @classmethod
     def list_queries(cls):
@@ -937,7 +925,7 @@ class SeasonStatGrid(__Scraper):
             self.__configure_dropdown(query, option)
         else:
             raise FanGraphs.exceptions.InvalidFilterQueryException(query)
-        self.soup = self.__refresh_parser()
+        self.__refresh_parser()
 
     def __configure_selection(self, query: str, option: str):
         """
@@ -1065,13 +1053,6 @@ class SeasonStatGrid(__Scraper):
             items = [e.getText() for e in elems]
             writer.writerow(items)
 
-    def reset(self):
-        """
-        Navigates to the webpage corresponding to :py:attr:`address`.
-        """
-        self.page.goto(self.address, timeout=0)
-        self.soup = self.__refresh_parser()
-
 
 class GameSpanLeaderboards(__Scraper):
     """
@@ -1088,13 +1069,8 @@ class GameSpanLeaderboards(__Scraper):
     address = "https://fangraphs.com/leaders/special/60-game-span"
 
     def __init__(self, browser="chromium"):
-        super().__init__(browser)
-        self.page.goto(self.address, timeout=0)
-        self.soup = self.__refresh_parser()
-
-    def reset(self):
-        self.page.goto(self.address, timeout=0)
-        self.soup = self.__refresh_parser()
+        super().__init__(browser, self.address)
+        self.reset()
 
 
 class InternationalLeaderboards:
