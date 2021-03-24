@@ -33,8 +33,13 @@ from playwright.sync_api import sync_playwright
 import FanGraphs.exceptions
 
 
-class __Utils:
+class ScrapingUtilities:
+    """
+    Manages the various objects used for scraping the FanGraphs webpages.
 
+    Intializes and manages ``Playwright`` browsers and pages.
+    Intializes and manages ``bs4.BeautifulSoup`` objects.
+    """
     def __init__(self, browser, address):
         """
         :param browser: The name of the browser to use (Chromium, Firefox, WebKit)
@@ -79,7 +84,6 @@ class __Utils:
     def _refresh_parser(self, *, waitfor=""):
         """
         Re-initializes the ``bs4.BeautifulSoup`` object stored in :py:attr:`soup`.
-        Called when a page refresh is expected
         """
         if waitfor:
             self.page.wait_for_selector(waitfor)
@@ -99,7 +103,7 @@ class __Utils:
 
     def reset(self, *, waitfor=""):
         """
-        Navigates to the webpage corresponding to :py:attr:`address`.
+        Navigates to :py:attr:`page` to :py:attr:`address`.
 
         :param waitfor: If specified, the CSS of the selector to wait for.
         The wait will occur after the page has navigated to the webpage and before the parser is refreshed.
@@ -112,13 +116,13 @@ class __Utils:
 
     def quit(self):
         """
-        Terminates the underlying ``Playwright`` browser context.
+        Terminates the ``Playwright`` browser and context manager.
         """
         self.__browser.close()
         self.__play.stop()
 
 
-class MajorLeagueLeaderboards(__Utils):
+class MajorLeagueLeaderboards(ScrapingUtilities):
     """
     Parses the FanGraphs Major League Leaderboards page.
     Note that the Splits Leaderboard is not covered.
@@ -197,7 +201,7 @@ class MajorLeagueLeaderboards(__Utils):
 
     def list_options(self, query: str):
         """
-        Lists the possible options which the filter query can be configured to.
+        Lists the possible options which a filter query can be configured to.
 
         :param query: The filter query
         :return: Options which the filter query can be configured to
@@ -219,7 +223,7 @@ class MajorLeagueLeaderboards(__Utils):
 
     def current_option(self, query: str):
         """
-        Retrieves the option which the filter query is currently set to.
+        Retrieves the option which a filter query is currently set to.
 
         :param query: The filter query being retrieved of its current option
         :return: The option which the filter query is currently set to
@@ -242,7 +246,7 @@ class MajorLeagueLeaderboards(__Utils):
 
     def configure(self, query: str, option: str, *, autoupdate=True):
         """
-        Configures a filter query ``query`` to a specified option ``option``.
+        Configures a filter query to a specified option.
 
         :param query: The filter query to be configured
         :param option: The option to set the filter query to
@@ -267,7 +271,7 @@ class MajorLeagueLeaderboards(__Utils):
 
     def __configure_selection(self, query, option):
         """
-        Configures a selection-class filter query ``query`` to an option ``option``
+        Configures a selection-class filter query to an option.
 
         :param query: The selection-class filter query to be configured
         :param option: The option to set the filter query to
@@ -286,7 +290,7 @@ class MajorLeagueLeaderboards(__Utils):
 
     def __configure_dropdown(self, query, option):
         """
-        Configures a dropdown-class filter query ``query`` to an option ``option``
+        Configures a dropdown-class filter query to an option.
 
         :param query: The dropdown-class filter query to be configured
         :param option: The option to set the filter query to
@@ -307,7 +311,7 @@ class MajorLeagueLeaderboards(__Utils):
 
     def __configure_checkbox(self, query, option):
         """
-        Configures a checkbox-class filter query ``query`` to an option ``option``.
+        Configures a checkbox-class filter query to an option.
 
         :param query: The checkbox-class filter query to be configured
         :param option: The option to set the filter query to
@@ -349,7 +353,7 @@ class MajorLeagueLeaderboards(__Utils):
         os.rename(download_path, path)
 
 
-class SplitsLeaderboards(__Utils):
+class SplitsLeaderboards(ScrapingUtilities):
     """
     Parses the FanGraphs Splits Leaderboards page.
 
@@ -458,7 +462,7 @@ class SplitsLeaderboards(__Utils):
 
     def list_options(self, query: str):
         """
-        Lists the possible options which the filter query can be configured to.
+        Lists the possible options which a filter query can be configured to.
 
         :param query: The filter query
         :return: Options which the filter query can be configured to
@@ -488,7 +492,7 @@ class SplitsLeaderboards(__Utils):
 
     def current_option(self, query: str):
         """
-        Retrieves the option(s) which the filter query is currently set to.
+        Retrieves the option(s) which a filter query is currently set to.
 
         Most dropdown- and split-class filter queries can be configured to multiple options.
         For those filter classes, a list is returned, while other filter classes return a string.
@@ -534,7 +538,7 @@ class SplitsLeaderboards(__Utils):
 
     def configure(self, query: str, option: str, *, autoupdate=False):
         """
-        Configures a filter query ``query`` to a specified option ``option``.
+        Configures a filter query to a specified option.
 
         :param query: The filter query to be configured
         :param option: The option to set the filter query to
@@ -559,7 +563,7 @@ class SplitsLeaderboards(__Utils):
 
     def __configure_selection(self, query: str, option: str):
         """
-        Configures a selection-class filter query ``query`` to an option ``option``
+        Configures a selection-class filter query to an option.
 
         :param query: The selection-class filter query to be configured
         :param option: The option to set the filter query to
@@ -574,7 +578,7 @@ class SplitsLeaderboards(__Utils):
 
     def __configure_dropdown(self, query: str, option: str):
         """
-        Configures a dropdown-class filter query ``query`` to an option ``option``.
+        Configures a dropdown-class filter query to an option.
 
         :param query: The dropdown-class filter query to be configured
         :param option: The option to set the filter query to
@@ -591,7 +595,7 @@ class SplitsLeaderboards(__Utils):
 
     def __configure_split(self, query: str, option: str):
         """
-        Configures a split-class filter query ``query`` to an option ``option``.
+        Configures a split-class filter query to an option.
         Split-class filter queries are separated from dropdown-class filter queries.
         This is solely because of the CSS selectors used.
 
@@ -610,7 +614,7 @@ class SplitsLeaderboards(__Utils):
 
     def __configure_switch(self, query: str, option: str):
         """
-        Configures a switch-class filter query ``query`` to an option ``option``.
+        Configures a switch-class filter query to an option.
 
         :param query: The switch-class filter query to be configured
         :param option: The option to configure the filter query to
@@ -650,7 +654,7 @@ class SplitsLeaderboards(__Utils):
 
     def configure_filter_group(self, group="Show All"):
         """
-        Configures the available filters to the specified group of filters
+        Configures the available filters to a specified group of filters
 
         :param group: The name of the group of filters
         """
@@ -737,7 +741,7 @@ class SplitsLeaderboards(__Utils):
         os.rename(download_path, path)
 
 
-class SeasonStatGrid(__Utils):
+class SeasonStatGrid(ScrapingUtilities):
     """
     Scrapes the FanGraphs Season Stat Grid webpage.
 
@@ -797,7 +801,7 @@ class SeasonStatGrid(__Utils):
 
     def list_options(self, query: str):
         """
-        Lists the possible options which the filter query can be configured to.
+        Lists the possible options which a filter query can be configured to.
 
         :param query: The filter query
         :return: Options which the filter query can be configured to
@@ -822,7 +826,7 @@ class SeasonStatGrid(__Utils):
 
     def current_option(self, query: str):
         """
-        Retrieves the option which the filter query is currently configured to.
+        Retrieves the option which a filter query is currently configured to.
 
         :param query: The filter query
         :return: The option which the filter query is currently configured to
@@ -847,7 +851,7 @@ class SeasonStatGrid(__Utils):
 
     def configure(self, query: str, option: str):
         """
-        Configures the filter query to the specified option.
+        Configures a filter query to a specified option.
 
         :param query: The filter query
         :param option: The option to configure ``query`` to
@@ -898,7 +902,8 @@ class SeasonStatGrid(__Utils):
 
     def _write_table_headers(self, writer: csv.writer):
         """
-        Writes the data table headers to the CSV file.
+        Writes the headers of the data table to the CSV file.
+
         :param writer: The ``csv.writer`` object
         """
         elems = self.soup.select(".table-scroll thead tr th")
@@ -907,7 +912,9 @@ class SeasonStatGrid(__Utils):
 
     def _write_table_rows(self, writer: csv.writer):
         """
-        Iterates through the rows of the data table and writes the data in each row to the CSV file.
+        Iterates through the rows of the current data table.
+        The data in each row is written to the CSV file.
+
         :param writer: The ``csv.writer`` object
         """
         row_elems = self.soup.select(".table-scroll tbody tr")
@@ -951,7 +958,7 @@ class SeasonStatGrid(__Utils):
                 self._refresh_parser(waitfor=self.__waitfor)
 
 
-class GameSpanLeaderboards(__Utils):
+class GameSpanLeaderboards(ScrapingUtilities):
     """
     Scrape the FanGraphs 60-Game Span Leaderboards
 
@@ -992,12 +999,26 @@ class GameSpanLeaderboards(__Utils):
 
     @classmethod
     def list_queries(cls):
+        """
+        Lists the possible filter queries which can be used to modify search results.
+
+        :return: Filter queries which can be used to modify search results
+        :rtype: list
+        """
         queries = []
         queries.extend(list(cls.__selections))
         queries.extend(list(cls.__dropdowns))
         return queries
 
     def list_options(self, query: str):
+        """
+        Lists the possible options which a filter query can be configured to.
+
+        :param query: The filter query
+        :return: Options which the filter query can be configured to
+        :rtype: list
+        :raises FanGraphs.exceptions.InvalidFilterQuery: Argument ``query`` is invalid
+        """
         query = query.lower()
         if query in self.__selections:
             elems = [
@@ -1013,6 +1034,14 @@ class GameSpanLeaderboards(__Utils):
         return options
 
     def current_option(self, query: str):
+        """
+        Retrieves the option which a filter query is currently set to.
+
+        :param query: The filter query being retrieved of its current option
+        :return: The option which the filter query is currently set to
+        :rtype: str
+        :raises FanGraphs.exceptions.InvalidFilterQuery: Argument ``query`` is invalid
+        """
         query = query.lower()
         option = ""
         if query in self.__selections:
@@ -1031,6 +1060,13 @@ class GameSpanLeaderboards(__Utils):
         return option
 
     def configure(self, query: str, option: str):
+        """
+        Configures a filter query to a specified option.
+
+        :param query: The filter query to be configured
+        :param option: The option to set the filter query to
+        :raises FanGraphs.exceptions.InvalidFilterQueryException: Argument ``query`` is invalid
+        """
         query = query.lower()
         self._close_ad()
         if query in self.__selections:
@@ -1042,6 +1078,13 @@ class GameSpanLeaderboards(__Utils):
         self._refresh_parser(waitfor=self.__waitfor)
 
     def __configure_selection(self, query: str, option: str):
+        """
+        Configures a selection-class filter query to an option.
+
+        :param query: The selection-class filter query to be configured
+        :param option: The option to set the filter query to
+        :raises FanGraphs.exceptions.InvalidFilterOptionException: Argument ``option`` is invalid
+        """
         options = self.list_options(query)
         try:
             index = options.index(option)
@@ -1050,6 +1093,13 @@ class GameSpanLeaderboards(__Utils):
         self.page.click(self.__selections[query][index])
 
     def __configure_dropdown(self, query: str, option: str):
+        """
+        Configures a dropdown-class filter query to an option.
+
+        :param query: The dropdown-class filter query to be configured
+        :param option: The option to set the filter query to
+        :raises FanGraphs.exceptions.InvalidFilterOptionException: Argument ``option`` is invalid
+        """
         options = self.list_options(query)
         try:
             index = options.index(option)
@@ -1062,6 +1112,14 @@ class GameSpanLeaderboards(__Utils):
         elem.click()
 
     def export(self, path=""):
+        """
+        Uses the **Export Data** button on the webpage to export the current leaderboard.
+        The data will be exported as a CSV file and the file will be saved to *out/*.
+        The file will be saved to the filepath ``path``, if specified.
+        Otherwise, the file will be saved to the filepath *./out/%d.%m.%y %H.%M.%S.csv*
+
+        :param path: The path to save the exported data to
+        """
         self._close_ad()
         if not path or os.path.splitext(path)[1] != ".csv":
             path = "{}.csv".format(
