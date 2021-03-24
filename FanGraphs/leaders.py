@@ -76,7 +76,7 @@ class __Utils:
         )
         self.soup = None
 
-    def __refresh_parser(self):
+    def _refresh_parser(self):
         """
         Re-initializes the ``bs4.BeautifulSoup`` object stored in :py:attr:`soup`.
         Called when a page refresh is expected
@@ -85,7 +85,7 @@ class __Utils:
             self.page.content(), features="lxml"
         )
 
-    def __close_ad(self):
+    def _close_ad(self):
         """
         Closes the ad which may interfere with clicking other page elements.
         """
@@ -93,7 +93,7 @@ class __Utils:
         if elem:
             elem.click()
 
-    def __expand_table(self, *, size="Infinity"):
+    def _expand_table(self, *, size="Infinity"):
         """
         Expands the data table to the appropriate number of rows
 
@@ -110,7 +110,7 @@ class __Utils:
         option = self.page.query_selector_all(f"{selector} option")[index]
         option.click()
 
-    def __sortby(self, sortby, *, reverse=False):
+    def _sortby(self, sortby, *, reverse=False):
         """
         Sorts the data by the appropriate table header.
 
@@ -124,7 +124,7 @@ class __Utils:
         if reverse:
             elems[index].click()
 
-    def __write_table_headers(self, writer: csv.writer):
+    def _write_table_headers(self, writer: csv.writer):
         """
         Writes the data table headers to the CSV file.
 
@@ -134,7 +134,7 @@ class __Utils:
         headers = [e.getText() for e in elems]
         writer.writerow(headers)
 
-    def __write_table_rows(self, writer: csv.writer):
+    def _write_table_rows(self, writer: csv.writer):
         """
         Iterates through the rows of the data table and writes the data in each row to the CSV file.
 
@@ -159,7 +159,7 @@ class __Utils:
         self.page.goto(self.address, timeout=0)
         if waitfor:
             self.page.wait_for_selector(waitfor)
-        self.__refresh_parser()
+        self._refresh_parser()
 
     def quit(self):
         """
@@ -303,7 +303,7 @@ class MajorLeagueLeaderboards(__Utils):
         query, option = query.lower(), str(option).lower()
         if query not in self.list_queries():
             raise FanGraphs.exceptions.InvalidFilterQueryException(query)
-        self.__close_ad()
+        self._close_ad()
         if query in self.__selections:
             self.__configure_selection(query, option)
         elif query in self.__dropdowns:
@@ -314,7 +314,7 @@ class MajorLeagueLeaderboards(__Utils):
             raise FanGraphs.exceptions.InvalidFilterQueryException(query)
         if query in self.__buttons and autoupdate:
             self.__click_button(query)
-        self.__refresh_parser()
+        self._refresh_parser()
 
     def __configure_selection(self, query, option):
         """
@@ -392,7 +392,7 @@ class MajorLeagueLeaderboards(__Utils):
             path = "out/{}.csv".format(
                 datetime.datetime.now().strftime("%d.%m.%y %H.%M.%S")
             )
-        self.__close_ad()
+        self._close_ad()
         with self.page.expect_download() as down_info:
             self.page.click("#LeaderBoard1_cmdCSV")
         download = down_info.value
@@ -591,7 +591,7 @@ class SplitsLeaderboards(__Utils):
         :param autoupdate: If ``True``, :py:meth:`update` will be called following configuration
         :raises FanGraphs.exceptions.InvalidFilterQueryException: Argument ``query`` is invalid
         """
-        self.__close_ad()
+        self._close_ad()
         query = query.lower()
         if query in self.__selections:
             self.__configure_selection(query, option)
@@ -605,7 +605,7 @@ class SplitsLeaderboards(__Utils):
             raise FanGraphs.exceptions.InvalidFilterQueryException(query)
         if autoupdate:
             self.update()
-        self.__refresh_parser()
+        self._refresh_parser()
 
     def __configure_selection(self, query: str, option: str):
         """
@@ -683,9 +683,9 @@ class SplitsLeaderboards(__Utils):
         elem = self.page.query_selector(selector)
         if elem is None:
             raise FanGraphs.exceptions.FilterUpdateIncapabilityWarning()
-        self.__close_ad()
+        self._close_ad()
         elem.click()
-        self.__refresh_parser()
+        self._refresh_parser()
 
     def list_filter_groups(self):
         """
@@ -711,7 +711,7 @@ class SplitsLeaderboards(__Utils):
             index = options.index(group)
         except ValueError:
             raise Exception
-        self.__close_ad()
+        self._close_ad()
         elem = self.page.query_selector_all(selector)[index]
         elem.click()
 
@@ -732,7 +732,7 @@ class SplitsLeaderboards(__Utils):
         elem = self.page.query_selector(selector)
         if elem is None:
             return
-        self.__close_ad()
+        self._close_ad()
         elem.click()
 
     @classmethod
@@ -761,7 +761,7 @@ class SplitsLeaderboards(__Utils):
             selector = self.__quick_splits[quick_split]
         except KeyError:
             raise FanGraphs.exceptions.InvalidQuickSplitException(quick_split)
-        self.__close_ad()
+        self._close_ad()
         self.page.click(selector)
         if autoupdate:
             self.update()
@@ -785,18 +785,18 @@ class SplitsLeaderboards(__Utils):
         :return:
         """
         self.page.hover(".data-export")
-        self.__close_ad()
-        self.__expand_table(size=size)
+        self._close_ad()
+        self._expand_table(size=size)
         if sortby:
-            self.__sortby(sortby.title(), reverse=reverse)
+            self._sortby(sortby.title(), reverse=reverse)
         if not path or os.path.splitext(path)[1] != ".csv":
             path = "{}.csv".format(
                 datetime.datetime.now().strftime("%d.%m.%y %H.%M.%S")
             )
         with open(os.path.join("out", path), "w", newline="") as file:
             writer = csv.writer(file)
-            self.__write_table_headers(writer)
-            self.__write_table_rows(writer)
+            self._write_table_headers(writer)
+            self._write_table_rows(writer)
 
 
 class SeasonStatGrid(__Utils):
@@ -916,14 +916,14 @@ class SeasonStatGrid(__Utils):
         :raises FanGraphs.exceptions.InvalidFilterOption: Filter ``query`` cannot be configured to ``option``
         """
         query = query.lower()
-        self.__close_ad()
+        self._close_ad()
         if query in self.__selections:
             self.__configure_selection(query, option)
         elif query in self.__dropdowns:
             self.__configure_dropdown(query, option)
         else:
             raise FanGraphs.exceptions.InvalidFilterQueryException(query)
-        self.__refresh_parser()
+        self._refresh_parser()
 
     def __configure_selection(self, query: str, option: str):
         """
@@ -974,17 +974,17 @@ class SeasonStatGrid(__Utils):
         :param sortby: The table header to sort the data by
         :param reverse: If ``True``, the organization of the data will be reversed
         """
-        self.__close_ad()
-        self.__expand_table(size=size)
-        self.__sortby(sortby.title(), reverse=reverse)
+        self._close_ad()
+        self._expand_table(size=size)
+        self._sortby(sortby.title(), reverse=reverse)
         if not path or os.path.splitext(path)[1] != ".csv":
             path = "{}.csv".format(
                 datetime.datetime.now().strftime("%d.%m.%y %H.%M.%S")
             )
         with open(os.path.join("out", path), "w", newline="") as file:
             writer = csv.writer(file)
-            self.__write_table_headers(writer)
-            self.__write_table_rows(writer)
+            self._write_table_headers(writer)
+            self._write_table_rows(writer)
 
 
 class GameSpanLeaderboards(__Utils):
@@ -1032,7 +1032,7 @@ class GameSpanLeaderboards(__Utils):
         queries.extend(list(cls.__dropdowns))
         return queries
 
-    def list_options(self, query):
+    def list_options(self, query: str):
         query = query.lower()
         if query in self.__selections:
             elems = [
@@ -1064,6 +1064,37 @@ class GameSpanLeaderboards(__Utils):
         else:
             raise FanGraphs.exceptions.InvalidFilterQueryException(query)
         return option
+
+    def configure(self, query: str, option: str):
+        query = query.lower()
+        self._close_ad()
+        if query in self.__selections:
+            self.__configure_selection(query, option)
+        elif query in self.__dropdowns:
+            self.__configure_dropdown(query, option)
+        else:
+            raise FanGraphs.exceptions.InvalidFilterQueryException(query)
+        self._refresh_parser()
+
+    def __configure_selection(self, query: str, option: str):
+        options = self.list_options(query)
+        try:
+            index = options.index(option)
+        except ValueError:
+            raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
+        self.page.click(self.__selections[query][index])
+
+    def __configure_dropdown(self, query: str, option: str):
+        options = self.list_options(query)
+        try:
+            index = options.index(option)
+        except ValueError:
+            raise FanGraphs.exceptions.InvalidFilterOptionException(query, option)
+        self.page.click(self.__dropdowns[query])
+        elem = self.page.query_selector_all(
+            f"{self.__dropdowns[query]} > div > a"
+        )[index]
+        elem.click()
 
 
 class InternationalLeaderboards:
