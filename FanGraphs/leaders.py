@@ -702,7 +702,8 @@ class SplitsLeaderboards:
         self.__close_ad()
         elem.click()
 
-    def list_quick_splits(self):
+    @classmethod
+    def list_quick_splits(cls):
         """
         Lists all the quick splits which can be used.
         Quick splits allow for the configuration of multiple filter queries at once.
@@ -710,7 +711,7 @@ class SplitsLeaderboards:
         :return: All available quick splits
         :rtype: list
         """
-        return list(self.__quick_splits)
+        return list(cls.__quick_splits)
 
     def configure_quick_split(self, quick_split: str, autoupdate=True):
         """
