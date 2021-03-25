@@ -2,7 +2,7 @@
 # FanGraphs/leaders.py
 
 """
-Web scraper for the **Leaders** tab of the `FanGraphs website`_.
+Web scraper for the **Leaders** tab of the `FanGraphs`_ website.
 Each page which is covered has its own class for scraping it.
 Below are each of the covered pages with the corresponding class:
 
@@ -13,7 +13,7 @@ Below are each of the covered pages with the corresponding class:
 - `KBO Leaders`_: :py:class:`InternationalLeaderboards`
 - `Combined WAR Leaderboards`_: :py:class:`WARLeaderboards`
 
-.. _FanGraphs website: https://fangraphs.com
+.. _FanGraphs: https://fangraphs.com
 .. _Major League Leaderboards: https://fangraphs.com/leaders.aspx
 .. _Splits Leaderboards: https://fangraphs.com/leaders/splits-leaderboards
 .. _Season Stat Grid: https://fangraphs.com/leaders/season-stat-grid
@@ -123,14 +123,7 @@ class MajorLeagueLeaderboards(ScrapingUtilities):
     Parses the FanGraphs Major League Leaderboards page.
     Note that the Splits Leaderboard is not covered.
     Instead, it is covered by :py:class:`SplitsLeaderboards`
-
-    .. py:attribute:: address
-        The base URL address of the Major League Leaderboards page.
-
-        :type: str
-        :value: https://fangraphs.com/leaders.aspx
     """
-
     __selections = leaders_sel.mll.selections
     __dropdowns = leaders_sel.mll.dropdowns
     __dropdown_options = leaders_sel.mll.dropdown_options
@@ -317,12 +310,6 @@ class MajorLeagueLeaderboards(ScrapingUtilities):
 class SplitsLeaderboards(ScrapingUtilities):
     """
     Parses the FanGraphs Splits Leaderboards page.
-
-    .. py:attribute:: address
-        The base URL address which corresponds to the Splits Leaderboards page.
-
-        :type: str
-        :value: https://fangraphs.com/leaders/splits-leaderboards
     """
     __selections = leaders_sel.splits.selections
     __dropdowns = leaders_sel.splits.dropdowns
@@ -642,12 +629,6 @@ class SplitsLeaderboards(ScrapingUtilities):
 class SeasonStatGrid(ScrapingUtilities):
     """
     Parses the FanGraphs Season Stat Grid webpage.
-
-    .. py:attribute:: address
-        The base URL address of the Season Stat Grid page.
-
-        :type: str
-        :value: https://fangraphs.com/season-stat-grid
     """
     __selections = leaders_sel.ssg.selections
     __dropdowns = leaders_sel.ssg.dropdowns
@@ -836,13 +817,6 @@ class SeasonStatGrid(ScrapingUtilities):
 class GameSpanLeaderboards(ScrapingUtilities):
     """
     Parses the FanGraphs 60-Game Span Leaderboards
-
-    .. py:attribute:: address
-
-        The base URL address of the 60-Game Span Leaderboards page
-
-        :type: str
-        :value: https://fangraphs.com/leaders/special/60-game-span
     """
     __selections = leaders_sel.gsl.selections
     __dropdowns = leaders_sel.gsl.dropdowns
@@ -995,13 +969,6 @@ class GameSpanLeaderboards(ScrapingUtilities):
 class InternationalLeaderboards(ScrapingUtilities):
     """
     Parses the FanGraphs KBO Leaderboards page
-
-    .. py:attribute:: address
-
-        The base URL address for the FanGraphs KBO Leaderboards page.
-
-        :type: str
-        :value: https://www.fangraphs.com/leaders/international
     """
     __selections = leaders_sel.intl.selections
     __dropdowns = leaders_sel.intl.dropdowns
@@ -1181,13 +1148,6 @@ class InternationalLeaderboards(ScrapingUtilities):
 class WARLeaderboards(ScrapingUtilities):
     """
     Parses the FanGraphs WAR Leaderboards page
-
-    .. py:attribute:: address
-
-        The base URL address for the FanGraphs WAR Leaderboards page.
-
-        :type: str
-        :value: https://fangraphs.com/warleaders.aspx
     """
     __dropdowns = leaders_sel.war.dropdowns
     __dropdown_options = leaders_sel.war.dropdown_options

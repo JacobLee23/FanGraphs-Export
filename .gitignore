@@ -4,3 +4,7 @@ virtualenv/
 *.log
 out/
 .vs/ 
+docs/_build
+docs/_static
+Makefile
+make.bat
