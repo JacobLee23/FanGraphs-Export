@@ -594,3 +594,14 @@ class TestWARLeaderboards:
                 page.content(), features="lxml"
             )
             browser.close()
+
+    def test_list_options_dropdowns(self):
+        """
+        Instance method ``WARLeaderboards.list_options``
+        """
+        elem_count = {
+            "season": 151, "team": 33, "type": 3
+        }
+        for query, sel in self.__dropdown_options.items():
+            elems = self.soup.select(f"{sel} li")
+            assert len(elems) == elem_count[query], query

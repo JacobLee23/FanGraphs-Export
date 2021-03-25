@@ -1028,3 +1028,14 @@ class WARLeaderboards(ScrapingUtilities):
         queries = []
         queries.extend(list(cls.__dropdowns))
         return queries
+
+    def list_options(self, query: str):
+        query = query.lower()
+        if query in self.__dropdowns:
+            elems = self.soup.select(
+                f"{self.__dropdown_options[query]} li"
+            )
+            options = [e.getText() for e in elems]
+        else:
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+        return options
