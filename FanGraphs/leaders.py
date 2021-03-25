@@ -999,7 +999,7 @@ class InternationalLeaderboards:
         pass
 
 
-class WARLeaderboards:
+class WARLeaderboards(ScrapingUtilities):
     """
     Parses the FanGraphs WAR Leaderboards page
 
@@ -1014,6 +1014,17 @@ class WARLeaderboards:
     __dropdown_options = leaders_sel.war.dropdown_options
 
     address = "https://fangraphs.com/warleaders.aspx"
+    __waitfor = ".rgMasterTable"
 
-    def __init__(self):
-        pass
+    def __init__(self, browser="chromium"):
+        """
+        :param browser: The name of the browser to use (Chromium, Firefox, WebKit)
+        """
+        super().__init__(browser, self.address)
+        self.reset(waitfor=self.__waitfor)
+
+    @classmethod
+    def list_queries(cls):
+        queries = []
+        queries.extend(list(cls.__dropdowns))
+        return queries
