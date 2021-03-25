@@ -51,6 +51,10 @@ class TestMajorLeagueLeaderboards:
 
     @classmethod
     def setup_class(cls):
+        """
+        Initialize class
+        :return:
+        """
         cls.soup = fetch_soup(cls.address)
 
     def test_address(self):
@@ -65,6 +69,11 @@ class TestMajorLeagueLeaderboards:
         [__selections, __dropdown_options]
     )
     def test_list_options(self, selectors: dict):
+        """
+        Instance method ``MajorLeagueLeaderboards.lsit_options``.
+
+        :param selectors: CSS Selectors
+        """
         elem_count = {
             "group": 3, "stat": 3, "position": 13, "type": 19,
             "league": 3, "team": 31, "single_season": 151, "split": 67,
@@ -75,7 +84,7 @@ class TestMajorLeagueLeaderboards:
         for query, sel in selectors.items():
             elems = self.soup.select(f"{sel} li")
             assert len(elems) == elem_count[query], query
-            assert all([isinstance(e.getText(), str) for e in elems]), query
+            assert all(isinstance(e.getText(), str) for e in elems), query
 
     def test_current_option_selections(self):
         """
@@ -161,6 +170,9 @@ class TestSplitsLeaderboards:
 
     @classmethod
     def setup_class(cls):
+        """
+        Initialize class
+        """
         cls.soup = fetch_soup(cls.address, leaders_sel.splits.waitfor)
 
     def test_address(self):
@@ -184,7 +196,7 @@ class TestSplitsLeaderboards:
         for query, sel_list in self.__selections.items():
             elems = [self.soup.select(s)[0] for s in sel_list]
             assert len(elems) == elem_count[query]
-            assert all([e.getText() for e in elems])
+            assert all(e.getText() for e in elems)
 
     @pytest.mark.parametrize(
         "selectors",
@@ -339,6 +351,9 @@ class TestSeasonStatGrid:
 
     @classmethod
     def setup_class(cls):
+        """
+        Initialize
+        """
         cls.soup = fetch_soup(cls.address, leaders_sel.ssg.waitfor)
 
     def test_address(self):
@@ -362,7 +377,7 @@ class TestSeasonStatGrid:
         for query, sel_list in self.__selections.items():
             elems = [self.soup.select(s)[0] for s in sel_list]
             assert len(elems) == elem_count[query]
-            assert all([e.getText() for e in elems])
+            assert all(e.getText() for e in elems)
 
     def test_list_options_dropdowns(self):
         """
@@ -381,7 +396,7 @@ class TestSeasonStatGrid:
         for query, sel in self.__dropdowns.items():
             elems = self.soup.select(f"{sel} li")
             assert len(elems) == elem_count[query], query
-            assert all([e.getText() for e in elems])
+            assert all(e.getText() for e in elems)
 
     def test_current_option_selections(self):
         """
@@ -431,6 +446,9 @@ class TestSeasonStatGrid:
             assert len(elems) == 1, query
 
     def test_export(self):
+        """
+        Instance method ``SeasonStatGrid.export``.
+        """
         total_pages = self.soup.select(
             ".table-page-control:nth-last-child(1) > .table-control-total"
         )
@@ -454,6 +472,9 @@ class TestGameSpanLeaderboards:
 
     @classmethod
     def setup_class(cls):
+        """
+        Initialize class
+        """
         cls.soup = fetch_soup(cls.address, leaders_sel.gsl.waitfor)
 
     def test_address(self):
@@ -477,7 +498,7 @@ class TestGameSpanLeaderboards:
         for query, sel_list in self.__selections.items():
             elems = [self.soup.select(s)[0] for s in sel_list]
             assert len(elems) == elem_count[query], query
-            assert all([e.getText() for e in elems]), query
+            assert all(e.getText() for e in elems), query
 
     def test_list_options_dropdowns(self):
         """
@@ -494,7 +515,7 @@ class TestGameSpanLeaderboards:
         for query, sel in self.__dropdowns.items():
             elems = self.soup.select(f"{sel} > div > a")
             assert len(elems) == elem_count[query], query
-            assert all([e.getText() for e in elems]), query
+            assert all(e.getText() for e in elems), query
 
     def test_current_option_selections(self):
         """
@@ -573,6 +594,9 @@ class TestInternationalLeaderboards:
 
     @classmethod
     def setup_class(cls):
+        """
+        Initialize class
+        """
         cls.soup = fetch_soup(cls.address, waitfor=leaders_sel.intl.waitfor)
 
     def test_address(self):
@@ -596,7 +620,7 @@ class TestInternationalLeaderboards:
         for query, sel_list in self.__selections.items():
             elems = [self.soup.select(s)[0] for s in sel_list]
             assert len(elems) == elem_count[query], query
-            assert all([e.getText() for e in elems]), query
+            assert all(e.getText() for e in elems), query
 
     def test_list_options_dropdowns(self):
         """
@@ -613,7 +637,7 @@ class TestInternationalLeaderboards:
         for query, sel in self.__dropdowns.items():
             elems = self.soup.select(f"{sel} > div > a")
             assert len(elems) == elem_count[query], query
-            assert all([e.getText() for e in elems]), query
+            assert all(e.getText() for e in elems), query
 
     def test_current_option_selections(self):
         """
@@ -692,6 +716,9 @@ class TestWARLeaderboards:
 
     @classmethod
     def setup_class(cls):
+        """
+        Initialize class
+        """
         cls.soup = fetch_soup(cls.address, waitfor=leaders_sel.war.waitfor)
 
     @pytest.mark.parametrize(
@@ -700,9 +727,9 @@ class TestWARLeaderboards:
     )
     def test_list_options(self, selectors: dict):
         """
-        Instance method ``WARLeaderboards.list_options``
+        Instance method ``WARLeaderboards.list_options``.
 
-        :param selectors: The CSS selectors
+        :param selectors: CSS selectors
         """
         elem_count = {
             "season": 151, "team": 33, "type": 3
@@ -716,6 +743,11 @@ class TestWARLeaderboards:
         [__dropdowns]
     )
     def test_current_option(self, selectors: dict):
+        """
+        Instance method ``WARLeaderboards.current_option``.
+
+        :param selectors: CSS selectors
+        """
         elem_text = {
             "season": "2020", "team": "All Teams", "type": "WAR (FIP Based)"
         }
@@ -726,10 +758,16 @@ class TestWARLeaderboards:
             assert elems[0].get("value") == elem_text[query], query
 
     def test_configure_dropdown(self):
+        """
+        Private instance method ``WARLeaderboards.__configure_dropdown``.
+        """
         for query, sel in self.__dropdowns.items():
             elems = self.soup.select(sel)
             assert len(elems) == 1, query
 
     def test_export(self):
+        """
+        Instance method ``WARLeaderboards.export``.
+        """
         elems = self.soup.select("#WARBoard1_cmdCSV")
         assert len(elems) == 1

@@ -562,8 +562,8 @@ class SplitsLeaderboards(ScrapingUtilities):
         options = [e.getText() for e in elems]
         try:
             index = options.index(group)
-        except ValueError:
-            raise Exception
+        except ValueError as err:
+            raise FanGraphs.exceptions.InvalidFilterGroup(group) from err
         self._close_ad()
         elem = self.page.query_selector_all(selector)[index]
         elem.click()

@@ -30,6 +30,19 @@ class UnknownBrowser(Exception):
         super().__init__(self.message)
 
 
+class InvalidFilterGroup(Exception):
+    """
+    Raised when an invalid filter group is used.
+    """
+    def __init__(self, group):
+        """
+        :param group: The filter group used
+        """
+        self.group = group
+        self.message = f"No filter group names '{self.group}' could be found"
+        super().__init__(self.message)
+
+
 class InvalidFilterQuery(Exception):
     """
     Raised when an invalid filter query is used.
