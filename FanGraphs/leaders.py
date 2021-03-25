@@ -1021,8 +1021,10 @@ class InternationalLeaderboards(ScrapingUtilities):
     @classmethod
     def list_queries(cls):
         """
+        Lists the possible filter queries which can be used to modify search results.
 
-        :return:
+        :return: Filter queries which can be used to modify search results
+        :rtype: list
         """
         queries = []
         queries.extend(cls.__selections)
@@ -1032,9 +1034,12 @@ class InternationalLeaderboards(ScrapingUtilities):
 
     def list_options(self, query: str):
         """
+        Retrieves the option which a filter query is currently set to.
 
-        :param query:
-        :return:
+        :param query: The filter query being retrieved of its current option
+        :return: The option which the filter query is currently set to
+        :rtype: str
+        :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
         """
         query = query.lower()
         if query in self.__selections:
@@ -1083,6 +1088,13 @@ class InternationalLeaderboards(ScrapingUtilities):
         return option
 
     def configure(self, query: str, option: str):
+        """
+        Configures a filter query to a specified option.
+
+        :param query: The filter query to be configured
+        :param option: The option to set the filter query to
+        :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
+        """
         query = query.lower()
         self._close_ad()
         if query in self.__selections:
@@ -1097,10 +1109,11 @@ class InternationalLeaderboards(ScrapingUtilities):
 
     def __configure_selection(self, query: str, option: str):
         """
+        Configures a selection-class filter query to an option.
 
-        :param query:
-        :param option:
-        :return:
+        :param query: The selection-class filter query to be configured
+        :param option: The option to set the filter query to
+        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
         """
         options = self.list_options(query)
         try:
@@ -1113,10 +1126,11 @@ class InternationalLeaderboards(ScrapingUtilities):
 
     def __configure_dropdown(self, query: str, option: str):
         """
+        Configures a dropdown-class filter query to an option.
 
-        :param query:
-        :param option:
-        :return:
+        :param query: The dropdown-class filter query to be configured
+        :param option: The option to set the filter query to
+        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
         """
         options = self.list_options(query)
         try:
@@ -1131,10 +1145,11 @@ class InternationalLeaderboards(ScrapingUtilities):
 
     def __configure_checkbox(self, query: str, option: str):
         """
+        Configures a checkbox-class filter query to an option.
 
-        :param query:
-        :param option:
-        :return:
+        :param query: The checkbox-class filter query to be configured
+        :param option: The option to set the filter query to
+        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
         """
         options = self.list_options(query)
         if option not in options:
