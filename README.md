@@ -21,20 +21,27 @@
         <img src="https://img.shields.io/github/license/JLpython-py/FanGraphs-Export" alt="GitHub Repository"/></a>
 </p>
 
-FanGraphs is a popular website among the baseball analytic community.
-The website is most well-known for its vast coverage of statistics.
-The `FanGraphs` package contains various modules for scraping and exporting data from the most popoular of webpages.
+The [FanGraphs](https://fangraphs.com/) website, well-known among baseball fans, provides a variety of baseball statistics.
+The statistics available are extremely expansive, as the website brags stats for every player in MLB history.
 
-## Installation
+The `FanGraphs` package allows for simple, intuitive parsing of the many webpages available.
+While not every page is "parse-able" (i.e. the pages are most composed of graphics),
+there are plans for covering as many pages as possible, including the most popular ones.
+This package contains modules for scraping and exporting data from each of the covered webpages.
 
 ## Dependencies
 
-- Python >= 3.6
-- BeautifulSoup4 4.9.3
-- lxml 4.6.3  
-- Playwright 1.9.2
-- Pytest 6.2.2  
-- Requests 2.25.1
+The `FanGraphs` library requires Python version 3.6 or higher.
+
+The following libraries along are required for the `FanGraphs` library.
+
+- `BeautifulSoup4`
+- `lxml`
+- `playwright`
+- `pytest`  
+- `requests`
+
+*Note: The dependencies of each package listed above are also required.*
 
 To install all the necessary packages, run:
 
@@ -42,12 +49,9 @@ To install all the necessary packages, run:
 pip install -r requirements.txt
 ```
 
-*Note: Per the [Playwright documentation](https://playwright.dev/python/docs/intro/), the browser binaries must be installed.
-To install the browser binaries, run:*
-
-```comandline
-playwright install
-```
+*Note: The browser binaries of `playwright` are needed for proper usage.
+To install the browser binaries, run `playwright install`.
+See the [Playwright documentation](https://playwright.dev/python/docs/intro/) for more information.*
 
 ## Documentation
 
@@ -56,7 +60,7 @@ playwright install
 Each group of FanGraphs pages (e.g. Leaders, Projections, etc.) which is covered has an individual module.
 Each webpage in each group of webpages has an individual class covering the page.
 
-FanGraphs webpage groups:
+Covered FanGraphs webpage groups:
 
 - [Leaders](#Leaders)
 
@@ -103,4 +107,4 @@ pytest -k "TestMajorLeagueLeaderboards"
 
 The code in this repository is licensed under an MIT License.
 
-Copyright (c) 2021 Jacob Lee
+**Copyright (c) 2021 Jacob Lee**
