@@ -11,3 +11,4 @@ dropdown_options = {
     "team": "#WARBoard1_rcbTeam_DropDown",
     "type": "#WARBoard1_rcbType_DropDown"
 }
+waitfor = ".rgMasterTable"

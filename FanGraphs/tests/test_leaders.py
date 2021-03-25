@@ -154,7 +154,7 @@ class TestSplitsLeaderboards:
             browser = play.chromium.launch()
             page = browser.new_page()
             page.goto(cls.address, timeout=0)
-            page.wait_for_selector(".fg-data-grid.undefined")
+            page.wait_for_selector(leaders_sel.splits.waitfor)
             cls.soup = bs4.BeautifulSoup(
                 page.content(), features="lxml"
             )
@@ -340,7 +340,7 @@ class TestSeasonStatGrid:
             browser = play.chromium.launch()
             page = browser.new_page()
             page.goto(cls.address, timeout=0)
-            page.wait_for_selector(".fg-data-grid.undefined")
+            page.wait_for_selector(leaders_sel.ssg.waitfor)
             cls.soup = bs4.BeautifulSoup(
                 page.content(), features="lxml"
             )
@@ -463,7 +463,7 @@ class TestGameSpanLeaderboards:
             browser = play.chromium.launch()
             page = browser.new_page()
             page.goto(cls.address, timeout=0)
-            page.wait_for_selector(".fg-data-grid.table-type")
+            page.wait_for_selector(leaders_sel.gsl.waitfor)
             cls.soup = bs4.BeautifulSoup(
                 page.content(), features="lxml"
             )
@@ -590,6 +590,7 @@ class TestWARLeaderboards:
             browser = play.chromium.launch()
             page = browser.new_page()
             page.goto(cls.address)
+            page.wait_for_selector(leaders_sel.war.waitfor)
             cls.soup = bs4.BeautifulSoup(
                 page.content(), features="lxml"
             )

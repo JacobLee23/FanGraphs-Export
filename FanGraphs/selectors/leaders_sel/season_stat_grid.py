@@ -25,3 +25,4 @@ dropdowns = {
     "plate_discipline": ".season-grid-controls-dropdown-row-stats > div:nth-child(8)",
     "value": ".season-grid-controls-dropdown-row-stats > div:nth-child(9)"
 }
+waitfor = ".fg-data-grid.undefined"

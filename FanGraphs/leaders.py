@@ -330,9 +330,9 @@ class SplitsLeaderboards(ScrapingUtilities):
     __splits = leaders_sel.splits.splits
     __quick_splits = leaders_sel.splits.quick_splits
     __switches = leaders_sel.splits.switches
+    __waitfor = leaders_sel.splits.waitfor
 
     address = "https://fangraphs.com/leaders/splits-leaderboards"
-    __waitfor = ".fg-data-grid.undefined"
 
     def __init__(self, *, browser="chromium"):
         """
@@ -652,9 +652,9 @@ class SeasonStatGrid(ScrapingUtilities):
     """
     __selections = leaders_sel.ssg.selections
     __dropdowns = leaders_sel.ssg.dropdowns
+    __waitfor = leaders_sel.ssg.waitfor
 
     address = "https://fangraphs.com/leaders/season-stat-grid"
-    __waitfor = ".fg-data-grid.undefined"
 
     def __init__(self, *, browser="chromium"):
         """
@@ -847,9 +847,9 @@ class GameSpanLeaderboards(ScrapingUtilities):
     """
     __selections = leaders_sel.gsl.selections
     __dropdowns = leaders_sel.gsl.dropdowns
+    __waitfor = leaders_sel.gsl.waitfor
 
     address = "https://fangraphs.com/leaders/special/60-game-span"
-    __waitfor = ".fg-data-grid.table-type"
 
     def __init__(self, browser="chromium"):
         """
@@ -1012,9 +1012,9 @@ class WARLeaderboards(ScrapingUtilities):
     """
     __dropdowns = leaders_sel.war.dropdowns
     __dropdown_options = leaders_sel.war.dropdown_options
+    __waitfor = leaders_sel.war.waitfor
 
     address = "https://fangraphs.com/warleaders.aspx"
-    __waitfor = ".rgMasterTable"
 
     def __init__(self, browser="chromium"):
         """

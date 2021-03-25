@@ -69,3 +69,4 @@ switches = {
     "split_teams": "#stack-buttons > div:nth-child(2)",
     "auto_pt": "#stack-buttons > div:nth-child(3)"
 }
+waitfor = ".fg-data-grid.undefined"

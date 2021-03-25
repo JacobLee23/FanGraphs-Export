@@ -19,3 +19,4 @@ dropdowns = {
     "season2": ".controls-stats:nth-child(2) > div:nth-child(3) > .fg-selection-box__selection",
     "determine": ".controls-stats.stat-determined > div:nth-child(1) > .fg-selection-box__selection"
 }
+waitfor = ".fg-data-grid.table-type"
