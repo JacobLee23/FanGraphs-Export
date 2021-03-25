@@ -15,6 +15,27 @@ import requests
 from FanGraphs.selectors import leaders_sel
 
 
+def fetch_soup(address, waitfor=""):
+    """
+    Initializes the ``bs4.BeautifulSoup`` object for parsing the FanGraphs page
+
+    :param address: The base URL address of the FanGraphs page
+    :param waitfor: The CSS selector to wait for
+    :return: A ``BeautifulSoup`` object for parsing the page
+    :rtype: bs4.BeautifulSoup
+    """
+    with sync_playwright() as play:
+        browser = play.chromium.launch()
+        page = browser.new_page()
+        page.goto(address, timeout=0)
+        page.wait_for_selector(waitfor)
+        soup = bs4.BeautifulSoup(
+            page.content(), feature="lxml"
+        )
+        browser.close()
+    return soup
+
+
 class TestMajorLeagueLeaderboards:
     """
     :py:class:`FanGraphs.leaders.MajorLeagueLeaderboards`
@@ -30,14 +51,7 @@ class TestMajorLeagueLeaderboards:
 
     @classmethod
     def setup_class(cls):
-        with sync_playwright() as play:
-            browser = play.chromium.launch()
-            page = browser.new_page()
-            page.goto(cls.address, timeout=0)
-            cls.soup = bs4.BeautifulSoup(
-                page.content(), features="lxml"
-            )
-            browser.close()
+        cls.soup = fetch_soup(cls.address)
 
     def test_address(self):
         """
@@ -147,18 +161,7 @@ class TestSplitsLeaderboards:
 
     @classmethod
     def setup_class(cls):
-        """
-        Initializes ``bs4.BeautifulSoup4`` object using ``playwright``.
-        """
-        with sync_playwright() as play:
-            browser = play.chromium.launch()
-            page = browser.new_page()
-            page.goto(cls.address, timeout=0)
-            page.wait_for_selector(leaders_sel.splits.waitfor)
-            cls.soup = bs4.BeautifulSoup(
-                page.content(), features="lxml"
-            )
-            browser.close()
+        cls.soup = fetch_soup(cls.address, leaders_sel.splits.waitfor)
 
     def test_address(self):
         """
@@ -336,15 +339,7 @@ class TestSeasonStatGrid:
 
     @classmethod
     def setup_class(cls):
-        with sync_playwright() as play:
-            browser = play.chromium.launch()
-            page = browser.new_page()
-            page.goto(cls.address, timeout=0)
-            page.wait_for_selector(leaders_sel.ssg.waitfor)
-            cls.soup = bs4.BeautifulSoup(
-                page.content(), features="lxml"
-            )
-            browser.close()
+        cls.soup = fetch_soup(cls.address, leaders_sel.ssg.waitfor)
 
     def test_address(self):
         """
@@ -459,15 +454,7 @@ class TestGameSpanLeaderboards:
 
     @classmethod
     def setup_class(cls):
-        with sync_playwright() as play:
-            browser = play.chromium.launch()
-            page = browser.new_page()
-            page.goto(cls.address, timeout=0)
-            page.wait_for_selector(leaders_sel.gsl.waitfor)
-            cls.soup = bs4.BeautifulSoup(
-                page.content(), features="lxml"
-            )
-            browser.close()
+        cls.soup = fetch_soup(cls.address, leaders_sel.gsl.waitfor)
 
     def test_address(self):
         """
@@ -583,14 +570,7 @@ class TestInternationalLeaderboards:
 
     @classmethod
     def setup_class(cls):
-        with sync_playwright() as play:
-            browser = play.chromium.launch()
-            page = browser.new_page()
-            page.goto(cls.address)
-            cls.soup = bs4.BeautifulSoup(
-                page.content(), features="lxml"
-            )
-            browser.close()
+        cls.soup = fetch_soup(cls.address)
 
 
 class TestWARLeaderboards:
@@ -604,15 +584,7 @@ class TestWARLeaderboards:
 
     @classmethod
     def setup_class(cls):
-        with sync_playwright() as play:
-            browser = play.chromium.launch()
-            page = browser.new_page()
-            page.goto(cls.address)
-            page.wait_for_selector(leaders_sel.war.waitfor)
-            cls.soup = bs4.BeautifulSoup(
-                page.content(), features="lxml"
-            )
-            browser.close()
+        cls.soup = fetch_soup(cls.address, waitfor=leaders_sel.war.waitfor)
 
     @pytest.mark.parametrize(
         "selectors",
