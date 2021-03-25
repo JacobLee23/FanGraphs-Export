@@ -9,15 +9,13 @@ idna==2.10
 iniconfig==1.1.1
 lxml==4.6.3
 packaging==20.9
-playwright==1.9.2
+playwright==1.10.0
 pluggy==0.13.1
 py==1.10.0
 pyee==8.1.0
 pyparsing==2.4.7
 pytest==6.2.2
 requests==2.25.1
-selenium==3.141.0
 soupsieve==2.2.1
 toml==0.10.2
-typing-extensions==3.7.4.3
-urllib3==1.26.3
+urllib3==1.26.4
