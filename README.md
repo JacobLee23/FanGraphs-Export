@@ -68,6 +68,7 @@ FanGraphs Leaders pages:
 - [Splits Leaderboards](https://fangraphs.com/leaders/splits-leaderboards)
 - [Season Stat Grid](https://fangraphs.com/leaders/season-stat-grid)
 - [60-Game Span Leaderboards](https://fangraphs.com/leaders/special/game-span)
+- [WAR Leaderboards](https://fangraphs.com/warleaders.aspx)
 
 ```python
 from FanGraphs import leaders
@@ -75,6 +76,7 @@ mll = leaders.MajorLeagueLeaderboards()
 splits = leaders.SplitsLeaderboards()
 ssg = leaders.SeasonStatGrid()
 gsl = leaders.GameSpanLeaderboards()
+war = leaders.WARLeaderboards()
 ```
 
 ## Tests
