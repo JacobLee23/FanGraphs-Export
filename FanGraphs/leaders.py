@@ -1054,6 +1054,34 @@ class InternationalLeaderboards(ScrapingUtilities):
             raise FanGraphs.exceptions.InvalidFilterQuery(query)
         return options
 
+    def current_option(self, query: str):
+        """
+
+        :param query:
+        :return:
+        """
+        query = query.lower()
+        option = ""
+        if query in self.__selections:
+            for sel in self.__selections[query]:
+                elem = self.soup.select(sel)[0]
+                if "active" in elem.get("class"):
+                    option = elem.getText()
+                    break
+        elif query in self.__dropdowns:
+            elem = self.soup.select(
+                f"{self.__dropdowns[query]} > div > span"
+            )[0]
+            option = elem.getText()
+        elif query in self.__checkboxes:
+            elem = self.soup.select(
+                self.__selections["stat"][0]
+            )
+            option = "True" if ",to" in elem[0].get("href") else "False"
+        else:
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+        return option
+
 
 class WARLeaderboards(ScrapingUtilities):
     """

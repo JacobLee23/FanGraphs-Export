@@ -615,6 +615,47 @@ class TestInternationalLeaderboards:
             assert len(elems) == elem_count[query], query
             assert all([e.getText() for e in elems]), query
 
+    def test_current_option_selections(self):
+        """
+        Instance method ``InternationalLeaderboards.current_option``.
+
+        Uses the following class attributes:
+
+        - ``InternationalLeaderboards.__selections``
+        """
+        elem_text = {
+            "stat": "Batters", "type": "Standard"
+        }
+        for query, sel_list in self.__selections.items():
+            elems = []
+            for sel in sel_list:
+                elem = self.soup.select(sel)[0]
+                assert elem.get("class") is not None, query
+                elems.append(elem)
+            active = ["active" in e.get("class") for e in elems]
+            assert active.count(True) == 1, query
+            text = [e.getText() for e in elems]
+            assert elem_text[query] in text, query
+
+    def test_current_option_dropdown(self):
+        """
+        Instance method ``InternationalLeaderboards.current_option``.
+
+        Uses the following class attributes:
+
+        - ``InternationalLeaderboards.__dropdowns``
+        """
+        elem_text = {
+            "position": "All", "min": "Qualified", "single_season": "2020",
+            "season1": "2020", "season2": "2020", "league": "KBO",
+            "team": "Select"
+        }
+        for query, sel in self.__dropdowns.items():
+            elems = self.soup.select(f"{sel} > div > span")
+            assert len(elems) == 1, query
+            text = elems[0].getText()
+            assert text == elem_text[query], query
+
 
 class TestWARLeaderboards:
     """
