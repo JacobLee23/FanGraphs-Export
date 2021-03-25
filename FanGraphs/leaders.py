@@ -1033,7 +1033,7 @@ class WARLeaderboards(ScrapingUtilities):
         query = query.lower()
         if query in self.__dropdowns:
             elems = self.soup.select(
-                f"{self.__dropdown_options[query]} li"
+                f"{self.__dropdown_options[query]} > ul > li"
             )
             options = [e.getText() for e in elems]
         else:
@@ -1048,3 +1048,23 @@ class WARLeaderboards(ScrapingUtilities):
         else:
             raise FanGraphs.exceptions.InvalidFilterQuery(query)
         return option
+
+    def configure(self, query: str, option: str):
+        query = query.lower()
+        if query in self.__dropdowns:
+            self.__configure_dropdown(query, option)
+        else:
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+        self._refresh_parser(waitfor=self.__waitfor)
+
+    def __configure_dropdown(self, query: str, option: str):
+        options = self.list_options(query)
+        try:
+            index = options.index(option)
+        except ValueError as err:
+            raise FanGraphs.exceptions.InvalidFilterOption(query, option) from err
+        self.page.click(self.__dropdowns[query])
+        elem = self.page.query_selector_all(
+            f"{self.__dropdown_options} > ul > li"
+        )[index]
+        elem.click()

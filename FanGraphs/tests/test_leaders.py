@@ -609,7 +609,7 @@ class TestWARLeaderboards:
             "season": 151, "team": 33, "type": 3
         }
         for query, sel in selectors.items():
-            elems = self.soup.select(f"{sel} li")
+            elems = self.soup.select(f"{sel} > ul > li")
             assert len(elems) == elem_count[query], query
 
     @pytest.mark.parametrize(
@@ -625,3 +625,8 @@ class TestWARLeaderboards:
             assert len(elems) == 1, query
             assert elems[0].get("value") is not None, query
             assert elems[0].get("value") == elem_text[query], query
+
+    def test_configure_dropdown(self):
+        for query, sel in self.__dropdowns.items():
+            elems = self.soup.select(sel)
+            assert len(elems) == 1, query
