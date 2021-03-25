@@ -673,6 +673,13 @@ class TestInternationalLeaderboards:
             elems = self.soup.select(sel)
             assert len(elems) == 1, query
 
+    def test_export(self):
+        """
+        Instance method ``InternationalLeaderboards.export``.
+        """
+        elems = self.soup.select(".data-export")
+        assert len(elems) == 1
+
 
 class TestWARLeaderboards:
     """

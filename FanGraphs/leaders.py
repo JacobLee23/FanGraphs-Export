@@ -1143,6 +1143,26 @@ class InternationalLeaderboards(ScrapingUtilities):
             return
         self.page.click(self.__checkboxes[query])
 
+    def export(self, path=""):
+        """
+        Uses the **Export Data** button on the webpage to export the current leaderboard.
+        The data will be exported as a CSV file and the file will be saved to *out/*.
+        The file will be saved to the filepath ``path``, if specified.
+        Otherwise, the file will be saved to the filepath *./out/%d.%m.%y %H.%M.%S.csv*
+
+        :param path: The path to save the exported data to
+        """
+        self._close_ad()
+        if not path or os.path.splitext(path)[1] != ".csv":
+            path = "out/{}.csv".format(
+                datetime.datetime.now().strftime("%d.%m.%y %H.%M.%S")
+            )
+        with self.page.expect_download() as down_info:
+            self.page.click(".data-export")
+        download = down_info.value
+        download_path = download.path()
+        os.rename(download_path, path)
+
 
 class WARLeaderboards(ScrapingUtilities):
     """
