@@ -12,53 +12,19 @@ from playwright.sync_api import sync_playwright
 import pytest
 import requests
 
+from FanGraphs.selectors import leaders_sel
+
 
 class TestMajorLeagueLeaderboards:
     """
     :py:class:`FanGraphs.leaders.MajorLeagueLeaderboards`
     """
 
-    __selections = {
-        "group": "#LeaderBoard1_tsGroup",
-        "stat": "#LeaderBoard1_tsStats",
-        "position": "#LeaderBoard1_tsPosition",
-        "type": "#LeaderBoard1_tsType"
-    }
-    __dropdowns = {
-        "league": "#LeaderBoard1_rcbLeague_Input",
-        "team": "#LeaderBoard1_rcbTeam_Input",
-        "single_season": "#LeaderBoard1_rcbSeason_Input",
-        "split": "#LeaderBoard1_rcbMonth_Input",
-        "min_pa": "#LeaderBoard1_rcbMin_Input",
-        "season1": "#LeaderBoard1_rcbSeason1_Input",
-        "season2": "#LeaderBoard1_rcbSeason2_Input",
-        "age1": "#LeaderBoard1_rcbAge1_Input",
-        "age2": "#LeaderBoard1_rcbAge2_Input"
-    }
-    __dropdown_options = {
-        "league": "#LeaderBoard1_rcbLeague_DropDown",
-        "team": "#LeaderBoard1_rcbTeam_DropDown",
-        "single_season": "#LeaderBoard1_rcbSeason_DropDown",
-        "split": "#LeaderBoard1_rcbMonth_DropDown",
-        "min_pa": "#LeaderBoard1_rcbMin_DropDown",
-        "season1": "#LeaderBoard1_rcbSeason1_DropDown",
-        "season2": "#LeaderBoard1_rcbSeason2_DropDown",
-        "age1": "#LeaderBoard1_rcbAge1_DropDown",
-        "age2": "#LeaderBoard1_rcbAge2_DropDown"
-    }
-    __checkboxes = {
-        "split_teams": "#LeaderBoard1_cbTeams",
-        "active_roster": "#LeaderBoard1_cbActive",
-        "hof": "#LeaderBoard1_cbHOF",
-        "split_seasons": "#LeaderBoard1_cbSeason",
-        "rookies": "#LeaderBoard1_cbRookie"
-    }
-    __buttons = {
-        "season1": "#LeaderBoard1_btnMSeason",
-        "season2": "#LeaderBoard1_btnMSeason",
-        "age1": "#LeaderBoard1_cmdAge",
-        "age2": "#LeaderBoard1_cmdAge"
-    }
+    __selections = leaders_sel.mll.selections
+    __dropdowns = leaders_sel.mll.dropdowns
+    __dropdown_options = leaders_sel.mll.dropdown_options
+    __checkboxes = leaders_sel.mll.checkboxes
+    __buttons = leaders_sel.mll.buttons
 
     address = "https://fangraphs.com/leaders.aspx"
 
@@ -171,74 +137,11 @@ class TestSplitsLeaderboards:
     :py:class:`FanGraphs.leaders.SplitsLeaderboards`.
     """
 
-    __selections = {
-        "group": [
-            ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(1)",
-            ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(2)",
-            ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(3)",
-            ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(4)"
-        ],
-        "stat": [
-            ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(6)",
-            ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(7)"
-        ],
-        "type": [
-            "#root-buttons-stats > div:nth-child(1)",
-            "#root-buttons-stats > div:nth-child(2)",
-            "#root-buttons-stats > div:nth-child(3)"
-        ]
-    }
-    __dropdowns = {
-        "time_filter": "#root-menu-time-filter > .fg-dropdown.splits.multi-choice",
-        "preset_range": "#root-menu-time-filter > .fg-dropdown.splits.single-choice",
-        "groupby": ".fg-dropdown.group-by"
-    }
-    __splits = {
-        "handedness": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(1)",
-        "home_away": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(2)",
-        "batted_ball": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(3)",
-        "situation": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(4)",
-        "count": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(5)",
-        "batting_order": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(1)",
-        "position": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(2)",
-        "inning": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(3)",
-        "leverage": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(4)",
-        "shifts": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(5)",
-        "team": ".fgBin:nth-child(3) > .fg-dropdown.splits.multi-choice:nth-child(1)",
-        "opponent": ".fgBin:nth-child(3) > .fg-dropdown.splits.multi-choice:nth-child(2)",
-    }
-    __quick_splits = {
-        "batting_home": ".quick-splits > div:nth-child(1) > div:nth-child(2) > .fgButton:nth-child(1)",
-        "batting_away": ".quick-splits > div:nth-child(1) > div:nth-child(2) > .fgButton:nth-child(2)",
-        "vs_lhp": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(1)",
-        "vs_lhp_home": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(2)",
-        "vs_lhp_away": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(3)",
-        "vs_lhp_as_lhh": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(4)",
-        "vs_lhp_as_rhh": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(5)",
-        "vs_rhp": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(1)",
-        "vs_rhp_home": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(2)",
-        "vs_rhp_away": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(3)",
-        "vs_rhp_as_lhh": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(4)",
-        "vs_rhp_as_rhh": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(5)",
-        "pitching_as_sp": ".quick-splits > div:nth-child(2) > div:nth-child(1) .fgButton:nth-child(1)",
-        "pitching_as_rp": ".quick-splits > div:nth-child(2) > div:nth-child(1) .fgButton:nth-child(2)",
-        "pitching_home": ".quick-splits > div:nth-child(2) > div:nth-child(2) > .fgButton:nth-child(1)",
-        "pitching_away": ".quick-splits > div:nth-child(2) > div:nth-child(2) > .fgButton:nth-child(2)",
-        "vs_lhh": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(1)",
-        "vs_lhh_home": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(2)",
-        "vs_lhh_away": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(3)",
-        "vs_lhh_as_rhp": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(4)",
-        "vs_lhh_as_lhp": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(5)",
-        "vs_rhh": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)",
-        "vs_rhh_home": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)",
-        "vs_rhh_away": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)",
-        "vs_rhh_as_rhp": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)",
-        "vs_rhh_as_lhp": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)"
-    }
-    __switches = {
-        "split_teams": "#stack-buttons > div:nth-child(2)",
-        "auto_pt": "#stack-buttons > div:nth-child(3)"
-    }
+    __selections = leaders_sel.splits.selections
+    __dropdowns = leaders_sel.splits.dropdowns
+    __splits = leaders_sel.splits.splits
+    __quick_splits = leaders_sel.splits.quick_splits
+    __switches = leaders_sel.splits.switches
 
     address = "https://fangraphs.com/leaders/splits-leaderboards"
 
@@ -251,7 +154,7 @@ class TestSplitsLeaderboards:
             browser = play.chromium.launch()
             page = browser.new_page()
             page.goto(cls.address, timeout=0)
-            page.wait_for_selector(".fg-data-grid.undefined")
+            page.wait_for_selector(leaders_sel.splits.waitfor)
             cls.soup = bs4.BeautifulSoup(
                 page.content(), features="lxml"
             )
@@ -426,30 +329,9 @@ class TestSeasonStatGrid:
     """
     :py:class:`FanGraphs.leaders.SeasonStatGrid`.
     """
-    __selections = {
-        "stat": [
-            "div[class*='fgButton button-green']:nth-child(1)",
-            "div[class*='fgButton button-green']:nth-child(2)"
-        ],
-        "type": [
-            "div[class*='fgButton button-green']:nth-child(4)",
-            "div[class*='fgButton button-green']:nth-child(5)",
-            "div[class*='fgButton button-green']:nth-child(6)"
-        ]
-    }
-    __dropdowns = {
-        "start_season": ".row-season > div:nth-child(2)",
-        "end_season": ".row-season > div:nth-child(4)",
-        "popular": ".season-grid-controls-dropdown-row-stats > div:nth-child(1)",
-        "standard": ".season-grid-controls-dropdown-row-stats > div:nth-child(2)",
-        "advanced": ".season-grid-controls-dropdown-row-stats > div:nth-child(3)",
-        "statcast": ".season-grid-controls-dropdown-row-stats > div:nth-child(4)",
-        "batted_ball": ".season-grid-controls-dropdown-row-stats > div:nth-child(5)",
-        "win_probability": ".season-grid-controls-dropdown-row-stats > div:nth-child(6)",
-        "pitch_type": ".season-grid-controls-dropdown-row-stats > div:nth-child(7)",
-        "plate_discipline": ".season-grid-controls-dropdown-row-stats > div:nth-child(8)",
-        "value": ".season-grid-controls-dropdown-row-stats > div:nth-child(9)"
-    }
+    __selections = leaders_sel.ssg.selections
+    __dropdowns = leaders_sel.ssg.dropdowns
+
     address = "https://fangraphs.com/leaders/season-stat-grid"
 
     @classmethod
@@ -458,7 +340,7 @@ class TestSeasonStatGrid:
             browser = play.chromium.launch()
             page = browser.new_page()
             page.goto(cls.address, timeout=0)
-            page.wait_for_selector(".fg-data-grid.undefined")
+            page.wait_for_selector(leaders_sel.ssg.waitfor)
             cls.soup = bs4.BeautifulSoup(
                 page.content(), features="lxml"
             )
@@ -570,24 +452,8 @@ class TestGameSpanLeaderboards:
     """
     :py:class:`GameSpanLeaderboards`.
     """
-    __selections = {
-        "stat": [
-            ".controls-stats > .fgButton:nth-child(1)",
-            ".controls-stats > .fgButton:nth-child(2)"
-        ],
-        "type": [
-            ".controls-board-view > .fgButton:nth-child(1)",
-            ".controls-board-view > .fgButton:nth-child(2)",
-            ".controls-board-view > .fgButton:nth-child(3)"
-        ]
-    }
-    __dropdowns = {
-        "min_pa": ".controls-stats:nth-child(1) > div:nth-child(3) > .fg-selection-box__selection",
-        "single_season": ".controls-stats:nth-child(2) > div:nth-child(1) > .fg-selection-box__selection",
-        "season1": ".controls-stats:nth-child(2) > div:nth-child(2) > .fg-selection-box__selection",
-        "season2": ".controls-stats:nth-child(2) > div:nth-child(3) > .fg-selection-box__selection",
-        "determine": ".controls-stats.stat-determined > div:nth-child(1) > .fg-selection-box__selection"
-    }
+    __selections = leaders_sel.gsl.selections
+    __dropdowns = leaders_sel.gsl.dropdowns
 
     address = "https://www.fangraphs.com/leaders/special/60-game-span"
 
@@ -597,7 +463,7 @@ class TestGameSpanLeaderboards:
             browser = play.chromium.launch()
             page = browser.new_page()
             page.goto(cls.address, timeout=0)
-            page.wait_for_selector(".fg-data-grid.table-type")
+            page.wait_for_selector(leaders_sel.gsl.waitfor)
             cls.soup = bs4.BeautifulSoup(
                 page.content(), features="lxml"
             )
@@ -706,4 +572,66 @@ class TestGameSpanLeaderboards:
         Instance method ``GameSpanLeaderboards.export``.
         """
         elems = self.soup.select(".data-export")
+        assert len(elems) == 1
+
+
+class TestWARLeaderboards:
+    """
+    :py:class:`FanGraphs.leaders.WARLeaderboards`
+    """
+    __dropdowns = leaders_sel.war.dropdowns
+    __dropdown_options = leaders_sel.war.dropdown_options
+
+    address = "https://fangraphs.com/warleaders.aspx"
+
+    @classmethod
+    def setup_class(cls):
+        with sync_playwright() as play:
+            browser = play.chromium.launch()
+            page = browser.new_page()
+            page.goto(cls.address)
+            page.wait_for_selector(leaders_sel.war.waitfor)
+            cls.soup = bs4.BeautifulSoup(
+                page.content(), features="lxml"
+            )
+            browser.close()
+
+    @pytest.mark.parametrize(
+        "selectors",
+        [__dropdown_options]
+    )
+    def test_list_options(self, selectors: dict):
+        """
+        Instance method ``WARLeaderboards.list_options``
+
+        :param selectors: The CSS selectors
+        """
+        elem_count = {
+            "season": 151, "team": 33, "type": 3
+        }
+        for query, sel in selectors.items():
+            elems = self.soup.select(f"{sel} > ul > li")
+            assert len(elems) == elem_count[query], query
+
+    @pytest.mark.parametrize(
+        "selectors",
+        [__dropdowns]
+    )
+    def test_current_option(self, selectors: dict):
+        elem_text = {
+            "season": "2020", "team": "All Teams", "type": "WAR (FIP Based)"
+        }
+        for query, sel in selectors.items():
+            elems = self.soup.select(sel)
+            assert len(elems) == 1, query
+            assert elems[0].get("value") is not None, query
+            assert elems[0].get("value") == elem_text[query], query
+
+    def test_configure_dropdown(self):
+        for query, sel in self.__dropdowns.items():
+            elems = self.soup.select(sel)
+            assert len(elems) == 1, query
+
+    def test_export(self):
+        elems = self.soup.select("#WARBoard1_cmdCSV")
         assert len(elems) == 1

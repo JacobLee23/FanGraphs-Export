@@ -31,6 +31,7 @@ import bs4
 from playwright.sync_api import sync_playwright
 
 import FanGraphs.exceptions
+from FanGraphs.selectors import leaders_sel
 
 
 class ScrapingUtilities:
@@ -131,47 +132,12 @@ class MajorLeagueLeaderboards(ScrapingUtilities):
         :value: https://fangraphs.com/leaders.aspx
     """
 
-    __selections = {
-        "group": "#LeaderBoard1_tsGroup",
-        "stat": "#LeaderBoard1_tsStats",
-        "position": "#LeaderBoard1_tsPosition",
-        "type": "#LeaderBoard1_tsType"
-    }
-    __dropdowns = {
-        "league": "#LeaderBoard1_rcbLeague_Input",
-        "team": "#LeaderBoard1_rcbTeam_Input",
-        "single_season": "#LeaderBoard1_rcbSeason_Input",
-        "split": "#LeaderBoard1_rcbMonth_Input",
-        "min_pa": "#LeaderBoard1_rcbMin_Input",
-        "season1": "#LeaderBoard1_rcbSeason1_Input",
-        "season2": "#LeaderBoard1_rcbSeason2_Input",
-        "age1": "#LeaderBoard1_rcbAge1_Input",
-        "age2": "#LeaderBoard1_rcbAge2_Input"
-    }
-    __dropdown_options = {
-        "league": "#LeaderBoard1_rcbLeague_DropDown",
-        "team": "#LeaderBoard1_rcbTeam_DropDown",
-        "single_season": "#LeaderBoard1_rcbSeason_DropDown",
-        "split": "#LeaderBoard1_rcbMonth_DropDown",
-        "min_pa": "#LeaderBoard1_rcbMin_DropDown",
-        "season1": "#LeaderBoard1_rcbSeason1_DropDown",
-        "season2": "#LeaderBoard1_rcbSeason2_DropDown",
-        "age1": "#LeaderBoard1_rcbAge1_DropDown",
-        "age2": "#LeaderBoard1_rcbAge2_DropDown"
-    }
-    __checkboxes = {
-        "split_teams": "#LeaderBoard1_cbTeams",
-        "active_roster": "#LeaderBoard1_cbActive",
-        "hof": "#LeaderBoard1_cbHOF",
-        "split_seasons": "#LeaderBoard1_cbSeason",
-        "rookies": "#LeaderBoard1_cbRookie"
-    }
-    __buttons = {
-        "season1": "#LeaderBoard1_btnMSeason",
-        "season2": "#LeaderBoard1_btnMSeason",
-        "age1": "#LeaderBoard1_cmdAge",
-        "age2": "#LeaderBoard1_cmdAge"
-    }
+    __selections = leaders_sel.mll.selections
+    __dropdowns = leaders_sel.mll.dropdowns
+    __dropdown_options = leaders_sel.mll.dropdown_options
+    __checkboxes = leaders_sel.mll.checkboxes
+    __buttons = leaders_sel.mll.buttons
+
     address = "https://fangraphs.com/leaders.aspx"
 
     def __init__(self, browser="chromium"):
@@ -359,77 +325,14 @@ class SplitsLeaderboards(ScrapingUtilities):
         :type: str
         :value: https://fangraphs.com/leaders/splits-leaderboards
     """
-    __selections = {
-        "group": [
-            ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(1)",
-            ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(2)",
-            ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(3)",
-            ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(4)"
-        ],
-        "stat": [
-            ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(6)",
-            ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(7)"
-        ],
-        "type": [
-            "#root-buttons-stats > div:nth-child(1)",
-            "#root-buttons-stats > div:nth-child(2)",
-            "#root-buttons-stats > div:nth-child(3)"
-        ]
-    }
-    __dropdowns = {
-        "time_filter": "#root-menu-time-filter > .fg-dropdown.splits.multi-choice",
-        "preset_range": "#root-menu-time-filter > .fg-dropdown.splits.single-choice",
-        "groupby": ".fg-dropdown.group-by"
-    }
-    __splits = {
-        "handedness": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(1)",
-        "home_away": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(2)",
-        "batted_ball": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(3)",
-        "situation": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(4)",
-        "count": ".fgBin:nth-child(1) > .fg-dropdown.splits.multi-choice:nth-child(5)",
-        "batting_order": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(1)",
-        "position": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(2)",
-        "inning": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(3)",
-        "leverage": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(4)",
-        "shifts": ".fgBin:nth-child(2) > .fg-dropdown.splits.multi-choice:nth-child(5)",
-        "team": ".fgBin:nth-child(3) > .fg-dropdown.splits.multi-choice:nth-child(1)",
-        "opponent": ".fgBin:nth-child(3) > .fg-dropdown.splits.multi-choice:nth-child(2)",
-    }
-    __quick_splits = {
-        "batting_home": ".quick-splits > div:nth-child(1) > div:nth-child(2) > .fgButton:nth-child(1)",
-        "batting_away": ".quick-splits > div:nth-child(1) > div:nth-child(2) > .fgButton:nth-child(2)",
-        "vs_lhp": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(1)",
-        "vs_lhp_home": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(2)",
-        "vs_lhp_away": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(3)",
-        "vs_lhp_as_lhh": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(4)",
-        "vs_lhp_as_rhh": ".quick-splits > div:nth-child(1) > div:nth-child(3) > .fgButton:nth-child(5)",
-        "vs_rhp": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(1)",
-        "vs_rhp_home": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(2)",
-        "vs_rhp_away": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(3)",
-        "vs_rhp_as_lhh": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(4)",
-        "vs_rhp_as_rhh": ".quick-splits > div:nth-child(1) > div:nth-child(4) > .fgButton:nth-child(5)",
-        "pitching_as_sp": ".quick-splits > div:nth-child(2) > div:nth-child(1) .fgButton:nth-child(1)",
-        "pitching_as_rp": ".quick-splits > div:nth-child(2) > div:nth-child(1) .fgButton:nth-child(2)",
-        "pitching_home": ".quick-splits > div:nth-child(2) > div:nth-child(2) > .fgButton:nth-child(1)",
-        "pitching_away": ".quick-splits > div:nth-child(2) > div:nth-child(2) > .fgButton:nth-child(2)",
-        "vs_lhh": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(1)",
-        "vs_lhh_home": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(2)",
-        "vs_lhh_away": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(3)",
-        "vs_lhh_as_rhp": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(4)",
-        "vs_lhh_as_lhp": ".quick-splits > div:nth-child(2) > div:nth-child(3) > .fgButton:nth-child(5)",
-        "vs_rhh": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)",
-        "vs_rhh_home": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)",
-        "vs_rhh_away": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)",
-        "vs_rhh_as_rhp": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)",
-        "vs_rhh_as_lhp": ".quick-splits > div:nth-child(2) > div:nth-child(4) > .fgButton:nth-child(1)"
-    }
-    __switches = {
-        "split_teams": "#stack-buttons > div:nth-child(2)",
-        "auto_pt": "#stack-buttons > div:nth-child(3)"
-    }
+    __selections = leaders_sel.splits.selections
+    __dropdowns = leaders_sel.splits.dropdowns
+    __splits = leaders_sel.splits.splits
+    __quick_splits = leaders_sel.splits.quick_splits
+    __switches = leaders_sel.splits.switches
+    __waitfor = leaders_sel.splits.waitfor
 
     address = "https://fangraphs.com/leaders/splits-leaderboards"
-    __waitfor = ".fg-data-grid.undefined"
 
     def __init__(self, *, browser="chromium"):
         """
@@ -727,7 +630,7 @@ class SplitsLeaderboards(ScrapingUtilities):
         """
         self._close_ad()
         if not path or os.path.splitext(path)[1] != ".csv":
-            path = "{}.csv".format(
+            path = "out/{}.csv".format(
                 datetime.datetime.now().strftime("%d.%m.%y %H.%M.%S")
             )
         with self.page.expect_download() as down_info:
@@ -739,7 +642,7 @@ class SplitsLeaderboards(ScrapingUtilities):
 
 class SeasonStatGrid(ScrapingUtilities):
     """
-    Scrapes the FanGraphs Season Stat Grid webpage.
+    Parses the FanGraphs Season Stat Grid webpage.
 
     .. py:attribute:: address
         The base URL address of the Season Stat Grid page.
@@ -747,33 +650,11 @@ class SeasonStatGrid(ScrapingUtilities):
         :type: str
         :value: https://fangraphs.com/season-stat-grid
     """
+    __selections = leaders_sel.ssg.selections
+    __dropdowns = leaders_sel.ssg.dropdowns
+    __waitfor = leaders_sel.ssg.waitfor
 
-    __selections = {
-        "stat": [
-            "div[class*='fgButton button-green']:nth-child(1)",
-            "div[class*='fgButton button-green']:nth-child(2)"
-        ],
-        "type": [
-            "div[class*='fgButton button-green']:nth-child(4)",
-            "div[class*='fgButton button-green']:nth-child(5)",
-            "div[class*='fgButton button-green']:nth-child(6)"
-        ]
-    }
-    __dropdowns = {
-        "start_season": ".row-season > div:nth-child(2)",
-        "end_season": ".row-season > div:nth-child(4)",
-        "popular": ".season-grid-controls-dropdown-row-stats > div:nth-child(1)",
-        "standard": ".season-grid-controls-dropdown-row-stats > div:nth-child(2)",
-        "advanced": ".season-grid-controls-dropdown-row-stats > div:nth-child(3)",
-        "statcast": ".season-grid-controls-dropdown-row-stats > div:nth-child(4)",
-        "batted_ball": ".season-grid-controls-dropdown-row-stats > div:nth-child(5)",
-        "win_probability": ".season-grid-controls-dropdown-row-stats > div:nth-child(6)",
-        "pitch_type": ".season-grid-controls-dropdown-row-stats > div:nth-child(7)",
-        "plate_discipline": ".season-grid-controls-dropdown-row-stats > div:nth-child(8)",
-        "value": ".season-grid-controls-dropdown-row-stats > div:nth-child(9)"
-    }
     address = "https://fangraphs.com/leaders/season-stat-grid"
-    __waitfor = ".fg-data-grid.undefined"
 
     def __init__(self, *, browser="chromium"):
         """
@@ -955,7 +836,7 @@ class SeasonStatGrid(ScrapingUtilities):
 
 class GameSpanLeaderboards(ScrapingUtilities):
     """
-    Scrape the FanGraphs 60-Game Span Leaderboards
+    Parses the FanGraphs 60-Game Span Leaderboards
 
     .. py:attribute:: address
 
@@ -964,26 +845,11 @@ class GameSpanLeaderboards(ScrapingUtilities):
         :type: str
         :value: https://fangraphs.com/leaders/special/60-game-span
     """
-    __selections = {
-        "stat": [
-            ".controls-stats > .fgButton:nth-child(1)",
-            ".controls-stats > .fgButton:nth-child(2)"
-        ],
-        "type": [
-            ".controls-board-view > .fgButton:nth-child(1)",
-            ".controls-board-view > .fgButton:nth-child(2)",
-            ".controls-board-view > .fgButton:nth-child(3)"
-        ]
-    }
-    __dropdowns = {
-        "min_pa": ".controls-stats:nth-child(1) > div:nth-child(3) > .fg-selection-box__selection",
-        "single_season": ".controls-stats:nth-child(2) > div:nth-child(1) > .fg-selection-box__selection",
-        "season1": ".controls-stats:nth-child(2) > div:nth-child(2) > .fg-selection-box__selection",
-        "season2": ".controls-stats:nth-child(2) > div:nth-child(3) > .fg-selection-box__selection",
-        "determine": ".controls-stats.stat-determined > div:nth-child(1) > .fg-selection-box__selection"
-    }
+    __selections = leaders_sel.gsl.selections
+    __dropdowns = leaders_sel.gsl.dropdowns
+    __waitfor = leaders_sel.gsl.waitfor
+
     address = "https://fangraphs.com/leaders/special/60-game-span"
-    __waitfor = ".fg-data-grid.table-type"
 
     def __init__(self, browser="chromium"):
         """
@@ -1117,7 +983,7 @@ class GameSpanLeaderboards(ScrapingUtilities):
         """
         self._close_ad()
         if not path or os.path.splitext(path)[1] != ".csv":
-            path = "{}.csv".format(
+            path = "out/{}.csv".format(
                 datetime.datetime.now().strftime("%d.%m.%y %H.%M.%S")
             )
         with self.page.expect_download() as down_info:
@@ -1133,7 +999,129 @@ class InternationalLeaderboards:
         pass
 
 
-class WARLeaderboards:
+class WARLeaderboards(ScrapingUtilities):
+    """
+    Parses the FanGraphs WAR Leaderboards page
 
-    def __init__(self):
-        pass
+    .. py:attribute:: address
+
+        The base URL address for the FanGraphs WAR Leaderboards page.
+
+        :type: str
+        :value: https://fangraphs.com/warleaders.aspx
+    """
+    __dropdowns = leaders_sel.war.dropdowns
+    __dropdown_options = leaders_sel.war.dropdown_options
+    __waitfor = leaders_sel.war.waitfor
+
+    address = "https://fangraphs.com/warleaders.aspx"
+
+    def __init__(self, browser="chromium"):
+        """
+        :param browser: The name of the browser to use (Chromium, Firefox, WebKit)
+        """
+        super().__init__(browser, self.address)
+        self.reset(waitfor=self.__waitfor)
+
+    @classmethod
+    def list_queries(cls):
+        """
+        Lists the possible filter queries which can be used to modify search results.
+
+        :return: Filter queries which can be used to modify search results
+        :rtype: list
+        """
+        queries = []
+        queries.extend(list(cls.__dropdowns))
+        return queries
+
+    def list_options(self, query: str):
+        """
+        Lists the possible options which a filter query can be configured to.
+
+        :param query: The filter query
+        :return: Options which the filter query can be configured to
+        :rtype: list
+        :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
+        """
+        query = query.lower()
+        if query in self.__dropdowns:
+            elems = self.soup.select(
+                f"{self.__dropdown_options[query]} > ul > li"
+            )
+            options = [e.getText() for e in elems]
+        else:
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+        return options
+
+    def current_option(self, query: str):
+        """
+        Retrieves the option which a filter query is currently set to.
+
+        :param query: The filter query being retrieved of its current option
+        :return: The option which the filter query is currently set to
+        :rtype: str
+        :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
+        """
+        query = query.lower()
+        if query in self.__dropdowns:
+            elem = self.soup.select(self.__dropdowns[query])[0]
+            option = elem.get("value")
+        else:
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+        return option
+
+    def configure(self, query: str, option: str):
+        """
+        Configures a filter query to a specified option.
+
+        :param query: The filter query to be configured
+        :param option: The option to set the filter query to
+        :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
+        """
+        query = query.lower()
+        self._close_ad()
+        if query in self.__dropdowns:
+            self.__configure_dropdown(query, option)
+        else:
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+        self._refresh_parser(waitfor=self.__waitfor)
+
+    def __configure_dropdown(self, query: str, option: str):
+        """
+        Configures a dropdown-class filter query to an option.
+
+        :param query: The dropdown-class filter query to be configured
+        :param option: The option to set the filter query to
+        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
+        """
+        options = self.list_options(query)
+        try:
+            index = options.index(option)
+        except ValueError as err:
+            raise FanGraphs.exceptions.InvalidFilterOption(query, option) from err
+        self.page.click(self.__dropdowns[query])
+        elem = self.page.query_selector_all(
+            f"{self.__dropdown_options} > ul > li"
+        )[index]
+        elem.click()
+
+    def export(self, path=""):
+        """
+        Uses the **Export Data** button on the webpage to export the current leaderboard.
+        The data will be exported as a CSV file and the file will be saved to *out/*.
+        The file will be saved to the filepath ``path``, if specified.
+        Otherwise, the file will be saved to the filepath *./out/%d.%m.%y %H.%M.%S.csv*
+
+        :param path: The path to save the exported data to
+        """
+        self._close_ad()
+        if not path or os.path.splitext(path)[1] != ".csv":
+            path = "out/{}.csv".format(
+                datetime.datetime.now().strftime("%d.%m.%y %H.%M.%S")
+            )
+        with self.page.expect_download() as down_info:
+            self.page.click("#WARBoard1_cmdCSV")
+        download = down_info.value
+        download_path = download.path()
+        os.rename(download_path, path)
