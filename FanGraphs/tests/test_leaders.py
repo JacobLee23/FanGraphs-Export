@@ -15,6 +15,27 @@ import requests
 from FanGraphs.selectors import leaders_sel
 
 
+def fetch_soup(address, waitfor=""):
+    """
+    Initializes the ``bs4.BeautifulSoup`` object for parsing the FanGraphs page
+
+    :param address: The base URL address of the FanGraphs page
+    :param waitfor: The CSS selector to wait for
+    :return: A ``BeautifulSoup`` object for parsing the page
+    :rtype: bs4.BeautifulSoup
+    """
+    with sync_playwright() as play:
+        browser = play.chromium.launch()
+        page = browser.new_page()
+        page.goto(address, timeout=0)
+        page.wait_for_selector(waitfor)
+        soup = bs4.BeautifulSoup(
+            page.content(), features="lxml"
+        )
+        browser.close()
+    return soup
+
+
 class TestMajorLeagueLeaderboards:
     """
     :py:class:`FanGraphs.leaders.MajorLeagueLeaderboards`
@@ -30,14 +51,7 @@ class TestMajorLeagueLeaderboards:
 
     @classmethod
     def setup_class(cls):
-        with sync_playwright() as play:
-            browser = play.chromium.launch()
-            page = browser.new_page()
-            page.goto(cls.address, timeout=0)
-            cls.soup = bs4.BeautifulSoup(
-                page.content(), features="lxml"
-            )
-            browser.close()
+        cls.soup = fetch_soup(cls.address)
 
     def test_address(self):
         """
@@ -147,18 +161,7 @@ class TestSplitsLeaderboards:
 
     @classmethod
     def setup_class(cls):
-        """
-        Initializes ``bs4.BeautifulSoup4`` object using ``playwright``.
-        """
-        with sync_playwright() as play:
-            browser = play.chromium.launch()
-            page = browser.new_page()
-            page.goto(cls.address, timeout=0)
-            page.wait_for_selector(leaders_sel.splits.waitfor)
-            cls.soup = bs4.BeautifulSoup(
-                page.content(), features="lxml"
-            )
-            browser.close()
+        cls.soup = fetch_soup(cls.address, leaders_sel.splits.waitfor)
 
     def test_address(self):
         """
@@ -336,15 +339,7 @@ class TestSeasonStatGrid:
 
     @classmethod
     def setup_class(cls):
-        with sync_playwright() as play:
-            browser = play.chromium.launch()
-            page = browser.new_page()
-            page.goto(cls.address, timeout=0)
-            page.wait_for_selector(leaders_sel.ssg.waitfor)
-            cls.soup = bs4.BeautifulSoup(
-                page.content(), features="lxml"
-            )
-            browser.close()
+        cls.soup = fetch_soup(cls.address, leaders_sel.ssg.waitfor)
 
     def test_address(self):
         """
@@ -459,15 +454,7 @@ class TestGameSpanLeaderboards:
 
     @classmethod
     def setup_class(cls):
-        with sync_playwright() as play:
-            browser = play.chromium.launch()
-            page = browser.new_page()
-            page.goto(cls.address, timeout=0)
-            page.wait_for_selector(leaders_sel.gsl.waitfor)
-            cls.soup = bs4.BeautifulSoup(
-                page.content(), features="lxml"
-            )
-            browser.close()
+        cls.soup = fetch_soup(cls.address, leaders_sel.gsl.waitfor)
 
     def test_address(self):
         """
@@ -575,6 +562,125 @@ class TestGameSpanLeaderboards:
         assert len(elems) == 1
 
 
+class TestInternationalLeaderboards:
+    """
+    :py:class:`FanGraphs.leaders.InternationalLeaderboards`
+    """
+    __selections = leaders_sel.intl.selections
+    __dropdowns = leaders_sel.intl.dropdowns
+    __checkboxes = leaders_sel.intl.checkboxes
+    address = "https://www.fangraphs.com/leaders/international"
+
+    @classmethod
+    def setup_class(cls):
+        cls.soup = fetch_soup(cls.address, waitfor=leaders_sel.intl.waitfor)
+
+    def test_address(self):
+        """
+        Class attribute ``InternationalLeaderboards.address``.
+        """
+        res = requests.get(self.address)
+        assert res.status_code == 200
+
+    def test_list_options_selections(self):
+        """
+        Instance method ``InternationalLeaderboards.list_options``.
+
+        Uses the following class attributes:
+
+        - ``InternationalLeaderboards.__selections``
+        """
+        elem_count = {
+            "stat": 2, "type": 2
+        }
+        for query, sel_list in self.__selections.items():
+            elems = [self.soup.select(s)[0] for s in sel_list]
+            assert len(elems) == elem_count[query], query
+            assert all([e.getText() for e in elems]), query
+
+    def test_list_options_dropdowns(self):
+        """
+        Instance method ``InternationalLeaderboards.list_options``.
+
+        Uses the following class attributes:
+
+        - ``InternationalLeaderboards.__dropdowns``
+        """
+        elem_count = {
+            "position": 11, "min": 42, "single_season": 19, "season1": 19, "season2": 19,
+            "league": 1, "team": 11
+        }
+        for query, sel in self.__dropdowns.items():
+            elems = self.soup.select(f"{sel} > div > a")
+            assert len(elems) == elem_count[query], query
+            assert all([e.getText() for e in elems]), query
+
+    def test_current_option_selections(self):
+        """
+        Instance method ``InternationalLeaderboards.current_option``.
+
+        Uses the following class attributes:
+
+        - ``InternationalLeaderboards.__selections``
+        """
+        elem_text = {
+            "stat": "Batters", "type": "Standard"
+        }
+        for query, sel_list in self.__selections.items():
+            elems = []
+            for sel in sel_list:
+                elem = self.soup.select(sel)[0]
+                assert elem.get("class") is not None, query
+                elems.append(elem)
+            active = ["active" in e.get("class") for e in elems]
+            assert active.count(True) == 1, query
+            text = [e.getText() for e in elems]
+            assert elem_text[query] in text, query
+
+    def test_current_option_dropdown(self):
+        """
+        Instance method ``InternationalLeaderboards.current_option``.
+
+        Uses the following class attributes:
+
+        - ``InternationalLeaderboards.__dropdowns``
+        """
+        elem_text = {
+            "position": "All", "min": "Qualified", "single_season": "2020",
+            "season1": "2020", "season2": "2020", "league": "KBO",
+            "team": "Select"
+        }
+        for query, sel in self.__dropdowns.items():
+            elems = self.soup.select(f"{sel} > div > span")
+            assert len(elems) == 1, query
+            text = elems[0].getText()
+            assert text == elem_text[query], query
+
+    def test_configure_selections(self):
+        """
+        Private instance method ``InternationalLeaderboards.__configure_selection``.
+        """
+        for query, sel_list in self.__selections.items():
+            for sel in sel_list:
+                elems = self.soup.select(sel)
+                assert len(elems) == 1, query
+
+    def test_configure_dropdown(self):
+        """
+        Private instance method ``InternationalLeaderboards.__configure_dropdown``.
+        """
+        for query, sel in self.__dropdowns.items():
+            elems = self.soup.select(sel)
+            assert len(elems) == 1, query
+
+    def test_export(self):
+        """
+        Instance method ``InternationalLeaderboards.export``.
+        """
+        elems = self.soup.select(".data-export")
+        assert len(elems) == 1
+
+
 class TestWARLeaderboards:
     """
     :py:class:`FanGraphs.leaders.WARLeaderboards`
@@ -586,15 +692,7 @@ class TestWARLeaderboards:
 
     @classmethod
     def setup_class(cls):
-        with sync_playwright() as play:
-            browser = play.chromium.launch()
-            page = browser.new_page()
-            page.goto(cls.address)
-            page.wait_for_selector(leaders_sel.war.waitfor)
-            cls.soup = bs4.BeautifulSoup(
-                page.content(), features="lxml"
-            )
-            browser.close()
+        cls.soup = fetch_soup(cls.address, waitfor=leaders_sel.war.waitfor)
 
     @pytest.mark.parametrize(
         "selectors",
