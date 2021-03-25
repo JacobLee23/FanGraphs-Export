@@ -656,6 +656,23 @@ class TestInternationalLeaderboards:
             text = elems[0].getText()
             assert text == elem_text[query], query
 
+    def test_configure_selections(self):
+        """
+        Private instance method ``InternationalLeaderboards.__configure_selection``.
+        """
+        for query, sel_list in self.__selections.items():
+            for sel in sel_list:
+                elems = self.soup.select(sel)
+                assert len(elems) == 1, query
+
+    def test_configure_dropdown(self):
+        """
+        Private instance method ``InternationalLeaderboards.__configure_dropdown``.
+        """
+        for query, sel in self.__dropdowns.items():
+            elems = self.soup.select(sel)
+            assert len(elems) == 1, query
+
 
 class TestWARLeaderboards:
     """

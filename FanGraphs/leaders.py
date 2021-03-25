@@ -1082,6 +1082,67 @@ class InternationalLeaderboards(ScrapingUtilities):
             raise FanGraphs.exceptions.InvalidFilterQuery(query)
         return option
 
+    def configure(self, query: str, option: str):
+        query = query.lower()
+        self._close_ad()
+        if query in self.__selections:
+            self.__configure_selection(query, option)
+        elif query in self.__dropdowns:
+            self.__configure_dropdown(query, option)
+        elif query in self.__checkboxes:
+            self.__configure_checkbox(query, option)
+        else:
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+        self._refresh_parser(waitfor=self.__waitfor)
+
+    def __configure_selection(self, query: str, option: str):
+        """
+
+        :param query:
+        :param option:
+        :return:
+        """
+        options = self.list_options(query)
+        try:
+            index = options.index(option)
+        except ValueError as err:
+            raise FanGraphs.exceptions.InvalidFilterOption from err
+        self.page.click(
+            self.__selections[query][index]
+        )
+
+    def __configure_dropdown(self, query: str, option: str):
+        """
+
+        :param query:
+        :param option:
+        :return:
+        """
+        options = self.list_options(query)
+        try:
+            index = options.index(option)
+        except ValueError as err:
+            raise FanGraphs.exceptions.InvalidFilterOption from err
+        self.page.click(self.__dropdowns[query])
+        elem = self.page.query_selector_all(
+            f"{self.__dropdowns[query]} > div > a"
+        )[index]
+        elem.click()
+
+    def __configure_checkbox(self, query: str, option: str):
+        """
+
+        :param query:
+        :param option:
+        :return:
+        """
+        options = self.list_options(query)
+        if option not in options:
+            raise FanGraphs.exceptions.InvalidFilterOption
+        if option == self.current_option(query):
+            return
+        self.page.click(self.__checkboxes[query])
+
 
 class WARLeaderboards(ScrapingUtilities):
     """
