@@ -1039,3 +1039,12 @@ class WARLeaderboards(ScrapingUtilities):
         else:
             raise FanGraphs.exceptions.InvalidFilterQuery(query)
         return options
+
+    def current_option(self, query: str):
+        query = query.lower()
+        if query in self.__dropdowns:
+            elem = self.soup.select(self.__dropdowns[query])[0]
+            option = elem.get("value")
+        else:
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+        return option

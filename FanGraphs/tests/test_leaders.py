@@ -595,13 +595,33 @@ class TestWARLeaderboards:
             )
             browser.close()
 
-    def test_list_options_dropdowns(self):
+    @pytest.mark.parametrize(
+        "selectors",
+        [__dropdown_options]
+    )
+    def test_list_options(self, selectors: dict):
         """
         Instance method ``WARLeaderboards.list_options``
+
+        :param selectors: The CSS selectors
         """
         elem_count = {
             "season": 151, "team": 33, "type": 3
         }
-        for query, sel in self.__dropdown_options.items():
+        for query, sel in selectors.items():
             elems = self.soup.select(f"{sel} li")
             assert len(elems) == elem_count[query], query
+
+    @pytest.mark.parametrize(
+        "selectors",
+        [__dropdowns]
+    )
+    def test_current_option(self, selectors: dict):
+        elem_text = {
+            "season": "2020", "team": "All Teams", "type": "WAR (FIP Based)"
+        }
+        for query, sel in selectors.items():
+            elems = self.soup.select(sel)
+            assert len(elems) == 1, query
+            assert elems[0].get("value") is not None, query
+            assert elems[0].get("value") == elem_text[query], query
