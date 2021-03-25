@@ -575,6 +575,24 @@ class TestGameSpanLeaderboards:
         assert len(elems) == 1
 
 
+class TestInternationalLeaderboards:
+    """
+    :py:class:`FanGraphs.leaders.InternationalLeaderboards`
+    """
+    address = "https://www.fangraphs.com/leaders/international"
+
+    @classmethod
+    def setup_class(cls):
+        with sync_playwright() as play:
+            browser = play.chromium.launch()
+            page = browser.new_page()
+            page.goto(cls.address)
+            cls.soup = bs4.BeautifulSoup(
+                page.content(), features="lxml"
+            )
+            browser.close()
+
+
 class TestWARLeaderboards:
     """
     :py:class:`FanGraphs.leaders.WARLeaderboards`

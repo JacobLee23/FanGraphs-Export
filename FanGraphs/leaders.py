@@ -993,10 +993,24 @@ class GameSpanLeaderboards(ScrapingUtilities):
         os.rename(download_path, path)
 
 
-class InternationalLeaderboards:
+class InternationalLeaderboards(ScrapingUtilities):
+    """
+    Parses the FanGraphs KBO Leaderboards page
 
-    def __init__(self):
-        pass
+    .. py:attribute:: address
+
+        The base URL address for the FanGraphs KBO Leaderboards page.
+
+        :type: str
+        :value: https://www.fangraphs.com/leaders/international
+    """
+    address = "https://www.fangraphs.com/leaders/international"
+
+    def __init__(self, browser="chromium"):
+        """
+        :param browser: The name of the browser to use (Chromium, Firefox, WebKit)
+        """
+        super().__init__(browser, self.address)
 
 
 class WARLeaderboards(ScrapingUtilities):
