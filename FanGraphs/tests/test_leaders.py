@@ -630,3 +630,7 @@ class TestWARLeaderboards:
         for query, sel in self.__dropdowns.items():
             elems = self.soup.select(sel)
             assert len(elems) == 1, query
+
+    def test_export(self):
+        elems = self.soup.select("#WARBoard1_cmdCSV")
+        assert len(elems) == 1

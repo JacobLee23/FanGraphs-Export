@@ -630,7 +630,7 @@ class SplitsLeaderboards(ScrapingUtilities):
         """
         self._close_ad()
         if not path or os.path.splitext(path)[1] != ".csv":
-            path = "{}.csv".format(
+            path = "out/{}.csv".format(
                 datetime.datetime.now().strftime("%d.%m.%y %H.%M.%S")
             )
         with self.page.expect_download() as down_info:
@@ -983,7 +983,7 @@ class GameSpanLeaderboards(ScrapingUtilities):
         """
         self._close_ad()
         if not path or os.path.splitext(path)[1] != ".csv":
-            path = "{}.csv".format(
+            path = "out/{}.csv".format(
                 datetime.datetime.now().strftime("%d.%m.%y %H.%M.%S")
             )
         with self.page.expect_download() as down_info:
@@ -1051,6 +1051,7 @@ class WARLeaderboards(ScrapingUtilities):
 
     def configure(self, query: str, option: str):
         query = query.lower()
+        self._close_ad()
         if query in self.__dropdowns:
             self.__configure_dropdown(query, option)
         else:
@@ -1068,3 +1069,15 @@ class WARLeaderboards(ScrapingUtilities):
             f"{self.__dropdown_options} > ul > li"
         )[index]
         elem.click()
+
+    def export(self, path=""):
+        self._close_ad()
+        if not path or os.path.splitext(path)[1] != ".csv":
+            path = "out/{}.csv".format(
+                datetime.datetime.now().strftime("%d.%m.%y %H.%M.%S")
+            )
+        with self.page.expect_download() as down_info:
+            self.page.click("#WARBoard1_cmdCSV")
+        download = down_info.value
+        download_path = download.path()
+        os.rename(download_path, path)
