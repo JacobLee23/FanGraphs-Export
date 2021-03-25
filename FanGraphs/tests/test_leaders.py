@@ -20,11 +20,11 @@ class TestMajorLeagueLeaderboards:
     :py:class:`FanGraphs.leaders.MajorLeagueLeaderboards`
     """
 
-    __selections = leaders_sel.MLL.selections
-    __dropdowns = leaders_sel.MLL.dropdowns
-    __dropdown_options = leaders_sel.MLL.dropdown_options
-    __checkboxes = leaders_sel.MLL.checkboxes
-    __buttons = leaders_sel.MLL.buttons
+    __selections = leaders_sel.mll.selections
+    __dropdowns = leaders_sel.mll.dropdowns
+    __dropdown_options = leaders_sel.mll.dropdown_options
+    __checkboxes = leaders_sel.mll.checkboxes
+    __buttons = leaders_sel.mll.buttons
 
     address = "https://fangraphs.com/leaders.aspx"
 
@@ -137,11 +137,11 @@ class TestSplitsLeaderboards:
     :py:class:`FanGraphs.leaders.SplitsLeaderboards`.
     """
 
-    __selections = leaders_sel.SPLITS.selections
-    __dropdowns = leaders_sel.SPLITS.dropdowns
-    __splits = leaders_sel.SPLITS.splits
-    __quick_splits = leaders_sel.SPLITS.quick_splits
-    __switches = leaders_sel.SPLITS.switches
+    __selections = leaders_sel.splits.selections
+    __dropdowns = leaders_sel.splits.dropdowns
+    __splits = leaders_sel.splits.splits
+    __quick_splits = leaders_sel.splits.quick_splits
+    __switches = leaders_sel.splits.switches
 
     address = "https://fangraphs.com/leaders/splits-leaderboards"
 
@@ -329,8 +329,8 @@ class TestSeasonStatGrid:
     """
     :py:class:`FanGraphs.leaders.SeasonStatGrid`.
     """
-    __selections = leaders_sel.SSG.selections
-    __dropdowns = leaders_sel.SSG.dropdowns
+    __selections = leaders_sel.ssg.selections
+    __dropdowns = leaders_sel.ssg.dropdowns
 
     address = "https://fangraphs.com/leaders/season-stat-grid"
 
@@ -452,8 +452,8 @@ class TestGameSpanLeaderboards:
     """
     :py:class:`GameSpanLeaderboards`.
     """
-    __selections = leaders_sel.GSL.selections
-    __dropdowns = leaders_sel.GSL.dropdowns
+    __selections = leaders_sel.gsl.selections
+    __dropdowns = leaders_sel.gsl.dropdowns
 
     address = "https://www.fangraphs.com/leaders/special/60-game-span"
 
@@ -579,6 +579,9 @@ class TestWARLeaderboards:
     """
     :py:class:`FanGraphs.leaders.WARLeaderboards`
     """
+    __dropdowns = leaders_sel.war.dropdowns
+    __dropdown_options = leaders_sel.war.dropdown_options
+
     address = "https://fangraphs.com/warleaders.aspx"
 
     @classmethod

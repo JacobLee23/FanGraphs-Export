@@ -132,11 +132,11 @@ class MajorLeagueLeaderboards(ScrapingUtilities):
         :value: https://fangraphs.com/leaders.aspx
     """
 
-    __selections = leaders_sel.MLL.selections
-    __dropdowns = leaders_sel.MLL.dropdowns
-    __dropdown_options = leaders_sel.MLL.dropdown_options
-    __checkboxes = leaders_sel.MLL.checkboxes
-    __buttons = leaders_sel.MLL.buttons
+    __selections = leaders_sel.mll.selections
+    __dropdowns = leaders_sel.mll.dropdowns
+    __dropdown_options = leaders_sel.mll.dropdown_options
+    __checkboxes = leaders_sel.mll.checkboxes
+    __buttons = leaders_sel.mll.buttons
 
     address = "https://fangraphs.com/leaders.aspx"
 
@@ -325,11 +325,11 @@ class SplitsLeaderboards(ScrapingUtilities):
         :type: str
         :value: https://fangraphs.com/leaders/splits-leaderboards
     """
-    __selections = leaders_sel.SPLITS.selections
-    __dropdowns = leaders_sel.SPLITS.dropdowns
-    __splits = leaders_sel.SPLITS.splits
-    __quick_splits = leaders_sel.SPLITS.quick_splits
-    __switches = leaders_sel.SPLITS.switches
+    __selections = leaders_sel.splits.selections
+    __dropdowns = leaders_sel.splits.dropdowns
+    __splits = leaders_sel.splits.splits
+    __quick_splits = leaders_sel.splits.quick_splits
+    __switches = leaders_sel.splits.switches
 
     address = "https://fangraphs.com/leaders/splits-leaderboards"
     __waitfor = ".fg-data-grid.undefined"
@@ -650,8 +650,8 @@ class SeasonStatGrid(ScrapingUtilities):
         :type: str
         :value: https://fangraphs.com/season-stat-grid
     """
-    __selections = leaders_sel.SSG.selections
-    __dropdowns = leaders_sel.SSG.dropdowns
+    __selections = leaders_sel.ssg.selections
+    __dropdowns = leaders_sel.ssg.dropdowns
 
     address = "https://fangraphs.com/leaders/season-stat-grid"
     __waitfor = ".fg-data-grid.undefined"
@@ -845,8 +845,8 @@ class GameSpanLeaderboards(ScrapingUtilities):
         :type: str
         :value: https://fangraphs.com/leaders/special/60-game-span
     """
-    __selections = leaders_sel.GSL.selections
-    __dropdowns = leaders_sel.GSL.dropdowns
+    __selections = leaders_sel.gsl.selections
+    __dropdowns = leaders_sel.gsl.dropdowns
 
     address = "https://fangraphs.com/leaders/special/60-game-span"
     __waitfor = ".fg-data-grid.table-type"
@@ -1010,6 +1010,9 @@ class WARLeaderboards:
         :type: str
         :value: https://fangraphs.com/warleaders.aspx
     """
+    __dropdowns = leaders_sel.war.dropdowns
+    __dropdown_options = leaders_sel.war.dropdown_options
+
     address = "https://fangraphs.com/warleaders.aspx"
 
     def __init__(self):
