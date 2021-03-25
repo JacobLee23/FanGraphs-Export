@@ -1,6 +1,10 @@
 #! python3
 # FanGraphs/selectors/leaders_sel/war_leaderboards.py
 
+"""
+CSS selectors for :py:class:`FanGraphs.leaders.WARLeaderboards`.
+"""
+
 dropdowns = {
     "season": "#WARBoard1_rcbSeason_Input",
     "team": "#WARBoard1_rcbTeam_Input",

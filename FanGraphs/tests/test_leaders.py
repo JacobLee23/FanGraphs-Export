@@ -4,7 +4,6 @@
 """
 The docstring in each class identifies the class in :py:mod:`FanGraphs.leaders` being tested.
 The docstring in each test identifies the class attribute(s)/method(s) being tested.
-==============================================================================
 """
 
 import bs4

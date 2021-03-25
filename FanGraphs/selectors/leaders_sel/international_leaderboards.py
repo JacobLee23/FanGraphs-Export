@@ -1,6 +1,10 @@
 #! python3
 # FanGraphs/selectors/leaders_sel/international_leaderboards.py
 
+"""
+CSS selectors for :py:class:`FanGraphs.leaders.InternationalLeaderboards`.
+"""
+
 selections = {
     "stat": [
         ".controls-stats > .fgButton:nth-child(1)",

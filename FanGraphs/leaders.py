@@ -20,7 +20,6 @@ Below are each of the covered pages with the corresponding class:
 .. _60-Game Span Leaderboards: https://www.fangraphs.com/leaders/special/60-game-span
 .. _KBO Leaders: https://www.fangraphs.com/leaders/international
 .. _Combined WAR Leaderboards: https://www.fangraphs.com/warleaders.aspx
-================================================================================
 """
 
 import csv

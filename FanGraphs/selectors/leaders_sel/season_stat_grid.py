@@ -1,6 +1,10 @@
 #! python3
 # FanGraphs/selectors/leaders_sel/season_stat_grid.py
 
+"""
+CSS selectors for :py:class:`FanGraphs.leaders.SeasonStatGrid`.
+"""
+
 selections = {
     "stat": [
         "div[class*='fgButton button-green']:nth-child(1)",

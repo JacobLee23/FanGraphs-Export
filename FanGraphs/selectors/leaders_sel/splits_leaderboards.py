@@ -1,6 +1,10 @@
 #! python3
 # FanGraphs/selectors/leaders_sel/splits_leaderboards.py
 
+"""
+CSS selectors for :py:class:`FanGraphs.leaders.SplitLeaderboards`.
+"""
+
 selections = {
     "group": [
         ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(1)",

@@ -3,7 +3,6 @@
 
 """
 The warnings and exceptions used by modules in the package.
-================================================================================
 """
 
 

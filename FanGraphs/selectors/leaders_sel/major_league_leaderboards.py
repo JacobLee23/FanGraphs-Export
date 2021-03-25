@@ -1,6 +1,10 @@
 #! python3
 # FanGraphs/selectors/leaders_sel/major_league_leaderboards.py
 
+"""
+CSS selectors for :py:class:`FanGraphs.leaders.MajorLeagueLeaderboards`.
+"""
+
 selections = {
     "group": "#LeaderBoard1_tsGroup",
     "stat": "#LeaderBoard1_tsStats",
