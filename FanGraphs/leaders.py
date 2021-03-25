@@ -1004,6 +1004,11 @@ class InternationalLeaderboards(ScrapingUtilities):
         :type: str
         :value: https://www.fangraphs.com/leaders/international
     """
+    __selections = leaders_sel.intl.selections
+    __dropdowns = leaders_sel.intl.dropdowns
+    __checkboxes = leaders_sel.intl.checkboxes
+    __waitfor = leaders_sel.intl.waitfor
+
     address = "https://www.fangraphs.com/leaders/international"
 
     def __init__(self, browser="chromium"):
@@ -1011,6 +1016,7 @@ class InternationalLeaderboards(ScrapingUtilities):
         :param browser: The name of the browser to use (Chromium, Firefox, WebKit)
         """
         super().__init__(browser, self.address)
+        self.reset(waitfor=self.__waitfor)
 
 
 class WARLeaderboards(ScrapingUtilities):

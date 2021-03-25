@@ -570,7 +570,7 @@ class TestInternationalLeaderboards:
 
     @classmethod
     def setup_class(cls):
-        cls.soup = fetch_soup(cls.address)
+        cls.soup = fetch_soup(cls.address, waitfor=leaders_sel.intl.waitfor)
 
 
 class TestWARLeaderboards:
