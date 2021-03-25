@@ -642,7 +642,7 @@ class SplitsLeaderboards(ScrapingUtilities):
 
 class SeasonStatGrid(ScrapingUtilities):
     """
-    Scrapes the FanGraphs Season Stat Grid webpage.
+    Parses the FanGraphs Season Stat Grid webpage.
 
     .. py:attribute:: address
         The base URL address of the Season Stat Grid page.
@@ -836,7 +836,7 @@ class SeasonStatGrid(ScrapingUtilities):
 
 class GameSpanLeaderboards(ScrapingUtilities):
     """
-    Scrape the FanGraphs 60-Game Span Leaderboards
+    Parses the FanGraphs 60-Game Span Leaderboards
 
     .. py:attribute:: address
 
@@ -1000,6 +1000,17 @@ class InternationalLeaderboards:
 
 
 class WARLeaderboards:
+    """
+    Parses the FanGraphs WAR Leaderboards page
+
+    .. py:attribute:: address
+
+        The base URL address for the FanGraphs WAR Leaderboards page.
+
+        :type: str
+        :value: https://fangraphs.com/warleaders.aspx
+    """
+    address = "https://fangraphs.com/warleaders.aspx"
 
     def __init__(self):
         pass

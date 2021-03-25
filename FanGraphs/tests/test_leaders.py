@@ -573,3 +573,21 @@ class TestGameSpanLeaderboards:
         """
         elems = self.soup.select(".data-export")
         assert len(elems) == 1
+
+
+class TestWARLeaderboards:
+    """
+    :py:class:`FanGraphs.leaders.WARLeaderboards`
+    """
+    address = "https://fangraphs.com/warleaders.aspx"
+
+    @classmethod
+    def setup_class(cls):
+        with sync_playwright() as play:
+            browser = play.chromium.launch()
+            page = browser.new_page()
+            page.goto(cls.address)
+            cls.soup = bs4.BeautifulSoup(
+                page.content(), features="lxml"
+            )
+            browser.close()
