@@ -1018,6 +1018,42 @@ class InternationalLeaderboards(ScrapingUtilities):
         super().__init__(browser, self.address)
         self.reset(waitfor=self.__waitfor)
 
+    @classmethod
+    def list_queries(cls):
+        """
+
+        :return:
+        """
+        queries = []
+        queries.extend(cls.__selections)
+        queries.extend(cls.__dropdowns)
+        queries.extend(cls.__checkboxes)
+        return queries
+
+    def list_options(self, query: str):
+        """
+
+        :param query:
+        :return:
+        """
+        query = query.lower()
+        if query in self.__selections:
+            elems = [
+                self.soup.select(s)[0]
+                for s in self.__selections[query]
+            ]
+            options = [e.getText() for e in elems]
+        elif query in self.__dropdowns:
+            elems = self.soup.select(
+                f"{self.__dropdowns[query]} > div > a"
+            )
+            options = [e.getText() for e in elems]
+        elif query in self.__checkboxes:
+            options = ["True", "False"]
+        else:
+            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+        return options
+
 
 class WARLeaderboards(ScrapingUtilities):
     """
