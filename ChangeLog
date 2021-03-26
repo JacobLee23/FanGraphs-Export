@@ -1,6 +1,7 @@
 CHANGES
 =======
 
+* Generate AUTHORS and ChangeLog
 * Create setup.cfg and setup.py files
 * Revise docstrings
 * Update .gitignore
