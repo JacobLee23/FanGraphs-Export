@@ -2,7 +2,7 @@
 # FanGraphs/leaders.py
 
 """
-Web scraper for the `FanGraphs`_ **Leaders** webpages.
+Web scraper for the FanGraphs **Leaders** webpages.
 Each page which is covered has its own class for scraping it.
 Below are each of the covered pages with the corresponding class:
 
@@ -25,7 +25,7 @@ import csv
 import datetime
 import os
 
-from FanGraphs import ScrapingUtilities
+from FanGraphs.utilities import ScrapingUtilities
 import FanGraphs.exceptions
 from FanGraphs.selectors import leaders_sel
 

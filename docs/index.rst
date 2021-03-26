@@ -6,17 +6,42 @@ FanGraphs documentation
     :numbered:
 
     leaders
+    utilities
     exceptions
     selectors
 
 
-FanGraphs
+Leaders
 ------------------------------------------------------------------------------
 
-.. automodule:: FanGraphs
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. autosummary::
+
+    FanGraphs.leaders
+
+
+Utilities
+------------------------------------------------------------------------------
+
+.. autosummary::
+
+    FanGraphs.utilities
+
+
+Exceptions
+------------------------------------------------------------------------------
+
+.. autosummary::
+
+    FanGraphs.exceptions
+
+
+Selectors
+------------------------------------------------------------------------------
+
+.. autosummary::
+
+    FanGraphs.selectors
+    FanGraphs.selectors.leaders_sel
 
 
 Indices and tables
