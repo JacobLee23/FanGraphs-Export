@@ -10,12 +10,12 @@ import csv
 import datetime
 import os
 
-from FanGraphs.utilities import ScrapingUtilities
-import FanGraphs.exceptions
-from FanGraphs.selectors import leaders_sel
+from fangraphs import utilities
+import fangraphs.exceptions
+from fangraphs.selectors import leaders_sel
 
 
-class MajorLeague(ScrapingUtilities):
+class MajorLeague(utilities.ScrapingUtilities):
     """
     Scrapes the FanGraphs `Major League Leaderboards`_ page.
 
@@ -72,7 +72,7 @@ class MajorLeague(ScrapingUtilities):
             elems = self.soup.select(f"{self.__selections[query]} li")
             options = [e.getText() for e in elems]
         else:
-            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+            raise fangraphs.exceptions.InvalidFilterQuery(query)
         return options
 
     def current_option(self, query: str):
@@ -95,7 +95,7 @@ class MajorLeague(ScrapingUtilities):
             elem = self.soup.select(f"{self.__selections[query]} .rtsLink.rtsSelected")
             option = elem.getText()
         else:
-            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+            raise fangraphs.exceptions.InvalidFilterQuery(query)
         return option
 
     def configure(self, query: str, option: str, *, autoupdate=True):
@@ -109,7 +109,7 @@ class MajorLeague(ScrapingUtilities):
         """
         query, option = query.lower(), str(option).lower()
         if query not in self.list_queries():
-            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+            raise fangraphs.exceptions.InvalidFilterQuery(query)
         self._close_ad()
         if query in self.__selections:
             self.__configure_selection(query, option)
@@ -118,7 +118,7 @@ class MajorLeague(ScrapingUtilities):
         elif query in self.__checkboxes:
             self.__configure_checkbox(query, option)
         else:
-            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+            raise fangraphs.exceptions.InvalidFilterQuery(query)
         if query in self.__buttons and autoupdate:
             self.__click_button(query)
         self._refresh_parser()
@@ -135,7 +135,7 @@ class MajorLeague(ScrapingUtilities):
         try:
             index = options.index(option)
         except ValueError as err:
-            raise FanGraphs.exceptions.InvalidFilterOption(query, option) from err
+            raise fangraphs.exceptions.InvalidFilterOption(query, option) from err
         self.page.click("#LeaderBoard_tsType a[href='#']")
         elem = self.page.query_selector_all(
             f"{self.__selections[query]} li"
@@ -154,7 +154,7 @@ class MajorLeague(ScrapingUtilities):
         try:
             index = options.index(option)
         except ValueError as err:
-            raise FanGraphs.exceptions.InvalidFilterOption(query, option) from err
+            raise fangraphs.exceptions.InvalidFilterOption(query, option) from err
         self.page.hover(
             self.__dropdowns[query]
         )
@@ -172,7 +172,7 @@ class MajorLeague(ScrapingUtilities):
         """
         options = self.list_options(query)
         if option not in options:
-            raise FanGraphs.exceptions.InvalidFilterOption(query, option)
+            raise fangraphs.exceptions.InvalidFilterOption(query, option)
         if option != self.current_option(query).title():
             self.page.click(self.__checkboxes[query])
 
@@ -198,7 +198,7 @@ class MajorLeague(ScrapingUtilities):
         self.export_data("#LeaderBoard1_cmdCSV", path)
 
 
-class Splits(ScrapingUtilities):
+class Splits(utilities.ScrapingUtilities):
     """
     Scrapes the FanGraphs `Splits Leaderboards`_ page.
 
@@ -265,7 +265,7 @@ class Splits(ScrapingUtilities):
         elif query in self.__switches:
             options = ["True", "False"]
         else:
-            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+            raise fangraphs.exceptions.InvalidFilterQuery(query)
         return options
 
     def current_option(self, query: str):
@@ -311,7 +311,7 @@ class Splits(ScrapingUtilities):
             elem = self.soup.select(self.__switches[query])
             option = "True" if "isActive" in elem[0].get("class") else "False"
         else:
-            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+            raise fangraphs.exceptions.InvalidFilterQuery(query)
         return option
 
     def configure(self, query: str, option: str, *, autoupdate=False):
@@ -334,7 +334,7 @@ class Splits(ScrapingUtilities):
         elif query in self.__switches:
             self.__configure_switch(query, option)
         else:
-            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+            raise fangraphs.exceptions.InvalidFilterQuery(query)
         if autoupdate:
             self.update()
         self._refresh_parser(waitfor=self.__waitfor)
@@ -351,7 +351,7 @@ class Splits(ScrapingUtilities):
         try:
             index = options.index(option)
         except ValueError as err:
-            raise FanGraphs.exceptions.InvalidFilterOption(query, option) from err
+            raise fangraphs.exceptions.InvalidFilterOption(query, option) from err
         self.page.click(self.__selections[query][index])
 
     def __configure_dropdown(self, query: str, option: str):
@@ -366,7 +366,7 @@ class Splits(ScrapingUtilities):
         try:
             index = options.index(option)
         except ValueError as err:
-            raise FanGraphs.exceptions.InvalidFilterOption(query, option) from err
+            raise fangraphs.exceptions.InvalidFilterOption(query, option) from err
         self.page.hover(self.__dropdowns[query])
         elem = self.page.query_selector_all(f"{self.__dropdowns[query]} ul li")[index]
         elem.click()
@@ -385,7 +385,7 @@ class Splits(ScrapingUtilities):
         try:
             index = options.index(option)
         except ValueError as err:
-            raise FanGraphs.exceptions.InvalidFilterOption(query, option) from err
+            raise fangraphs.exceptions.InvalidFilterOption(query, option) from err
         self.page.hover(self.__splits[query])
         elem = self.page.query_selector_all(f"{self.__splits[query]} ul li")[index]
         elem.click()
@@ -400,7 +400,7 @@ class Splits(ScrapingUtilities):
         """
         options = self.list_options(query)
         if option not in options:
-            raise FanGraphs.exceptions.InvalidFilterOption(query, option)
+            raise fangraphs.exceptions.InvalidFilterOption(query, option)
         if option != self.current_option(query)[0].title():
             self.page.click(self.__switches[query])
 
@@ -414,7 +414,7 @@ class Splits(ScrapingUtilities):
         selector = "#button-update"
         elem = self.page.query_selector(selector)
         if elem is None:
-            raise FanGraphs.exceptions.FilterUpdateIncapability()
+            raise fangraphs.exceptions.FilterUpdateIncapability()
         self._close_ad()
         elem.click()
         self._refresh_parser(waitfor=self.__waitfor)
@@ -442,7 +442,7 @@ class Splits(ScrapingUtilities):
         try:
             index = options.index(group)
         except ValueError as err:
-            raise FanGraphs.exceptions.InvalidFilterGroup(group) from err
+            raise fangraphs.exceptions.InvalidFilterGroup(group) from err
         self._close_ad()
         elem = self.page.query_selector_all(selector)[index]
         elem.click()
@@ -492,7 +492,7 @@ class Splits(ScrapingUtilities):
         try:
             selector = self.__quick_splits[quick_split]
         except ValueError as err:
-            raise FanGraphs.exceptions.InvalidQuickSplit(quick_split) from err
+            raise fangraphs.exceptions.InvalidQuickSplit(quick_split) from err
         self._close_ad()
         self.page.click(selector)
         if autoupdate:
@@ -510,7 +510,7 @@ class Splits(ScrapingUtilities):
         self.export_data(".data-export", path)
 
 
-class SeasonStatGrid(ScrapingUtilities):
+class SeasonStatGrid(utilities.ScrapingUtilities):
     """
     Scrapes the FanGraphs `Season Stat Grid`_ page.
 
@@ -564,7 +564,7 @@ class SeasonStatGrid(ScrapingUtilities):
             )
             options = [e.getText() for e in elems]
         else:
-            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+            raise fangraphs.exceptions.InvalidFilterQuery(query)
         return options
 
     def current_option(self, query: str):
@@ -589,7 +589,7 @@ class SeasonStatGrid(ScrapingUtilities):
             )
             option = elems[0].getText() if elems else "None"
         else:
-            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+            raise fangraphs.exceptions.InvalidFilterQuery(query)
         return option
 
     def configure(self, query: str, option: str):
@@ -607,7 +607,7 @@ class SeasonStatGrid(ScrapingUtilities):
         elif query in self.__dropdowns:
             self.__configure_dropdown(query, option)
         else:
-            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+            raise fangraphs.exceptions.InvalidFilterQuery(query)
         self._refresh_parser(waitfor=self.__waitfor)
 
     def __configure_selection(self, query: str, option: str):
@@ -622,7 +622,7 @@ class SeasonStatGrid(ScrapingUtilities):
         try:
             index = options.index(option)
         except ValueError as err:
-            raise FanGraphs.exceptions.InvalidFilterOption(query, option) from err
+            raise fangraphs.exceptions.InvalidFilterOption(query, option) from err
         self.page.click(self.__selections[query][index])
 
     def __configure_dropdown(self, query: str, option: str):
@@ -637,7 +637,7 @@ class SeasonStatGrid(ScrapingUtilities):
         try:
             index = options.index(option)
         except ValueError as err:
-            raise FanGraphs.exceptions.InvalidFilterOption(query, option) from err
+            raise fangraphs.exceptions.InvalidFilterOption(query, option) from err
         self.page.hover(self.__dropdowns[query])
         elem = self.page.query_selector_all(f"{self.__dropdowns[query]} ul li")[index]
         elem.click()
@@ -700,7 +700,7 @@ class SeasonStatGrid(ScrapingUtilities):
                 self._refresh_parser(waitfor=self.__waitfor)
 
 
-class GameSpan(ScrapingUtilities):
+class GameSpan(utilities.ScrapingUtilities):
     """
     Scrapes the FanGraphs `60-Game Span Leaderboards`_ page.
 
@@ -752,7 +752,7 @@ class GameSpan(ScrapingUtilities):
             elems = self.soup.select(f"{self.__dropdowns[query]} > div > a")
             options = [e.getText() for e in elems]
         else:
-            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+            raise fangraphs.exceptions.InvalidFilterQuery(query)
         return options
 
     def current_option(self, query: str):
@@ -778,7 +778,7 @@ class GameSpan(ScrapingUtilities):
             )[0]
             option = elem.getText()
         else:
-            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+            raise fangraphs.exceptions.InvalidFilterQuery(query)
         return option
 
     def configure(self, query: str, option: str):
@@ -796,7 +796,7 @@ class GameSpan(ScrapingUtilities):
         elif query in self.__dropdowns:
             self.__configure_dropdown(query, option)
         else:
-            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+            raise fangraphs.exceptions.InvalidFilterQuery(query)
         self._refresh_parser(waitfor=self.__waitfor)
 
     def __configure_selection(self, query: str, option: str):
@@ -811,7 +811,7 @@ class GameSpan(ScrapingUtilities):
         try:
             index = options.index(option)
         except ValueError as err:
-            raise FanGraphs.exceptions.InvalidFilterOption(query, option) from err
+            raise fangraphs.exceptions.InvalidFilterOption(query, option) from err
         self.page.click(self.__selections[query][index])
 
     def __configure_dropdown(self, query: str, option: str):
@@ -826,7 +826,7 @@ class GameSpan(ScrapingUtilities):
         try:
             index = options.index(option)
         except ValueError as err:
-            raise FanGraphs.exceptions.InvalidFilterOption(query, option) from err
+            raise fangraphs.exceptions.InvalidFilterOption(query, option) from err
         self.page.click(self.__dropdowns[query])
         elem = self.page.query_selector_all(
             f"{self.__dropdowns[query]} > div > a"
@@ -845,7 +845,7 @@ class GameSpan(ScrapingUtilities):
         self.export_data(".data-export", path)
 
 
-class International(ScrapingUtilities):
+class International(utilities.ScrapingUtilities):
     """
     Scrapes the FanGraphs `KBO Leaderboards`_ page.
 
@@ -903,7 +903,7 @@ class International(ScrapingUtilities):
         elif query in self.__checkboxes:
             options = ["True", "False"]
         else:
-            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+            raise fangraphs.exceptions.InvalidFilterQuery(query)
         return options
 
     def current_option(self, query: str):
@@ -931,7 +931,7 @@ class International(ScrapingUtilities):
             )
             option = "True" if ",to" in elem[0].get("href") else "False"
         else:
-            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+            raise fangraphs.exceptions.InvalidFilterQuery(query)
         return option
 
     def configure(self, query: str, option: str):
@@ -951,7 +951,7 @@ class International(ScrapingUtilities):
         elif query in self.__checkboxes:
             self.__configure_checkbox(query, option)
         else:
-            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+            raise fangraphs.exceptions.InvalidFilterQuery(query)
         self._refresh_parser(waitfor=self.__waitfor)
 
     def __configure_selection(self, query: str, option: str):
@@ -966,7 +966,7 @@ class International(ScrapingUtilities):
         try:
             index = options.index(option)
         except ValueError as err:
-            raise FanGraphs.exceptions.InvalidFilterOption from err
+            raise fangraphs.exceptions.InvalidFilterOption from err
         self.page.click(
             self.__selections[query][index]
         )
@@ -983,7 +983,7 @@ class International(ScrapingUtilities):
         try:
             index = options.index(option)
         except ValueError as err:
-            raise FanGraphs.exceptions.InvalidFilterOption from err
+            raise fangraphs.exceptions.InvalidFilterOption from err
         self.page.click(self.__dropdowns[query])
         elem = self.page.query_selector_all(
             f"{self.__dropdowns[query]} > div > a"
@@ -1000,7 +1000,7 @@ class International(ScrapingUtilities):
         """
         options = self.list_options(query)
         if option not in options:
-            raise FanGraphs.exceptions.InvalidFilterOption
+            raise fangraphs.exceptions.InvalidFilterOption
         if option == self.current_option(query):
             return
         self.page.click(self.__checkboxes[query])
@@ -1017,7 +1017,7 @@ class International(ScrapingUtilities):
         self.export_data(".data-export", path)
 
 
-class WAR(ScrapingUtilities):
+class WAR(utilities.ScrapingUtilities):
     """
     Scrapes the FanGraphs `Combined WAR Leaderboards`_ page.
 
@@ -1064,7 +1064,7 @@ class WAR(ScrapingUtilities):
             )
             options = [e.getText() for e in elems]
         else:
-            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+            raise fangraphs.exceptions.InvalidFilterQuery(query)
         return options
 
     def current_option(self, query: str):
@@ -1081,7 +1081,7 @@ class WAR(ScrapingUtilities):
             elem = self.soup.select(self.__dropdowns[query])[0]
             option = elem.get("value")
         else:
-            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+            raise fangraphs.exceptions.InvalidFilterQuery(query)
         return option
 
     def configure(self, query: str, option: str):
@@ -1097,7 +1097,7 @@ class WAR(ScrapingUtilities):
         if query in self.__dropdowns:
             self.__configure_dropdown(query, option)
         else:
-            raise FanGraphs.exceptions.InvalidFilterQuery(query)
+            raise fangraphs.exceptions.InvalidFilterQuery(query)
         self._refresh_parser(waitfor=self.__waitfor)
 
     def __configure_dropdown(self, query: str, option: str):
@@ -1112,7 +1112,7 @@ class WAR(ScrapingUtilities):
         try:
             index = options.index(option)
         except ValueError as err:
-            raise FanGraphs.exceptions.InvalidFilterOption(query, option) from err
+            raise fangraphs.exceptions.InvalidFilterOption(query, option) from err
         self.page.click(self.__dropdowns[query])
         elem = self.page.query_selector_all(
             f"{self.__dropdown_options} > ul > li"

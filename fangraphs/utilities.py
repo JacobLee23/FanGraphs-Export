@@ -11,7 +11,7 @@ import os
 import bs4
 from playwright.sync_api import sync_playwright
 
-import FanGraphs.exceptions
+import fangraphs.exceptions
 
 
 class ScrapingUtilities:
@@ -53,7 +53,7 @@ class ScrapingUtilities:
         }
         browser_ctx = browsers.get(browser.lower())
         if browser_ctx is None:
-            raise FanGraphs.exceptions.UnknownBrowser(browser.lower())
+            raise fangraphs.exceptions.UnknownBrowser(browser.lower())
         self.__browser = browser_ctx.launch(
             downloads_path=os.path.abspath("out")
         )

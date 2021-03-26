@@ -13,16 +13,16 @@
 The [FanGraphs](https://fangraphs.com/) website, well-known among baseball fans, provides a variety of baseball statistics.
 The statistics available are extremely expansive, as the website brags stats for every player in MLB history.
 
-The `FanGraphs` package allows for simple, intuitive parsing of the many webpages available.
+The `fangraphs` package allows for simple, intuitive parsing of the many webpages available.
 While not every page is "scrape-able" (i.e. the pages are most composed of graphics),
 there are plans for covering as many pages as possible, including the most popular ones.
 This package contains modules for scraping and exporting data from each of the covered webpages.
 
 ## Dependencies
 
-The `FanGraphs` library requires Python version 3.6 or higher.
+The `fangraphs` library requires Python version 3.6 or higher.
 
-The following libraries along are required for the `FanGraphs` library.
+The following libraries along are required for the `fangraphs` library.
 
 - `BeautifulSoup4`
 - `lxml`
@@ -66,7 +66,8 @@ FanGraphs Leaders pages:
 - [WAR Leaderboards](https://fangraphs.com/warleaders.aspx)
 
 ```python
-from FanGraphs import leaders
+from fangraphs import leaders
+
 mll = leaders.MajorLeague()
 splits = leaders.Splits()
 ssg = leaders.SeasonStatGrid()
@@ -79,11 +80,11 @@ war = leaders.WAR()
 
 To run all tests, run `pytest FanGraphs`
 
-To run the tests for a specific module, run `pytest FanGraphs/test_module_name`.
+To run the tests for a specific module, run `pytest fangraphs/test_module_name`.
 For example,
 
 ```commandline
-pytest FanGraphs/test_leaders
+pytest fangraphs/test_leaders
 ```
 
 To run the tests for a specific class, run `pytest -k "TestClassName"`.

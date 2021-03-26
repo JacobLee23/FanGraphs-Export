@@ -11,7 +11,7 @@ from playwright.sync_api import sync_playwright
 import pytest
 import requests
 
-from FanGraphs.selectors import leaders_sel
+from fangraphs.selectors import leaders_sel
 
 
 def fetch_soup(address, waitfor=""):
@@ -27,7 +27,8 @@ def fetch_soup(address, waitfor=""):
         browser = play.chromium.launch()
         page = browser.new_page()
         page.goto(address, timeout=0)
-        page.wait_for_selector(waitfor)
+        if waitfor:
+            page.wait_for_selector(waitfor)
         soup = bs4.BeautifulSoup(
             page.content(), features="lxml"
         )
