@@ -80,11 +80,11 @@ war = leaders.WAR()
 
 To run all tests, run `pytest FanGraphs`
 
-To run the tests for a specific module, run `pytest fangraphs/test_module_name`.
+To run the tests for a specific module, run `pytest fangraphs/tests/test_module_name.py`.
 For example,
 
 ```commandline
-pytest fangraphs/test_leaders
+pytest fangraphs/tests/test_leaders.py
 ```
 
 To run the tests for a specific class, run `pytest -k "TestClassName"`.
