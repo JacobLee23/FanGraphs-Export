@@ -1,6 +1,10 @@
 CHANGES
 =======
 
+* Correct README test instructions
+* Fix naming inconsistincies within modules; Fix bug in tests
+* Update files for v1.0.0
+
 v1.0.0
 ------
 

@@ -3,7 +3,7 @@ FanGraphs.leaders
 
 .. toctree::
 
-.. automodule:: FanGraphs.leaders
+.. automodule:: fangraphs.leaders
     :members:
     :undoc-members:
     :show-inheritance:

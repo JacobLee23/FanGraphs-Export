@@ -16,7 +16,7 @@ Leaders
 
 .. autosummary::
 
-    FanGraphs.leaders
+    fangraphs.leaders
 
 
 Utilities
@@ -24,7 +24,7 @@ Utilities
 
 .. autosummary::
 
-    FanGraphs.utilities
+    fangraphs.utilities
 
 
 Exceptions
@@ -32,7 +32,7 @@ Exceptions
 
 .. autosummary::
 
-    FanGraphs.exceptions
+    fangraphs.exceptions
 
 
 Selectors
@@ -40,8 +40,8 @@ Selectors
 
 .. autosummary::
 
-    FanGraphs.selectors
-    FanGraphs.selectors.leaders_sel
+    fangraphs.selectors
+    fangraphs.selectors.leaders_sel
 
 
 Indices and tables
