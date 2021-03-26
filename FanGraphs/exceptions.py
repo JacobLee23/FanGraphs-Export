@@ -71,7 +71,7 @@ class InvalidFilterOption(Exception):
 
 class InvalidQuickSplit(Exception):
     """
-    Raised when an invalid quick split is usedd
+    Raised when an invalid quick split is used.
     """
     def __init__(self, quick_split):
         """

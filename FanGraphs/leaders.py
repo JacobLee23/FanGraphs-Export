@@ -6,12 +6,12 @@ Web scraper for the FanGraphs **Leaders** webpages.
 Each page which is covered has its own class for scraping it.
 Below are each of the covered pages with the corresponding class:
 
-- `Major League Leaderboards`_: :py:class:`MajorLeagueLeaderboards`
-- `Splits Leaderboards`_: :py:class:`SplitsLeaderboards`
+- `Major League Leaderboards`_: :py:class:`MajorLeague`
+- `Splits Leaderboards`_: :py:class:`Splits`
 - `Season Stat Grid`_: :py:class:`SeasonStatGrid`
-- `60-Game Span Leaderboards`_: :py:class:`GameSpanLeaderboards`
-- `KBO Leaders`_: :py:class:`InternationalLeaderboards`
-- `Combined WAR Leaderboards`_: :py:class:`WARLeaderboards`
+- `60-Game Span Leaderboards`_: :py:class:`GameSpan`
+- `KBO Leaders`_: :py:class:`International`
+- `Combined WAR Leaderboards`_: :py:class:`WAR`
 
 .. _Major League Leaderboards: https://fangraphs.com/leaders.aspx
 .. _Splits Leaderboards: https://fangraphs.com/leaders/splits-leaderboards
