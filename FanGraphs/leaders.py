@@ -4,21 +4,6 @@
 """
 Web scraper for the FanGraphs **Leaders** webpages.
 Each page which is covered has its own class for scraping it.
-Below are each of the covered pages with the corresponding class:
-
-- `Major League Leaderboards`_: :py:class:`MajorLeague`
-- `Splits Leaderboards`_: :py:class:`Splits`
-- `Season Stat Grid`_: :py:class:`SeasonStatGrid`
-- `60-Game Span Leaderboards`_: :py:class:`GameSpan`
-- `KBO Leaders`_: :py:class:`International`
-- `Combined WAR Leaderboards`_: :py:class:`WAR`
-
-.. _Major League Leaderboards: https://fangraphs.com/leaders.aspx
-.. _Splits Leaderboards: https://fangraphs.com/leaders/splits-leaderboards
-.. _Season Stat Grid: https://fangraphs.com/leaders/season-stat-grid
-.. _60-Game Span Leaderboards: https://www.fangraphs.com/leaders/special/60-game-span
-.. _KBO Leaders: https://www.fangraphs.com/leaders/international
-.. _Combined WAR Leaderboards: https://www.fangraphs.com/warleaders.aspx
 """
 
 import csv
@@ -32,9 +17,12 @@ from FanGraphs.selectors import leaders_sel
 
 class MajorLeague(ScrapingUtilities):
     """
-    Parses the FanGraphs Major League Leaderboards page.
+    Scrapes the FanGraphs `Major League Leaderboards`_ page.
+
     Note that the Splits Leaderboard is not covered.
-    Instead, it is covered by :py:class:`SplitsLeaderboards`
+    Instead, it is covered by :py:class:`SplitsLeaderboards`.
+
+    .. _Major League Leaderboards: https://fangraphs.com/leaders.aspx
     """
     __selections = leaders_sel.MajorLeague.selections
     __dropdowns = leaders_sel.MajorLeague.dropdowns
@@ -212,7 +200,9 @@ class MajorLeague(ScrapingUtilities):
 
 class Splits(ScrapingUtilities):
     """
-    Parses the FanGraphs Splits Leaderboards page.
+    Scrapes the FanGraphs `Splits Leaderboards`_ page.
+
+    .. _Splits Leaderboards: https://fangraphs.com/leaders/splits-leaderboards
     """
     __selections = leaders_sel.Splits.selections
     __dropdowns = leaders_sel.Splits.dropdowns
@@ -522,7 +512,9 @@ class Splits(ScrapingUtilities):
 
 class SeasonStatGrid(ScrapingUtilities):
     """
-    Parses the FanGraphs Season Stat Grid webpage.
+    Scrapes the FanGraphs `Season Stat Grid`_ page.
+
+    .. _Season Stat Grid: https://fangraphs.com/leaders/season-stat-grid
     """
     __selections = leaders_sel.SeasonStatGrid.selections
     __dropdowns = leaders_sel.SeasonStatGrid.dropdowns
@@ -710,7 +702,9 @@ class SeasonStatGrid(ScrapingUtilities):
 
 class GameSpan(ScrapingUtilities):
     """
-    Parses the FanGraphs 60-Game Span Leaderboards
+    Scrapes the FanGraphs `60-Game Span Leaderboards`_ page.
+
+    .. _60-Game Span Leaderboards: https://www.fangraphs.com/leaders/special/60-game-span
     """
     __selections = leaders_sel.GameSpan.selections
     __dropdowns = leaders_sel.GameSpan.dropdowns
@@ -853,7 +847,9 @@ class GameSpan(ScrapingUtilities):
 
 class International(ScrapingUtilities):
     """
-    Parses the FanGraphs KBO Leaderboards page
+    Scrapes the FanGraphs `KBO Leaderboards`_ page.
+
+    .. _KBO Leaderboards: https://www.fangraphs.com/leaders/international
     """
     __selections = leaders_sel.International.selections
     __dropdowns = leaders_sel.International.dropdowns
@@ -1023,7 +1019,9 @@ class International(ScrapingUtilities):
 
 class WAR(ScrapingUtilities):
     """
-    Parses the FanGraphs WAR Leaderboards page
+    Scrapes the FanGraphs `Combined WAR Leaderboards`_ page.
+
+    .. _Combined WAR Leaderboards: https://www.fangraphs.com/warleaders.aspx
     """
     __dropdowns = leaders_sel.WAR.dropdowns
     __dropdown_options = leaders_sel.WAR.dropdown_options
