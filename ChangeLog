@@ -1,6 +1,10 @@
 CHANGES
 =======
 
+v1.0.0
+------
+
+* Add remaining files
 * Generate AUTHORS and ChangeLog
 * Create setup.cfg and setup.py files
 * Revise docstrings

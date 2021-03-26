@@ -7,13 +7,14 @@
 
 ![Milestone 1](https://img.shields.io/github/milestones/progress/JLpython-py/FanGraphs-Export/1)
 ![Latest Release](https://img.shields.io/github/v/tag/JLpython-py/FanGraphs-Export)
-![GitHub Repository](https://img.shields.io/github/license/JLpython-py/FanGraphs-Export)
+![License: MIT](https://img.shields.io/github/license/JLpython-py/FanGraphs-Export)
+![Read the Docs](https://img.shields.io/readthedocs/fangraphs-export)
 
 The [FanGraphs](https://fangraphs.com/) website, well-known among baseball fans, provides a variety of baseball statistics.
 The statistics available are extremely expansive, as the website brags stats for every player in MLB history.
 
 The `FanGraphs` package allows for simple, intuitive parsing of the many webpages available.
-While not every page is "parse-able" (i.e. the pages are most composed of graphics),
+While not every page is "scrape-able" (i.e. the pages are most composed of graphics),
 there are plans for covering as many pages as possible, including the most popular ones.
 This package contains modules for scraping and exporting data from each of the covered webpages.
 
@@ -43,6 +44,7 @@ See the [Playwright documentation](https://playwright.dev/python/docs/intro/) fo
 
 ## Documentation
 
+The **Read the Docs** documentation can be found [here](https://fangraphs-export.readthedocs.io/en/latest/?).
 ## Basic Usage
 
 Each group of FanGraphs pages (e.g. Leaders, Projections, etc.) which is covered has an individual module.
@@ -65,12 +67,12 @@ FanGraphs Leaders pages:
 
 ```python
 from FanGraphs import leaders
-mll = leaders.MajorLeagueLeaderboards()
-splits = leaders.SplitsLeaderboards()
+mll = leaders.MajorLeague()
+splits = leaders.Splits()
 ssg = leaders.SeasonStatGrid()
-gsl = leaders.GameSpanLeaderboards()
-intl = leaders.InternationalLeaderboards()
-war = leaders.WARLeaderboards()
+gsl = leaders.GameSpan()
+intl = leaders.International()
+war = leaders.WAR()
 ```
 
 ## Tests
