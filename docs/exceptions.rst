@@ -3,7 +3,7 @@ FanGraphs.exceptions
 
 .. toctree::
 
-.. automodule:: FanGraphs.exceptions
+.. automodule:: fangraphs.exceptions
     :members:
     :undoc-members:
     :show-inheritance:

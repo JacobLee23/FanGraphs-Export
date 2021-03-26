@@ -5,7 +5,7 @@ FanGraphs.selectors
 
     selectors/leaders_sel
 
-.. automodule:: FanGraphs.selectors
+.. automodule:: fangraphs.selectors
     :members:
     :undoc-members:
     :show-inheritance:
