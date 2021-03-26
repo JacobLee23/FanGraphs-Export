@@ -1,6 +1,8 @@
 __pycache__/
 virtualenv/
 .idea/
-*.log
 out/
 .vs/ 
+Makefile
+make.bat
+docs/_*/

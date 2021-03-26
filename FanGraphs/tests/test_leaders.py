@@ -35,16 +35,15 @@ def fetch_soup(address, waitfor=""):
     return soup
 
 
-class TestMajorLeagueLeaderboards:
+class TestMajorLeague:
     """
-    :py:class:`FanGraphs.leaders.MajorLeagueLeaderboards`
+    :py:class:`FanGraphs.leaders.MajorLeague`
     """
-
-    __selections = leaders_sel.mll.selections
-    __dropdowns = leaders_sel.mll.dropdowns
-    __dropdown_options = leaders_sel.mll.dropdown_options
-    __checkboxes = leaders_sel.mll.checkboxes
-    __buttons = leaders_sel.mll.buttons
+    __selections = leaders_sel.MajorLeague.selections
+    __dropdowns = leaders_sel.MajorLeague.dropdowns
+    __dropdown_options = leaders_sel.MajorLeague.dropdown_options
+    __checkboxes = leaders_sel.MajorLeague.checkboxes
+    __buttons = leaders_sel.MajorLeague.buttons
 
     address = "https://fangraphs.com/leaders.aspx"
 
@@ -154,16 +153,16 @@ class TestMajorLeagueLeaderboards:
         assert len(elems) == 1
 
 
-class TestSplitsLeaderboards:
+class TestSplits:
     """
-    :py:class:`FanGraphs.leaders.SplitsLeaderboards`.
+    :py:class:`FanGraphs.leaders.Splits`.
     """
 
-    __selections = leaders_sel.splits.selections
-    __dropdowns = leaders_sel.splits.dropdowns
-    __splits = leaders_sel.splits.splits
-    __quick_splits = leaders_sel.splits.quick_splits
-    __switches = leaders_sel.splits.switches
+    __selections = leaders_sel.Splits.selections
+    __dropdowns = leaders_sel.Splits.dropdowns
+    __splits = leaders_sel.Splits.splits
+    __quick_splits = leaders_sel.Splits.quick_splits
+    __switches = leaders_sel.Splits.switches
 
     address = "https://fangraphs.com/leaders/splits-leaderboards"
 
@@ -172,7 +171,9 @@ class TestSplitsLeaderboards:
         """
         Initialize class
         """
-        cls.soup = fetch_soup(cls.address, leaders_sel.splits.waitfor)
+        cls.soup = fetch_soup(
+            cls.address, leaders_sel.Splits.waitfor
+        )
 
     def test_address(self):
         """
@@ -343,8 +344,8 @@ class TestSeasonStatGrid:
     """
     :py:class:`FanGraphs.leaders.SeasonStatGrid`.
     """
-    __selections = leaders_sel.ssg.selections
-    __dropdowns = leaders_sel.ssg.dropdowns
+    __selections = leaders_sel.SeasonStatGrid.selections
+    __dropdowns = leaders_sel.SeasonStatGrid.dropdowns
 
     address = "https://fangraphs.com/leaders/season-stat-grid"
 
@@ -353,7 +354,9 @@ class TestSeasonStatGrid:
         """
         Initialize
         """
-        cls.soup = fetch_soup(cls.address, leaders_sel.ssg.waitfor)
+        cls.soup = fetch_soup(
+            cls.address, leaders_sel.SeasonStatGrid.waitfor
+        )
 
     def test_address(self):
         """
@@ -460,12 +463,12 @@ class TestSeasonStatGrid:
         assert arrow[0].getText() == "chevron_right"
 
 
-class TestGameSpanLeaderboards:
+class TestGameSpan:
     """
-    :py:class:`GameSpanLeaderboards`.
+    :py:class:`GameSpan`.
     """
-    __selections = leaders_sel.gsl.selections
-    __dropdowns = leaders_sel.gsl.dropdowns
+    __selections = leaders_sel.GameSpan.selections
+    __dropdowns = leaders_sel.GameSpan.dropdowns
 
     address = "https://www.fangraphs.com/leaders/special/60-game-span"
 
@@ -474,7 +477,9 @@ class TestGameSpanLeaderboards:
         """
         Initialize class
         """
-        cls.soup = fetch_soup(cls.address, leaders_sel.gsl.waitfor)
+        cls.soup = fetch_soup(
+            cls.address, leaders_sel.GameSpan.waitfor
+        )
 
     def test_address(self):
         """
@@ -582,13 +587,13 @@ class TestGameSpanLeaderboards:
         assert len(elems) == 1
 
 
-class TestInternationalLeaderboards:
+class TestInternational:
     """
     :py:class:`FanGraphs.leaders.InternationalLeaderboards`
     """
-    __selections = leaders_sel.intl.selections
-    __dropdowns = leaders_sel.intl.dropdowns
-    __checkboxes = leaders_sel.intl.checkboxes
+    __selections = leaders_sel.International.selections
+    __dropdowns = leaders_sel.International.dropdowns
+    __checkboxes = leaders_sel.International.checkboxes
     address = "https://www.fangraphs.com/leaders/international"
 
     @classmethod
@@ -596,7 +601,9 @@ class TestInternationalLeaderboards:
         """
         Initialize class
         """
-        cls.soup = fetch_soup(cls.address, waitfor=leaders_sel.intl.waitfor)
+        cls.soup = fetch_soup(
+            cls.address, waitfor=leaders_sel.International.waitfor
+        )
 
     def test_address(self):
         """
@@ -704,12 +711,12 @@ class TestInternationalLeaderboards:
         assert len(elems) == 1
 
 
-class TestWARLeaderboards:
+class TestWAR:
     """
     :py:class:`FanGraphs.leaders.WARLeaderboards`
     """
-    __dropdowns = leaders_sel.war.dropdowns
-    __dropdown_options = leaders_sel.war.dropdown_options
+    __dropdowns = leaders_sel.WAR.dropdowns
+    __dropdown_options = leaders_sel.WAR.dropdown_options
 
     address = "https://fangraphs.com/warleaders.aspx"
 
@@ -718,7 +725,9 @@ class TestWARLeaderboards:
         """
         Initialize class
         """
-        cls.soup = fetch_soup(cls.address, waitfor=leaders_sel.war.waitfor)
+        cls.soup = fetch_soup(
+            cls.address, waitfor=leaders_sel.WAR.waitfor
+        )
 
     @pytest.mark.parametrize(
         "selectors",
