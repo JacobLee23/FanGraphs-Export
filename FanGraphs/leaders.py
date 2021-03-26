@@ -123,11 +123,11 @@ class MajorLeagueLeaderboards(ScrapingUtilities):
     Note that the Splits Leaderboard is not covered.
     Instead, it is covered by :py:class:`SplitsLeaderboards`
     """
-    __selections = leaders_sel.mll.selections
-    __dropdowns = leaders_sel.mll.dropdowns
-    __dropdown_options = leaders_sel.mll.dropdown_options
-    __checkboxes = leaders_sel.mll.checkboxes
-    __buttons = leaders_sel.mll.buttons
+    __selections = leaders_sel.MajorLeague.selections
+    __dropdowns = leaders_sel.MajorLeague.dropdowns
+    __dropdown_options = leaders_sel.MajorLeague.dropdown_options
+    __checkboxes = leaders_sel.MajorLeague.checkboxes
+    __buttons = leaders_sel.MajorLeague.buttons
 
     address = "https://fangraphs.com/leaders.aspx"
 
@@ -310,12 +310,12 @@ class SplitsLeaderboards(ScrapingUtilities):
     """
     Parses the FanGraphs Splits Leaderboards page.
     """
-    __selections = leaders_sel.splits.selections
-    __dropdowns = leaders_sel.splits.dropdowns
-    __splits = leaders_sel.splits.splits
-    __quick_splits = leaders_sel.splits.quick_splits
-    __switches = leaders_sel.splits.switches
-    __waitfor = leaders_sel.splits.waitfor
+    __selections = leaders_sel.Splits.selections
+    __dropdowns = leaders_sel.Splits.dropdowns
+    __splits = leaders_sel.Splits.splits
+    __quick_splits = leaders_sel.Splits.quick_splits
+    __switches = leaders_sel.Splits.switches
+    __waitfor = leaders_sel.Splits.waitfor
 
     address = "https://fangraphs.com/leaders/splits-leaderboards"
 
@@ -629,9 +629,9 @@ class SeasonStatGrid(ScrapingUtilities):
     """
     Parses the FanGraphs Season Stat Grid webpage.
     """
-    __selections = leaders_sel.ssg.selections
-    __dropdowns = leaders_sel.ssg.dropdowns
-    __waitfor = leaders_sel.ssg.waitfor
+    __selections = leaders_sel.SeasonStatGrid.selections
+    __dropdowns = leaders_sel.SeasonStatGrid.dropdowns
+    __waitfor = leaders_sel.SeasonStatGrid.waitfor
 
     address = "https://fangraphs.com/leaders/season-stat-grid"
 
@@ -817,9 +817,9 @@ class GameSpanLeaderboards(ScrapingUtilities):
     """
     Parses the FanGraphs 60-Game Span Leaderboards
     """
-    __selections = leaders_sel.gsl.selections
-    __dropdowns = leaders_sel.gsl.dropdowns
-    __waitfor = leaders_sel.gsl.waitfor
+    __selections = leaders_sel.GameSpan.selections
+    __dropdowns = leaders_sel.GameSpan.dropdowns
+    __waitfor = leaders_sel.GameSpan.waitfor
 
     address = "https://fangraphs.com/leaders/special/60-game-span"
 
@@ -969,10 +969,10 @@ class InternationalLeaderboards(ScrapingUtilities):
     """
     Parses the FanGraphs KBO Leaderboards page
     """
-    __selections = leaders_sel.intl.selections
-    __dropdowns = leaders_sel.intl.dropdowns
-    __checkboxes = leaders_sel.intl.checkboxes
-    __waitfor = leaders_sel.intl.waitfor
+    __selections = leaders_sel.International.selections
+    __dropdowns = leaders_sel.International.dropdowns
+    __checkboxes = leaders_sel.International.checkboxes
+    __waitfor = leaders_sel.International.waitfor
 
     address = "https://www.fangraphs.com/leaders/international"
 
@@ -1148,9 +1148,9 @@ class WARLeaderboards(ScrapingUtilities):
     """
     Parses the FanGraphs WAR Leaderboards page
     """
-    __dropdowns = leaders_sel.war.dropdowns
-    __dropdown_options = leaders_sel.war.dropdown_options
-    __waitfor = leaders_sel.war.waitfor
+    __dropdowns = leaders_sel.WAR.dropdowns
+    __dropdown_options = leaders_sel.WAR.dropdown_options
+    __waitfor = leaders_sel.WAR.waitfor
 
     address = "https://fangraphs.com/warleaders.aspx"
 
