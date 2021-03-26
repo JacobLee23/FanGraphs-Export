@@ -9,6 +9,16 @@ FanGraphs documentation
     exceptions
     selectors
 
+
+FanGraphs
+------------------------------------------------------------------------------
+
+.. automodule:: FanGraphs
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
 Indices and tables
 ==============================================================================
 

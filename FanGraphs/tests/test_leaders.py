@@ -35,9 +35,9 @@ def fetch_soup(address, waitfor=""):
     return soup
 
 
-class TestMajorLeagueLeaderboards:
+class TestMajorLeague:
     """
-    :py:class:`FanGraphs.leaders.MajorLeagueLeaderboards`
+    :py:class:`FanGraphs.leaders.MajorLeague`
     """
     __selections = leaders_sel.MajorLeague.selections
     __dropdowns = leaders_sel.MajorLeague.dropdowns
@@ -153,9 +153,9 @@ class TestMajorLeagueLeaderboards:
         assert len(elems) == 1
 
 
-class TestSplitsLeaderboards:
+class TestSplits:
     """
-    :py:class:`FanGraphs.leaders.SplitsLeaderboards`.
+    :py:class:`FanGraphs.leaders.Splits`.
     """
 
     __selections = leaders_sel.Splits.selections
@@ -463,9 +463,9 @@ class TestSeasonStatGrid:
         assert arrow[0].getText() == "chevron_right"
 
 
-class TestGameSpanLeaderboards:
+class TestGameSpan:
     """
-    :py:class:`GameSpanLeaderboards`.
+    :py:class:`GameSpan`.
     """
     __selections = leaders_sel.GameSpan.selections
     __dropdowns = leaders_sel.GameSpan.dropdowns
@@ -587,7 +587,7 @@ class TestGameSpanLeaderboards:
         assert len(elems) == 1
 
 
-class TestInternationalLeaderboards:
+class TestInternational:
     """
     :py:class:`FanGraphs.leaders.InternationalLeaderboards`
     """
@@ -711,7 +711,7 @@ class TestInternationalLeaderboards:
         assert len(elems) == 1
 
 
-class TestWARLeaderboards:
+class TestWAR:
     """
     :py:class:`FanGraphs.leaders.WARLeaderboards`
     """
