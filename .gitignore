@@ -6,3 +6,7 @@ out/
 Makefile
 make.bat
 docs/_*/
+.eggs/
+build/
+dist/
+fangraphs.egg-info/
