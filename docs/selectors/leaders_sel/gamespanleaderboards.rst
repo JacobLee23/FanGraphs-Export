@@ -1,11 +1,9 @@
-FanGraphs.leaders
+FanGraphs.selectors.leaders_sel.game_span_leaderboards
 ==============================================================================
 
 .. toctree::
 
-.. automodule:: FanGraphs.leaders
+.. automodule:: FanGraphs.selectors.leaders_sel.game_span_leaderboards
     :members:
     :undoc-members:
     :show-inheritance:
-
-.. _FanGraphs: https://fangraphs.com/

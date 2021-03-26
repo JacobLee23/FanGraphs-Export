@@ -1,11 +1,9 @@
-FanGraphs.leaders
+FanGraphs.exceptions
 ==============================================================================
 
 .. toctree::
 
-.. automodule:: FanGraphs.leaders
+.. automodule:: FanGraphs.exceptions
     :members:
     :undoc-members:
     :show-inheritance:
-
-.. _FanGraphs: https://fangraphs.com/

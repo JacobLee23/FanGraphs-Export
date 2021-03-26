@@ -2,7 +2,7 @@
 # FanGraphs/leaders.py
 
 """
-Web scraper for the **Leaders** tab of the `FanGraphs`_ website.
+Web scraper for the `FanGraphs`_ **Leaders** webpages.
 Each page which is covered has its own class for scraping it.
 Below are each of the covered pages with the corresponding class:
 
@@ -13,7 +13,6 @@ Below are each of the covered pages with the corresponding class:
 - `KBO Leaders`_: :py:class:`InternationalLeaderboards`
 - `Combined WAR Leaderboards`_: :py:class:`WARLeaderboards`
 
-.. _FanGraphs: https://fangraphs.com
 .. _Major League Leaderboards: https://fangraphs.com/leaders.aspx
 .. _Splits Leaderboards: https://fangraphs.com/leaders/splits-leaderboards
 .. _Season Stat Grid: https://fangraphs.com/leaders/season-stat-grid
@@ -599,7 +598,7 @@ class SplitsLeaderboards(ScrapingUtilities):
         try:
             selector = self.__quick_splits[quick_split]
         except ValueError as err:
-            raise FanGraphs.exceptions.InvalidQuickSplitException(quick_split) from err
+            raise FanGraphs.exceptions.InvalidQuickSplit(quick_split) from err
         self._close_ad()
         self.page.click(selector)
         if autoupdate:

@@ -1,11 +1,9 @@
-FanGraphs.leaders
+FanGraphs.selectors.leaders_sel.season_stat_grid
 ==============================================================================
 
 .. toctree::
 
-.. automodule:: FanGraphs.leaders
+.. automodule:: FanGraphs.selectors.leaders_sel.season_stat_grid
     :members:
     :undoc-members:
     :show-inheritance:
-
-.. _FanGraphs: https://fangraphs.com/

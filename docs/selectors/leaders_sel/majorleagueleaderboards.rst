@@ -1,11 +1,9 @@
-FanGraphs.leaders
+FanGraphs.selectors.leaders_sel.major_league_leaderboards
 ==============================================================================
 
 .. toctree::
 
-.. automodule:: FanGraphs.leaders
+.. automodule:: FanGraphs.selectors.leaders_sel.major_league_leaderboards
     :members:
     :undoc-members:
     :show-inheritance:
-
-.. _FanGraphs: https://fangraphs.com/

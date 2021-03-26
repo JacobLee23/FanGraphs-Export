@@ -1,16 +1,13 @@
-.. FanGraphs-Export documentation master file, created by
-   sphinx-quickstart on Thu Mar 25 13:52:45 2021.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-FanGraphs-Export documentation
+FanGraphs documentation
 ==============================================================================
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
 
-   leaders
+.. toctree::
+    :numbered:
+
+    leaders
+    exceptions
+    selectors
 
 Indices and tables
 ==============================================================================

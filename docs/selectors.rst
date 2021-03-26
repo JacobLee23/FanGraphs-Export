@@ -1,11 +1,11 @@
-FanGraphs.leaders
+FanGraphs.selectors
 ==============================================================================
 
 .. toctree::
 
-.. automodule:: FanGraphs.leaders
+    selectors/leaders_sel
+
+.. automodule:: FanGraphs.selectors
     :members:
     :undoc-members:
     :show-inheritance:
-
-.. _FanGraphs: https://fangraphs.com/

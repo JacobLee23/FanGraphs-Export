@@ -69,7 +69,7 @@ class InvalidFilterOption(Exception):
         super().__init__(self.message)
 
 
-class InvalidQuickSplitException(Exception):
+class InvalidQuickSplit(Exception):
     """
     Raised when an invalid quick split is usedd
     """
