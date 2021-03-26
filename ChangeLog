@@ -1,0 +1,173 @@
+CHANGES
+=======
+
+* Generate AUTHORS and ChangeLog
+* Create setup.cfg and setup.py files
+* Revise docstrings
+* Update .gitignore
+* Correct typos in docstrings
+* Correct docstrings in FanGraphs.selectors.leaders\_sel
+* Move ScrapingUtilities to FanGraphs.utilities
+* Rename class names in FanGraphs.leaders
+* Apply CSS selector changes to docs
+* Relocate CSS selectors
+* Add doc files for all modules
+* Add FanGraphs.leaders autodocumentation
+* Run Sphinx Quickstart
+
+v0.8.2
+------
+
+* Add/Edit module docstrings
+* Update README
+* Update requirements
+
+v0.8.1
+------
+
+* Run pylint
+* Update README.md
+
+v0.8.0
+------
+
+* Add method docstrings
+* Create export method
+* Create configure method and private helper methods
+* Create current\_option method
+* Create list\_queries and list\_options methods
+* Compile CSS Selectors
+* Refactor setup\_class methods in test classes
+* Initialize InternationalLeaderboards class
+* Update README.md
+
+v0.7.0
+------
+
+* Add method docstrings
+* Move waitfor selector to FanGraphs.selectors.leader\_sel package modules
+* Create export method
+* Create configure method and private helper methods
+* Create current\_option method
+* Create list\_options method
+* Create list\_queries method
+* Compile CSS selectors for WARLeaderboards
+* Initialize WARLeaderboards class
+* Move CSS Selectors to FanGraphs.selectors.leaders\_sel subpackage
+* Update README.md
+* Create LICENSE
+* Update README.md
+
+v0.6.0
+------
+
+* Pylint
+* Add class and method docstrings
+* Create export method; Rework export methods of other classes
+* Create configure method and helper private methods
+* Create current\_option method
+* Create list\_queries and list\_options methods
+* Update unit tests
+* Refactor classes (\_\_Utils integration)
+* Refactor reset instance methods of classes
+* Intialize GameSpanLeaderboards
+
+v0.5.1
+------
+
+* Change FanGraphs.leaders.SplitsLeaderboards.list\_quick\_splits from instance method to class method
+
+v0.5.0
+------
+
+* Update README
+* Update README
+
+v0.4.0
+------
+
+* Delete functional tests
+* Add docstrings to TestSeasonStatGrid
+* Add docstrings to TestSeasonSTatGrid
+* Add docstrings to TestMajorLeagueLeaderboards
+* Refactor TestSplitsLeaderboards; Add docstrings
+* Refactor functional tests into unit tests: TestMajorLeagueLeaderboards
+* Refactor TestSeasonStatGrid
+* Refactor TestSplitsLeaderboards
+* Refactor TestMajorLeagueLeaderboards
+* Refactor TestSeasonStatGrid
+* Refactor TestSplitsLeaderboards
+* Refactor TestMajorLeagueLeaderboards
+* Refactor Playwright browser initiation
+* Restructure file hierarchy
+* Remove FanGraphs.projections module
+* Install pytest
+
+v0.3.0
+------
+
+* Add module-level docstrings
+* Update docstrings
+* Refactor functional tests
+* Bugfix unit tests
+* Bugfix unit tests
+* Refactor SeasonStatGrid and SplitsLeaderboards unit tests
+* Refactor MajorLeagueLeaderboards unit tests
+* Refactor MajorLeagueLeaderboards to use Playwright
+* Refactor SeasonStatGrid to use Playwright
+* Refactor SplitsLeaderboards to use Playwright
+* Install Playwright
+* Refactor quick splits
+* Modify execute method (still buggy)
+* Add quick splits, quick\_split and configure\_quick\_split methods
+* Add export method (buggy)
+* Add configure method
+* Remove quick split compatibility; Add current\_option method
+* Add list\_filter\_groups and list\_options methods
+* Add list\_queries method
+* Compile quick splits and splits CSS Selectors
+* Add update method
+* Compile dropdown CSS selectors
+* Compile selections CSS selectors
+* Add configure\_group method
+* Add reset\_filters method
+
+v0.2.0
+------
+
+* Separate functional tests
+* Add docstrings to class and class methods
+* Create export method
+* Add explicit wait before creating bs4.BeautifulSoup object
+* Use browser page source instead of '\*' CSS Selector
+* Fix bug in configure method
+* Refactor tests
+* Finalize configure method
+* Switch main parser from Selenium to BeautifulSoup4
+* Install requests, BeautifulSoup4, cssselect
+* Add configure method (buggy)
+* Fix bugs in current\_option method
+* Add current\_option method
+* Add list\_options method
+* Add list\_queries method
+* Migrate exceptions to separate file
+* Compile remaining CSS selectors
+* Compile CSS selectors
+* Initialize SeasonStatGrid class
+* Initialize SplitsLeaderboards class
+* Update README.md
+
+v0.1.0
+------
+
+* Add query configuration for leaderboard type
+* Create export method, update functional and unit tests
+* Create current\_options and configure classmethods
+* Create list\_queries classmethod
+* Write listoptions classmethod
+* Add page filter element XPaths
+* Add \_\_init\_\_ to MajorLeagueLeaderboards
+* Initialize tests for leaders.MajorLeagueLeaderboards
+* Initialize directory for unit tests
+* Initialize classes
+* Initial Commit
