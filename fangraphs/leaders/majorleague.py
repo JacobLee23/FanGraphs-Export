@@ -102,8 +102,6 @@ class MajorLeague(ScrapingUtilities):
         :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
         """
         query, option = query.lower(), str(option).lower()
-        if query not in self.list_queries():
-            raise fangraphs.exceptions.InvalidFilterQuery(query)
         self._close_ad()
         if query in self.__selections:
             self.__configure_selection(query, option)

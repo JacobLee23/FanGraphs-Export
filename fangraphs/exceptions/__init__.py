@@ -2,7 +2,7 @@
 # FanGraphs/exceptions.py
 
 """
-The warnings and exceptions used by modules in the package.
+Warning and exceptions
 """
 
 
