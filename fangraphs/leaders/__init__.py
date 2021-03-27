@@ -1,8 +1,8 @@
 #! python3
-# FanGraphs/utilities.py
+# FanGraphs/leaders/__init__.py
 
 """
-Helper module with web scraping utilities.
+Subpackage for scraping the FanGraphs **Leaders** pages.
 """
 
 import datetime
