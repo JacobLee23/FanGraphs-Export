@@ -1,6 +1,16 @@
 CHANGES
 =======
 
+v1.0.2
+------
+
+* Update REAMDE, documentation
+* Relocate all fangraphs.leaders.\* modules to fangraphs.leaders.leaders
+* Refactor list\_options, current\_option, and configure (and private helper) methods
+* Update documentation
+* Move classes from fangraphs.leaders for fangraphs.leaders.\*
+* Release v1.0.1
+
 v1.0.1
 ------
 
