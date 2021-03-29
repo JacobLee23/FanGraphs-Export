@@ -66,11 +66,11 @@ FanGraphs Leaders pages:
 - [WAR Leaderboards](https://fangraphs.com/warleaders.aspx)
 
 ```python
-from fangraphs import leaders
+from fangraphs.leaders import leaders
 
 mll = leaders.MajorLeague()
 splits = leaders.Splits()
-ssg = leaders.SeasonStatGrid()
+ssg = leaders.SeasonStat()
 gsl = leaders.GameSpan()
 intl = leaders.International()
 war = leaders.WAR()

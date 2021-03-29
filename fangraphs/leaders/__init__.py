@@ -11,8 +11,6 @@ import os
 import bs4
 from playwright.sync_api import sync_playwright
 
-import fangraphs.exceptions
-
 
 class ScrapingUtilities:
     """
@@ -20,9 +18,8 @@ class ScrapingUtilities:
     Intializes and manages ``Playwright`` browsers and pages.
     Intializes and manages ``bs4.BeautifulSoup`` objects.
     """
-    def __init__(self, browser, address):
+    def __init__(self, address):
         """
-        :param browser: The name of the browser to use (Chromium, Firefox, WebKit)
         :param address: The base URL address of the FanGraphs page
         .. py:attribute:: address
             The base URL address of the FanGraphs page
@@ -38,15 +35,7 @@ class ScrapingUtilities:
         os.makedirs("out", exist_ok=True)
 
         self.__play = sync_playwright().start()
-        browsers = {
-            "chromium": self.__play.chromium,
-            "firefox": self.__play.firefox,
-            "webkit": self.__play.webkit
-        }
-        browser_ctx = browsers.get(browser.lower())
-        if browser_ctx is None:
-            raise fangraphs.exceptions.UnknownBrowser(browser.lower())
-        self.__browser = browser_ctx.launch(
+        self.__browser = self.__play.chromium.launch(
             downloads_path=os.path.abspath("out")
         )
         self.page = self.__browser.new_page(

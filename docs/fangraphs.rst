@@ -21,12 +21,7 @@ Leaders
 .. autosummary::
 
     fangraphs.leaders
-    fangraphs.leaders.gamespan
-    fangraphs.leaders.international
-    fangraphs.leaders.majorleague
-    fangraphs.leaders.seasonstat
-    fangraphs.leaders.splits
-    fangraphs.leaders.war
+    fangraphs.leaders.leaders
 
 
 Exceptions

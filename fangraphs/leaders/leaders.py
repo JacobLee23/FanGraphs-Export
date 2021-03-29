@@ -1,6 +1,10 @@
 #! python3
 # FanGraphs/leaders/leaders.py
 
+"""
+Scrpaer for the webpages under the FanGaphs **Leaders** tab.
+"""
+
 import csv
 import datetime
 import os
@@ -13,7 +17,7 @@ from fangraphs.selectors import leaders_sel
 
 class GameSpan(ScrapingUtilities):
     """
-    Scrapes the FanGraphs `60-Game Span Leaderboards`_ page.
+    Scraper for the FanGraphs `60-Game Span Leaderboards`_ page.
 
     .. _60-Game Span Leaderboards: https://www.fangraphs.com/leaders/special/60-game-span
     """
@@ -23,15 +27,12 @@ class GameSpan(ScrapingUtilities):
 
     address = "https://fangraphs.com/leaders/special/60-game-span"
 
-    def __init__(self, browser="chromium"):
-        """
-        :param browser: The name of the browser to use (Chromium, Firefox, WebKit)
-        """
-        super().__init__(browser, self.address)
+    def __init__(self):
+        super().__init__(self.address)
         self.reset(waitfor=self.__waitfor)
-        self.compile_selectors()
+        self.__compile_selectors()
 
-    def compile_selectors(self):
+    def __compile_selectors(self):
         for cat, sel in leaders_sel.GameSpan.selections.items():
             self.__selections.setdefault(
                 cat, selectors.Selections(self.soup, sel)
@@ -122,7 +123,7 @@ class GameSpan(ScrapingUtilities):
 
 class International(ScrapingUtilities):
     """
-    Scrapes the FanGraphs `KBO Leaderboards`_ page.
+    Scraper for the FanGraphs `KBO Leaderboards`_ page.
 
     .. _KBO Leaderboards: https://www.fangraphs.com/leaders/international
     """
@@ -133,15 +134,12 @@ class International(ScrapingUtilities):
 
     address = "https://www.fangraphs.com/leaders/international"
 
-    def __init__(self, browser="chromium"):
-        """
-        :param browser: The name of the browser to use (Chromium, Firefox, WebKit)
-        """
-        super().__init__(browser, self.address)
+    def __init__(self):
+        super().__init__(self.address)
         self.reset(waitfor=self.__waitfor)
-        self.compile_selectors()
+        self.__compile_selectors()
 
-    def compile_selectors(self):
+    def __compile_selectors(self):
         for cat, sel in leaders_sel.International.selections.items():
             self.__selections.setdefault(
                 cat, selectors.Selections(self.soup, sel)
@@ -245,7 +243,7 @@ class International(ScrapingUtilities):
 
 class MajorLeague(ScrapingUtilities):
     """
-    Scrapes the FanGraphs `Major League Leaderboards`_ page.
+    Scraper for the FanGraphs `Major League Leaderboards`_ page.
 
     Note that the Splits Leaderboard is not covered.
     Instead, it is covered by :py:class:`SplitsLeaderboards`.
@@ -259,15 +257,12 @@ class MajorLeague(ScrapingUtilities):
 
     address = "https://fangraphs.com/leaders.aspx"
 
-    def __init__(self, browser="chromium"):
-        """
-        :param browser: The name of the browser to use (Chromium, Firefox, WebKit)
-        """
-        super().__init__(browser, self.address)
+    def __init__(self):
+        super().__init__(self.address)
         self.reset()
-        self.compile_selectors()
+        self.__compile_selectors()
 
-    def compile_selectors(self):
+    def __compile_selectors(self):
         for cat, sel in leaders_sel.MajorLeague.selections.items():
             self.__selections.setdefault(
                 cat, selectors.Selections(self.soup, sel, "> div > ul > li")
@@ -377,7 +372,7 @@ class MajorLeague(ScrapingUtilities):
 
 class SeasonStat(ScrapingUtilities):
     """
-    Scrapes the FanGraphs `Season Stat Grid`_ page.
+    Scraper for the FanGraphs `Season Stat Grid`_ page.
 
     .. _Season Stat Grid: https://fangraphs.com/leaders/season-stat-grid
     """
@@ -387,15 +382,12 @@ class SeasonStat(ScrapingUtilities):
 
     address = "https://fangraphs.com/leaders/season-stat-grid"
 
-    def __init__(self, *, browser="chromium"):
-        """
-        :param browser: The name of the browser to use (Chromium, Firefox, WebKit)
-        """
-        super().__init__(browser, self.address)
+    def __init__(self):
+        super().__init__(self.address)
         self.reset(waitfor=self.__waitfor)
-        self.compile_selectors()
+        self.__compile_selectors()
 
-    def compile_selectors(self):
+    def __compile_selectors(self):
         for cat, sel in leaders_sel.SeasonStat.selections.items():
             self.__selections.setdefault(
                 cat, selectors.Selections(self.soup, sel)
@@ -532,7 +524,7 @@ class SeasonStat(ScrapingUtilities):
 
 class Splits(ScrapingUtilities):
     """
-    Scrapes the FanGraphs `Splits Leaderboards`_ page.
+    Scraper for the FanGraphs `Splits Leaderboards`_ page.
 
     .. _Splits Leaderboards: https://fangraphs.com/leaders/splits-leaderboards
     """
@@ -545,18 +537,15 @@ class Splits(ScrapingUtilities):
 
     address = "https://fangraphs.com/leaders/splits-leaderboards"
 
-    def __init__(self, *, browser="chromium"):
-        """
-        :param browser: The name of the browser to use (Chromium, Firefox, WebKit)
-        """
-        super().__init__(browser, self.address)
+    def __init__(self):
+        super().__init__(self.address)
         self.reset(waitfor=self.__waitfor)
-        self.compile_selectors()
+        self.__compile_selectors()
 
         self.configure_filter_group("Show All")
         self.configure("auto_pt", "False", autoupdate=True)
 
-    def compile_selectors(self):
+    def __compile_selectors(self):
         for cat, sel in leaders_sel.Splits.selections.items():
             self.__selections.setdefault(
                 cat, selectors.Selections(self.soup, sel)
@@ -778,7 +767,7 @@ class Splits(ScrapingUtilities):
 
 class WAR(ScrapingUtilities):
     """
-    Scrapes the FanGraphs `Combined WAR Leaderboards`_ page.
+    Scraper for the FanGraphs `Combined WAR Leaderboards`_ page.
 
     .. _Combined WAR Leaderboards: https://www.fangraphs.com/warleaders.aspx
     """
@@ -787,15 +776,12 @@ class WAR(ScrapingUtilities):
 
     address = "https://fangraphs.com/warleaders.aspx"
 
-    def __init__(self, browser="chromium"):
-        """
-        :param browser: The name of the browser to use (Chromium, Firefox, WebKit)
-        """
-        super().__init__(browser, self.address)
+    def __init__(self):
+        super().__init__(self.address)
         self.reset(waitfor=self.__waitfor)
-        self.compile_selectors()
+        self.__compile_selectors()
 
-    def compile_selectors(self):
+    def __compile_selectors(self):
         for cat, sel in leaders_sel.WAR.dropdowns.items():
             options = leaders_sel.WAR.dropdown_options[cat]
             self.__dropdowns.setdefault(

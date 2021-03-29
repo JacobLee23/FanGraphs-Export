@@ -16,19 +16,6 @@ class FilterUpdateIncapability(Warning):
         super().__init__(self.message)
 
 
-class UnknownBrowser(Exception):
-    """
-    Raised when the browser name given is not recognized.
-    """
-    def __init__(self, browser):
-        """
-        :param browser: The name of the browser used
-        """
-        self.browser = browser
-        self.message = f"No browser named '{self.browser}' was recognized"
-        super().__init__(self.message)
-
-
 class InvalidFilterGroup(Exception):
     """
     Raised when an invalid filter group is used.
