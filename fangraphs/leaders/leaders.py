@@ -28,9 +28,16 @@ class GameSpan(ScrapingUtilities):
     address = "https://fangraphs.com/leaders/special/60-game-span"
 
     def __init__(self):
-        super().__init__(self.address)
-        self.reset(waitfor=self.__waitfor)
+        super().__init__(self.address, waitfor=self.__waitfor)
+
+    def __enter__(self):
+        self._browser_init()
+        self.reset()
         self.__compile_selectors()
+        return self
+
+    def __exit__(self, exc_type, value, traceback):
+        self.quit()
 
     def __compile_selectors(self):
         for cat, sel in leaders_sel.GameSpan.selections.items():
@@ -107,7 +114,7 @@ class GameSpan(ScrapingUtilities):
             self.__dropdowns[query].configure(self.page, option)
         else:
             raise fangraphs.exceptions.InvalidFilterQuery(query)
-        self._refresh_parser(waitfor=self.__waitfor)
+        self._refresh_parser()
 
     def export(self, path=""):
         """
@@ -135,9 +142,16 @@ class International(ScrapingUtilities):
     address = "https://www.fangraphs.com/leaders/international"
 
     def __init__(self):
-        super().__init__(self.address)
-        self.reset(waitfor=self.__waitfor)
+        super().__init__(self.address, waitfor=self.__waitfor)
+
+    def __enter__(self):
+        self._browser_init()
+        self.reset()
         self.__compile_selectors()
+        return self
+
+    def __exit__(self, exc_type, value, traceback):
+        self.quit()
 
     def __compile_selectors(self):
         for cat, sel in leaders_sel.International.selections.items():
@@ -227,7 +241,7 @@ class International(ScrapingUtilities):
             self.page.click(self.__switches[query])
         else:
             raise fangraphs.exceptions.InvalidFilterQuery(query)
-        self._refresh_parser(waitfor=self.__waitfor)
+        self._refresh_parser()
 
     def export(self, path=""):
         """
@@ -258,9 +272,16 @@ class MajorLeague(ScrapingUtilities):
     address = "https://fangraphs.com/leaders.aspx"
 
     def __init__(self):
-        super().__init__(self.address)
+        super().__init__(self.address, waitfor="")
+
+    def __enter__(self):
+        self._browser_init()
         self.reset()
         self.__compile_selectors()
+        return self
+
+    def __exit__(self, exc_type, value, traceback):
+        self.quit()
 
     def __compile_selectors(self):
         for cat, sel in leaders_sel.MajorLeague.selections.items():
@@ -383,9 +404,16 @@ class SeasonStat(ScrapingUtilities):
     address = "https://fangraphs.com/leaders/season-stat-grid"
 
     def __init__(self):
-        super().__init__(self.address)
-        self.reset(waitfor=self.__waitfor)
+        super().__init__(self.address, waitfor=self.__waitfor)
+
+    def __enter__(self):
+        self._browser_init()
+        self.reset()
         self.__compile_selectors()
+        return self
+
+    def __exit__(self, exc_type, value, traceback):
+        self.quit()
 
     def __compile_selectors(self):
         for cat, sel in leaders_sel.SeasonStat.selections.items():
@@ -462,7 +490,7 @@ class SeasonStat(ScrapingUtilities):
             self.__dropdowns[query].configure(self.page, option)
         else:
             raise fangraphs.exceptions.InvalidFilterQuery(query)
-        self._refresh_parser(waitfor=self.__waitfor)
+        self._refresh_parser()
 
     def _write_table_headers(self, writer: csv.writer):
         """
@@ -519,7 +547,7 @@ class SeasonStat(ScrapingUtilities):
                 self.page.click(
                     ".table-page-control:nth-last-child(1) > .next"
                 )
-                self._refresh_parser(waitfor=self.__waitfor)
+                self._refresh_parser()
 
 
 class Splits(ScrapingUtilities):
@@ -538,12 +566,19 @@ class Splits(ScrapingUtilities):
     address = "https://fangraphs.com/leaders/splits-leaderboards"
 
     def __init__(self):
-        super().__init__(self.address)
-        self.reset(waitfor=self.__waitfor)
+        super().__init__(self.address, waitfor=self.__waitfor)
+
+    def __enter__(self):
+        self._browser_init()
+        self.reset()
         self.__compile_selectors()
 
-        self.configure_filter_group("Show All")
+        self.set_filter_group("Show All")
         self.configure("auto_pt", "False", autoupdate=True)
+        return self
+
+    def __exit__(self, exc_type, value, traceback):
+        self.quit()
 
     def __compile_selectors(self):
         for cat, sel in leaders_sel.Splits.selections.items():
@@ -657,7 +692,7 @@ class Splits(ScrapingUtilities):
             raise fangraphs.exceptions.InvalidFilterQuery(query)
         if autoupdate:
             self.update()
-        self._refresh_parser(waitfor=self.__waitfor)
+        self._refresh_parser()
 
     def update(self):
         """
@@ -671,7 +706,7 @@ class Splits(ScrapingUtilities):
             raise fangraphs.exceptions.FilterUpdateIncapability()
         self._close_ad()
         elem.click()
-        self._refresh_parser(waitfor=self.__waitfor)
+        self._refresh_parser()
 
     def list_filter_groups(self):
         """
@@ -684,7 +719,7 @@ class Splits(ScrapingUtilities):
         groups = [e.getText() for e in elems]
         return groups
 
-    def configure_filter_group(self, group="Show All"):
+    def set_filter_group(self, group="Show All"):
         """
         Configures the available filters to a specified group of filters
 
@@ -777,9 +812,16 @@ class WAR(ScrapingUtilities):
     address = "https://fangraphs.com/warleaders.aspx"
 
     def __init__(self):
-        super().__init__(self.address)
-        self.reset(waitfor=self.__waitfor)
+        super().__init__(self.address, waitfor=self.__waitfor)
+
+    def __enter__(self):
+        self._browser_init()
+        self.reset()
         self.__compile_selectors()
+        return self
+
+    def __exit__(self, exc_type, value, traceback):
+        self.quit()
 
     def __compile_selectors(self):
         for cat, sel in leaders_sel.WAR.dropdowns.items():
@@ -846,7 +888,7 @@ class WAR(ScrapingUtilities):
             self.__dropdowns[query].configure(self.page, option)
         else:
             raise fangraphs.exceptions.InvalidFilterQuery(query)
-        self._refresh_parser(waitfor=self.__waitfor)
+        self._refresh_parser()
 
     def export(self, path=""):
         """

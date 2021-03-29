@@ -18,7 +18,7 @@ class ScrapingUtilities:
     Intializes and manages ``Playwright`` browsers and pages.
     Intializes and manages ``bs4.BeautifulSoup`` objects.
     """
-    def __init__(self, address):
+    def __init__(self, address, *, waitfor=""):
         """
         :param address: The base URL address of the FanGraphs page
         .. py:attribute:: address
@@ -32,8 +32,16 @@ class ScrapingUtilities:
             :type: bs4.BeautifulSoup
         """
         self.address = address
+        self.waitfor = waitfor
         os.makedirs("out", exist_ok=True)
 
+        self.__play = None
+        self.__browser = None
+        self.page = None
+
+        self.soup = None
+
+    def _browser_init(self):
         self.__play = sync_playwright().start()
         self.__browser = self.__play.chromium.launch(
             downloads_path=os.path.abspath("out")
@@ -41,14 +49,14 @@ class ScrapingUtilities:
         self.page = self.__browser.new_page(
             accept_downloads=True
         )
-        self.soup = None
+        self._refresh_parser()
 
-    def _refresh_parser(self, *, waitfor=""):
+    def _refresh_parser(self):
         """
         Re-initializes the ``bs4.BeautifulSoup`` object stored in :py:attr:`soup`.
         """
-        if waitfor:
-            self.page.wait_for_selector(waitfor)
+        if self.waitfor:
+            self.page.wait_for_selector(self.waitfor)
         self.soup = bs4.BeautifulSoup(
             self.page.content(), features="lxml"
         )
@@ -83,13 +91,12 @@ class ScrapingUtilities:
         download_path = download.path()
         os.rename(download_path, path)
 
-    def reset(self, *, waitfor=""):
+    def reset(self):
         """
         Navigates :py:attr:`page` to :py:attr:`address`.
-        :param waitfor: If specified, the CSS of the selector to wait for.
         """
         self.page.goto(self.address, timeout=0)
-        self._refresh_parser(waitfor=waitfor)
+        self._refresh_parser()
 
     def quit(self):
         """

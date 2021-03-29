@@ -40,7 +40,7 @@ class Selections:
             raise Exception
         return option
 
-    def configure(self, page, option: str):
+    async def configure(self, page, option: str):
         option = option.lower()
         options = [o.lower() for o in self.list_options()]
         try:
@@ -48,12 +48,12 @@ class Selections:
         except ValueError as err:
             raise fangraphs.exceptions.InvalidFilterOption(option) from err
         if isinstance(self.selector, str):
-            elem = page.query_selector_all(
+            elem = await page.query_selector_all(
                 f"{self.selector} {self.descendant}"
             )[index]
-            elem.click()
+            await elem.click()
         elif isinstance(self.selector, list):
-            page.click(self.selector[index])
+            await page.click(self.selector[index])
         else:
             raise Exception
 
@@ -96,17 +96,17 @@ class Dropdowns:
             raise Exception
         return option
 
-    def configure(self, page, option: str):
+    async def configure(self, page, option: str):
         options = [o.lower() for o in self.list_options()]
         try:
             index = options.index(option.lower())
         except ValueError as err:
             raise fangraphs.exceptions.InvalidFilterOption(option) from err
-        page.click(self.selector)
-        elem = page.query_selector_all(
+        await page.click(self.selector)
+        elem = await page.query_selector_all(
             f"{self.selector} {self.descendants}"
         )[index]
-        elem.click()
+        await elem.click()
 
 
 class Switches:
