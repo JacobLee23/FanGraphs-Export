@@ -1,51 +1,14 @@
 FanGraphs documentation
-==============================================================================
-
+=======================
 
 .. toctree::
-    :numbered:
+    :maxdepth: 4
 
-    leaders
-    utilities
-    exceptions
-    selectors
-
-
-Leaders
-------------------------------------------------------------------------------
-
-.. autosummary::
-
-    fangraphs.leaders
-
-
-Utilities
-------------------------------------------------------------------------------
-
-.. autosummary::
-
-    fangraphs.utilities
-
-
-Exceptions
-------------------------------------------------------------------------------
-
-.. autosummary::
-
-    fangraphs.exceptions
-
-
-Selectors
-------------------------------------------------------------------------------
-
-.. autosummary::
-
-    fangraphs.selectors
-    fangraphs.selectors.leaders_sel
+    api_reference
 
 
 Indices and tables
-==============================================================================
+==================
 
 * :ref:`genindex`
 * :ref:`modindex`

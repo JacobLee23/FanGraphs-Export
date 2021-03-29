@@ -8,7 +8,7 @@ CSS selectors for the classes in :py:mod:`FanGraphs.leaders`.
 
 class GameSpan:
     """
-    CSS selectors for :py:class:`FanGraphs.leaders.GameSpan`.
+    CSS selectors for :py:mod:`fangraphs.leaders.gamespan`.
     """
     selections = {
         "stat": [
@@ -33,7 +33,7 @@ class GameSpan:
 
 class International:
     """
-    CSS selectors for :py:class:`FanGraphs.leaders.International`.
+    CSS selectors for :py:mod:`fangraphs.leaders.international`.
     """
     selections = {
         "stat": [
@@ -54,7 +54,7 @@ class International:
         "league": ".controls-stats:nth-child(3) > div:nth-child(1) > .fg-selection-box__selection",
         "team": ".controls-stats:nth-child(3) > div:nth-child(2) > .fg-selection-box__selection",
     }
-    checkboxes = {
+    switches = {
         "split_seasons": ".controls-stats > .fg-checkbox"
     }
     waitfor = ".fg-data-grid.table-type"
@@ -62,7 +62,7 @@ class International:
 
 class MajorLeague:
     """
-    CSS selectors for :py:class:`FanGraphs.leaders.MajorLeague`.
+    CSS selectors for :py:mod:`fangraphs.leaders.majorleague`.
     """
     selections = {
         "group": "#LeaderBoard1_tsGroup",
@@ -92,7 +92,7 @@ class MajorLeague:
         "age1": "#LeaderBoard1_rcbAge1_DropDown",
         "age2": "#LeaderBoard1_rcbAge2_DropDown"
     }
-    checkboxes = {
+    switches = {
         "split_teams": "#LeaderBoard1_cbTeams",
         "active_roster": "#LeaderBoard1_cbActive",
         "hof": "#LeaderBoard1_cbHOF",
@@ -107,9 +107,9 @@ class MajorLeague:
     }
 
 
-class SeasonStatGrid:
+class SeasonStat:
     """
-    CSS selectors for :py:class:`FanGraphs.leaders.SeasonStatGrid`.
+    CSS selectors for :py:mod:`fangraphs.leaders.seasonstat`.
     """
     selections = {
         "stat": [
@@ -140,7 +140,7 @@ class SeasonStatGrid:
 
 class Splits:
     """
-    CSS selectors for :py:class:`FanGraphs.leaders.Splits`.
+    CSS selectors for :py:mod:`fangraphs.leaders.splits`.
     """
     selections = {
         "group": [
@@ -215,7 +215,7 @@ class Splits:
 
 class WAR:
     """
-    CSS selectors for :py:class:`FanGraphs.leaders.WAR`.
+    CSS selectors for :py:mod:`fangraphs.leaders.war`.
     """
     dropdowns = {
         "season": "#WARBoard1_rcbSeason_Input",
