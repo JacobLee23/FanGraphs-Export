@@ -7,6 +7,7 @@ Scraper for the Splits Leaderboards page.
 
 import fangraphs.exceptions
 from fangraphs.leaders import ScrapingUtilities
+from fangraphs import selectors
 from fangraphs.selectors import leaders_sel
 
 
@@ -16,11 +17,11 @@ class Splits(ScrapingUtilities):
 
     .. _Splits Leaderboards: https://fangraphs.com/leaders/splits-leaderboards
     """
-    __selections = leaders_sel.Splits.selections
-    __dropdowns = leaders_sel.Splits.dropdowns
-    __splits = leaders_sel.Splits.splits
+    __selections = {}
+    __dropdowns = {}
+    __splits = {}
     __quick_splits = leaders_sel.Splits.quick_splits
-    __switches = leaders_sel.Splits.switches
+    __switches = {}
     __waitfor = leaders_sel.Splits.waitfor
 
     address = "https://fangraphs.com/leaders/splits-leaderboards"
@@ -31,9 +32,28 @@ class Splits(ScrapingUtilities):
         """
         super().__init__(browser, self.address)
         self.reset(waitfor=self.__waitfor)
+        self.compile_selectors()
 
         self.configure_filter_group("Show All")
         self.configure("auto_pt", "False", autoupdate=True)
+
+    def compile_selectors(self):
+        for cat, sel in leaders_sel.Splits.selections.items():
+            self.__selections.setdefault(
+                cat, selectors.Selections(self.soup, sel)
+            )
+        for cat, sel in leaders_sel.Splits.dropdowns.items():
+            self.__dropdowns.setdefault(
+                cat, selectors.Dropdowns(self.soup, sel, "> ul > li")
+            )
+        for cat, sel in leaders_sel.Splits.splits.items():
+            self.__splits.setdefault(
+                cat, selectors.Dropdowns(self.soup, sel, "> ul > li")
+            )
+        for cat, sel in leaders_sel.Splits.switches.items():
+            self.__switches.setdefault(
+                cat, selectors.Switches(self.soup, sel)
+            )
 
     @classmethod
     def list_queries(cls):
@@ -61,19 +81,11 @@ class Splits(ScrapingUtilities):
         """
         query = query.lower()
         if query in self.__selections:
-            elems = [
-                self.soup.select(s)[0]
-                for s in self.__selections[query]
-            ]
-            options = [e.getText() for e in elems]
+            options = self.__selections[query].list_options()
         elif query in self.__dropdowns:
-            selector = f"{self.__dropdowns[query]} ul li"
-            elems = self.soup.select(selector)
-            options = [e.getText() for e in elems]
+            options = self.__dropdowns[query].list_options()
         elif query in self.__splits:
-            selector = f"{self.__splits[query]} ul li"
-            elems = self.soup.select(selector)
-            options = [e.getText() for e in elems]
+            options = self.__splits[query].list_options()
         elif query in self.__switches:
             options = ["True", "False"]
         else:
@@ -98,30 +110,14 @@ class Splits(ScrapingUtilities):
         :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
         """
         query = query.lower()
-        option = []
         if query in self.__selections:
-            for sel in self.__selections[query]:
-                elem = self.soup.select(sel)[0]
-                if "isActive" in elem.get("class"):
-                    option = elem.getText()
-                    break
+            option = self.__selections[query].current_option()
         elif query in self.__dropdowns:
-            elems = self.soup.select(
-                f"{self.__dropdowns[query]} ul li"
-            )
-            for elem in elems:
-                if "highlight-selection" in elem.get("class"):
-                    option.append(elem.getText())
+            option = self.__dropdowns[query].current_option(opt_type=2, multiple=True)
         elif query in self.__splits:
-            elems = self.soup.select(
-                f"{self.__splits[query]} ul li"
-            )
-            for elem in elems:
-                if "highlight-selection" in elem.get("class"):
-                    option.append(elem.getText())
+            option = self.__splits[query].current_option(opt_type=2, multiple=True)
         elif query in self.__switches:
-            elem = self.soup.select(self.__switches[query])
-            option = "True" if "isActive" in elem[0].get("class") else "False"
+            option = self.__switches[query].current_option(opt_type=2)
         else:
             raise fangraphs.exceptions.InvalidFilterQuery(query)
         return option
@@ -138,83 +134,22 @@ class Splits(ScrapingUtilities):
         self._close_ad()
         query = query.lower()
         if query in self.__selections:
-            self.__configure_selection(query, option)
+            self.__selections[query].configure(self.page, option)
         elif query in self.__dropdowns:
-            self.__configure_dropdown(query, option)
+            self.__dropdowns[query].configure(self.page, option)
         elif query in self.__splits:
-            self.__configure_split(query, option)
+            self.__splits[query].configure(self.page, option)
         elif query in self.__switches:
-            self.__configure_switch(query, option)
+            options = [o.lower() for o in self.list_options(query)]
+            if option.lower() not in options:
+                raise fangraphs.exceptions.InvalidFilterOption(option)
+            if option != self.current_option(query)[0].title():
+                self.page.click(self.__switches[query])
         else:
             raise fangraphs.exceptions.InvalidFilterQuery(query)
         if autoupdate:
             self.update()
         self._refresh_parser(waitfor=self.__waitfor)
-
-    def __configure_selection(self, query: str, option: str):
-        """
-        Configures a selection-class filter query to an option.
-
-        :param query: The selection-class filter query to be configured
-        :param option: The option to set the filter query to
-        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
-        """
-        options = self.list_options(query)
-        try:
-            index = options.index(option)
-        except ValueError as err:
-            raise fangraphs.exceptions.InvalidFilterOption(query, option) from err
-        self.page.click(self.__selections[query][index])
-
-    def __configure_dropdown(self, query: str, option: str):
-        """
-        Configures a dropdown-class filter query to an option.
-
-        :param query: The dropdown-class filter query to be configured
-        :param option: The option to set the filter query to
-        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
-        """
-        options = self.list_options(query)
-        try:
-            index = options.index(option)
-        except ValueError as err:
-            raise fangraphs.exceptions.InvalidFilterOption(query, option) from err
-        self.page.hover(self.__dropdowns[query])
-        elem = self.page.query_selector_all(f"{self.__dropdowns[query]} ul li")[index]
-        elem.click()
-
-    def __configure_split(self, query: str, option: str):
-        """
-        Configures a split-class filter query to an option.
-        Split-class filter queries are separated from dropdown-class filter queries.
-        This is solely because of the CSS selectors used.
-
-        :param query: The split-class filter query to be configured
-        :param option: The option to configure the filter query to
-        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
-        """
-        options = self.list_options(query)
-        try:
-            index = options.index(option)
-        except ValueError as err:
-            raise fangraphs.exceptions.InvalidFilterOption(query, option) from err
-        self.page.hover(self.__splits[query])
-        elem = self.page.query_selector_all(f"{self.__splits[query]} ul li")[index]
-        elem.click()
-
-    def __configure_switch(self, query: str, option: str):
-        """
-        Configures a switch-class filter query to an option.
-
-        :param query: The switch-class filter query to be configured
-        :param option: The option to configure the filter query to
-        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
-        """
-        options = self.list_options(query)
-        if option not in options:
-            raise fangraphs.exceptions.InvalidFilterOption(query, option)
-        if option != self.current_option(query)[0].title():
-            self.page.click(self.__switches[query])
 
     def update(self):
         """
@@ -223,8 +158,7 @@ class Splits(ScrapingUtilities):
 
         :raises FanGraphs.exceptions.FilterUpdateIncapability: No filter queries to update
         """
-        selector = "#button-update"
-        elem = self.page.query_selector(selector)
+        elem = self.page.query_selector("#button-update")
         if elem is None:
             raise fangraphs.exceptions.FilterUpdateIncapability()
         self._close_ad()
@@ -272,8 +206,9 @@ class Splits(ScrapingUtilities):
         - ``auto_pt``
         - ``split_teams``
         """
-        selector = "#stack-buttons div[class='fgButton small']:nth-last-child(1)"
-        elem = self.page.query_selector(selector)
+        elem = self.page.query_selector(
+            "#stack-buttons .fgButton.small:nth-last-child(1)"
+        )
         if elem is None:
             return
         self._close_ad()
@@ -290,7 +225,7 @@ class Splits(ScrapingUtilities):
         """
         return list(cls.__quick_splits)
 
-    def configure_quick_split(self, quick_split: str, autoupdate=True):
+    def set_to_quick_split(self, quick_split: str, autoupdate=True):
         """
         Invokes the configuration of a quick split.
         All filter queries affected by :py:meth:`reset_filters` are reset prior to configuration.

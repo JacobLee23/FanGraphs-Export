@@ -11,18 +11,19 @@ import os
 
 import fangraphs.exceptions
 from fangraphs.leaders import ScrapingUtilities
+from fangraphs import selectors
 from fangraphs.selectors import leaders_sel
 
 
-class SeasonStatGrid(ScrapingUtilities):
+class SeasonStat(ScrapingUtilities):
     """
     Scrapes the FanGraphs `Season Stat Grid`_ page.
 
     .. _Season Stat Grid: https://fangraphs.com/leaders/season-stat-grid
     """
-    __selections = leaders_sel.SeasonStatGrid.selections
-    __dropdowns = leaders_sel.SeasonStatGrid.dropdowns
-    __waitfor = leaders_sel.SeasonStatGrid.waitfor
+    __selections = {}
+    __dropdowns = {}
+    __waitfor = leaders_sel.SeasonStat.waitfor
 
     address = "https://fangraphs.com/leaders/season-stat-grid"
 
@@ -32,6 +33,17 @@ class SeasonStatGrid(ScrapingUtilities):
         """
         super().__init__(browser, self.address)
         self.reset(waitfor=self.__waitfor)
+        self.compile_selectors()
+
+    def compile_selectors(self):
+        for cat, sel in leaders_sel.SeasonStat.selections.items():
+            self.__selections.setdefault(
+                cat, selectors.Selections(self.soup, sel)
+            )
+        for cat, sel in leaders_sel.SeasonStat.dropdowns.items():
+            self.__dropdowns.setdefault(
+                cat, selectors.Dropdowns(self.soup, sel, "> ul > li")
+            )
 
     @classmethod
     def list_queries(cls):
@@ -57,16 +69,9 @@ class SeasonStatGrid(ScrapingUtilities):
         """
         query = query.lower()
         if query in self.__selections:
-            elems = [
-                self.soup.select(s)[0]
-                for s in self.__selections[query]
-            ]
-            options = [e.getText() for e in elems]
+            options = self.__selections[query].list_options()
         elif query in self.__dropdowns:
-            elems = self.soup.select(
-                f"{self.__dropdowns[query]} li"
-            )
-            options = [e.getText() for e in elems]
+            options = self.__dropdowns[query].list_options()
         else:
             raise fangraphs.exceptions.InvalidFilterQuery(query)
         return options
@@ -82,16 +87,9 @@ class SeasonStatGrid(ScrapingUtilities):
         """
         query = query.lower()
         if query in self.__selections:
-            selector = "div[class='fgButton button-green active isActive']"
-            elems = self.soup.select(selector)
-            option = {
-                "stat": elems[0].getText(), "type": elems[1].getText()
-            }[query]
+            option = self.__selections[query].current_option()
         elif query in self.__dropdowns:
-            elems = self.soup.select(
-                f"{self.__dropdowns[query]} li[class$='highlight-selection']"
-            )
-            option = elems[0].getText() if elems else "None"
+            option = self.__dropdowns[query].current_option(opt_type=2)
         else:
             raise fangraphs.exceptions.InvalidFilterQuery(query)
         return option
@@ -107,44 +105,12 @@ class SeasonStatGrid(ScrapingUtilities):
         query = query.lower()
         self._close_ad()
         if query in self.__selections:
-            self.__configure_selection(query, option)
+            self.__selections[query].configure(self.page, option)
         elif query in self.__dropdowns:
-            self.__configure_dropdown(query, option)
+            self.__dropdowns[query].configure(self.page, option)
         else:
             raise fangraphs.exceptions.InvalidFilterQuery(query)
         self._refresh_parser(waitfor=self.__waitfor)
-
-    def __configure_selection(self, query: str, option: str):
-        """
-        Configures a selection-class filter query to a specified option.
-
-        :param query: The filter query
-        :param option: The option to configure ``query`` to
-        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
-        """
-        options = self.list_options(query)
-        try:
-            index = options.index(option)
-        except ValueError as err:
-            raise fangraphs.exceptions.InvalidFilterOption(query, option) from err
-        self.page.click(self.__selections[query][index])
-
-    def __configure_dropdown(self, query: str, option: str):
-        """
-        Configures a dropdown-class filter query to a specified option.
-
-        :param query: The filter query
-        :param option: The option to configure ``query`` to
-        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
-        """
-        options = self.list_options(query)
-        try:
-            index = options.index(option)
-        except ValueError as err:
-            raise fangraphs.exceptions.InvalidFilterOption(query, option) from err
-        self.page.hover(self.__dropdowns[query])
-        elem = self.page.query_selector_all(f"{self.__dropdowns[query]} ul li")[index]
-        elem.click()
 
     def _write_table_headers(self, writer: csv.writer):
         """

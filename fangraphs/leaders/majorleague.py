@@ -6,6 +6,7 @@ Scraper for the Major League Leaders page.
 """
 import fangraphs.exceptions
 from fangraphs.leaders import ScrapingUtilities
+from fangraphs import selectors
 from fangraphs.selectors import leaders_sel
 
 
@@ -18,10 +19,9 @@ class MajorLeague(ScrapingUtilities):
 
     .. _Major League Leaderboards: https://fangraphs.com/leaders.aspx
     """
-    __selections = leaders_sel.MajorLeague.selections
-    __dropdowns = leaders_sel.MajorLeague.dropdowns
-    __dropdown_options = leaders_sel.MajorLeague.dropdown_options
-    __checkboxes = leaders_sel.MajorLeague.checkboxes
+    __selections = {}
+    __dropdowns = {}
+    __switches = {}
     __buttons = leaders_sel.MajorLeague.buttons
 
     address = "https://fangraphs.com/leaders.aspx"
@@ -32,6 +32,22 @@ class MajorLeague(ScrapingUtilities):
         """
         super().__init__(browser, self.address)
         self.reset()
+        self.compile_selectors()
+
+    def compile_selectors(self):
+        for cat, sel in leaders_sel.MajorLeague.selections.items():
+            self.__selections.setdefault(
+                cat, selectors.Selections(self.soup, sel, "> div > ul > li")
+            )
+        for cat, sel in leaders_sel.MajorLeague.dropdowns.items():
+            options = leaders_sel.MajorLeague.dropdown_options[cat]
+            self.__dropdowns.setdefault(
+                cat, selectors.Dropdowns(self.soup, sel, "> div > ul > li", options)
+            )
+        for cat, sel in leaders_sel.MajorLeague.switches.items():
+            self.__switches.setdefault(
+                cat, selectors.Switches(self.soup, sel)
+            )
 
     @classmethod
     def list_queries(cls):
@@ -44,7 +60,7 @@ class MajorLeague(ScrapingUtilities):
         queries = []
         queries.extend(list(cls.__selections))
         queries.extend(list(cls.__dropdowns))
-        queries.extend(list(cls.__checkboxes))
+        queries.extend(list(cls.__switches))
         return queries
 
     def list_options(self, query: str):
@@ -57,14 +73,12 @@ class MajorLeague(ScrapingUtilities):
         :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
         """
         query = query.lower()
-        if query in self.__checkboxes:
+        if query in self.__switches:
             options = ["True", "False"]
-        elif query in self.__dropdown_options:
-            elems = self.soup.select(f"{self.__dropdown_options[query]} li")
-            options = [e.getText() for e in elems]
+        elif query in self.__dropdowns:
+            options = self.__dropdowns[query].list_options()
         elif query in self.__selections:
-            elems = self.soup.select(f"{self.__selections[query]} li")
-            options = [e.getText() for e in elems]
+            options = self.__selections[query].list_options()
         else:
             raise fangraphs.exceptions.InvalidFilterQuery(query)
         return options
@@ -79,15 +93,12 @@ class MajorLeague(ScrapingUtilities):
         :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
         """
         query = query.lower()
-        if query in self.__checkboxes:
-            elem = self.soup.select(self.__checkboxes[query])[0]
-            option = "True" if elem.get("checked") == "checked" else "False"
+        if query in self.__switches:
+            option = self.__switches[query].current_option(opt_type=1)
         elif query in self.__dropdowns:
-            elem = self.soup.select(self.__dropdowns[query])[0]
-            option = elem.get("value")
+            option = self.__dropdowns[query].current_option(opt_type=1)
         elif query in self.__selections:
-            elem = self.soup.select(f"{self.__selections[query]} .rtsLink.rtsSelected")
-            option = elem.getText()
+            option = self.__selections[query].current_option()
         else:
             raise fangraphs.exceptions.InvalidFilterQuery(query)
         return option
@@ -104,79 +115,20 @@ class MajorLeague(ScrapingUtilities):
         query, option = query.lower(), str(option).lower()
         self._close_ad()
         if query in self.__selections:
-            self.__configure_selection(query, option)
+            self.__selections[query].configure(self.page, option)
         elif query in self.__dropdowns:
-            self.__configure_dropdown(query, option)
-        elif query in self.__checkboxes:
-            self.__configure_checkbox(query, option)
+            self.__dropdowns[query].configure(self.page, option)
+        elif query in self.__switches:
+            options = [o.lower() for o in self.list_options(query)]
+            if option.lower() not in options:
+                raise fangraphs.exceptions.InvalidFilterOption(option)
+            if option != self.current_option(query).title():
+                self.page.click(self.__switches[query])
         else:
             raise fangraphs.exceptions.InvalidFilterQuery(query)
         if query in self.__buttons and autoupdate:
-            self.__click_button(query)
+            self.page.click(self.__buttons[query])
         self._refresh_parser()
-
-    def __configure_selection(self, query, option):
-        """
-        Configures a selection-class filter query to an option.
-
-        :param query: The selection-class filter query to be configured
-        :param option: The option to set the filter query to
-        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
-        """
-        options = [o.lower() for o in self.list_options(query)]
-        try:
-            index = options.index(option)
-        except ValueError as err:
-            raise fangraphs.exceptions.InvalidFilterOption(query, option) from err
-        self.page.click("#LeaderBoard_tsType a[href='#']")
-        elem = self.page.query_selector_all(
-            f"{self.__selections[query]} li"
-        )[index]
-        elem.click()
-
-    def __configure_dropdown(self, query, option):
-        """
-        Configures a dropdown-class filter query to an option.
-
-        :param query: The dropdown-class filter query to be configured
-        :param option: The option to set the filter query to
-        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
-        """
-        options = [o.lower() for o in self.list_options(query)]
-        try:
-            index = options.index(option)
-        except ValueError as err:
-            raise fangraphs.exceptions.InvalidFilterOption(query, option) from err
-        self.page.hover(
-            self.__dropdowns[query]
-        )
-        elem = self.page.query_selector_all(
-            f"{self.__dropdowns[query]} > div > ul > li"
-        )[index]
-        elem.click()
-
-    def __configure_checkbox(self, query, option):
-        """
-        Configures a checkbox-class filter query to an option.
-
-        :param query: The checkbox-class filter query to be configured
-        :param option: The option to set the filter query to
-        """
-        options = self.list_options(query)
-        if option not in options:
-            raise fangraphs.exceptions.InvalidFilterOption(query, option)
-        if option != self.current_option(query).title():
-            self.page.click(self.__checkboxes[query])
-
-    def __click_button(self, query):
-        """
-        Clicks the button element which is attached to the search query.
-
-        :param query: The filter query which has an attached form submission button
-        """
-        self.page.click(
-            self.__buttons[query]
-        )
 
     def export(self, path=""):
         """

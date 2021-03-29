@@ -7,6 +7,7 @@ Scraper for the 60-Game Span Leaderboards page.
 
 import fangraphs.exceptions
 from fangraphs.leaders import ScrapingUtilities
+from fangraphs import selectors
 from fangraphs.selectors import leaders_sel
 
 
@@ -16,8 +17,8 @@ class GameSpan(ScrapingUtilities):
 
     .. _60-Game Span Leaderboards: https://www.fangraphs.com/leaders/special/60-game-span
     """
-    __selections = leaders_sel.GameSpan.selections
-    __dropdowns = leaders_sel.GameSpan.dropdowns
+    __selections = {}
+    __dropdowns = {}
     __waitfor = leaders_sel.GameSpan.waitfor
 
     address = "https://fangraphs.com/leaders/special/60-game-span"
@@ -28,6 +29,17 @@ class GameSpan(ScrapingUtilities):
         """
         super().__init__(browser, self.address)
         self.reset(waitfor=self.__waitfor)
+        self.compile_selectors()
+
+    def compile_selectors(self):
+        for cat, sel in leaders_sel.GameSpan.selections.items():
+            self.__selections.setdefault(
+                cat, selectors.Selections(self.soup, sel)
+            )
+        for cat, sel in leaders_sel.GameSpan.dropdowns.items():
+            self.__dropdowns.setdefault(
+                cat, selectors.Dropdowns(self.soup, sel, "> div > a")
+            )
 
     @classmethod
     def list_queries(cls):
@@ -53,14 +65,9 @@ class GameSpan(ScrapingUtilities):
         """
         query = query.lower()
         if query in self.__selections:
-            elems = [
-                self.soup.select(s)[0]
-                for s in self.__selections[query]
-            ]
-            options = [e.getText() for e in elems]
+            options = self.__selections[query].list_options()
         elif query in self.__dropdowns:
-            elems = self.soup.select(f"{self.__dropdowns[query]} > div > a")
-            options = [e.getText() for e in elems]
+            options = self.__dropdowns[query].list_options()
         else:
             raise fangraphs.exceptions.InvalidFilterQuery(query)
         return options
@@ -75,18 +82,10 @@ class GameSpan(ScrapingUtilities):
         :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
         """
         query = query.lower()
-        option = ""
         if query in self.__selections:
-            for sel in self.__selections[query]:
-                elem = self.soup.select(sel)[0]
-                if "active" in elem.get("class"):
-                    option = elem.getText()
-                    break
+            option = self.__selections[query].current_option()
         elif query in self.__dropdowns:
-            elem = self.soup.select(
-                f"{self.__dropdowns[query]} > div > span"
-            )[0]
-            option = elem.getText()
+            option = self.__dropdowns[query].current_option(opt_type=3)
         else:
             raise fangraphs.exceptions.InvalidFilterQuery(query)
         return option
@@ -102,46 +101,12 @@ class GameSpan(ScrapingUtilities):
         query = query.lower()
         self._close_ad()
         if query in self.__selections:
-            self.__configure_selection(query, option)
+            self.__selections[query].configure(self.page, option)
         elif query in self.__dropdowns:
-            self.__configure_dropdown(query, option)
+            self.__dropdowns[query].configure(self.page, option)
         else:
             raise fangraphs.exceptions.InvalidFilterQuery(query)
         self._refresh_parser(waitfor=self.__waitfor)
-
-    def __configure_selection(self, query: str, option: str):
-        """
-        Configures a selection-class filter query to an option.
-
-        :param query: The selection-class filter query to be configured
-        :param option: The option to set the filter query to
-        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
-        """
-        options = self.list_options(query)
-        try:
-            index = options.index(option)
-        except ValueError as err:
-            raise fangraphs.exceptions.InvalidFilterOption(query, option) from err
-        self.page.click(self.__selections[query][index])
-
-    def __configure_dropdown(self, query: str, option: str):
-        """
-        Configures a dropdown-class filter query to an option.
-
-        :param query: The dropdown-class filter query to be configured
-        :param option: The option to set the filter query to
-        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
-        """
-        options = self.list_options(query)
-        try:
-            index = options.index(option)
-        except ValueError as err:
-            raise fangraphs.exceptions.InvalidFilterOption(query, option) from err
-        self.page.click(self.__dropdowns[query])
-        elem = self.page.query_selector_all(
-            f"{self.__dropdowns[query]} > div > a"
-        )[index]
-        elem.click()
 
     def export(self, path=""):
         """

@@ -7,6 +7,7 @@ Scraper for the KBO Leaders page.
 
 import fangraphs.exceptions
 from fangraphs.leaders import ScrapingUtilities
+from fangraphs import selectors
 from fangraphs.selectors import leaders_sel
 
 
@@ -16,9 +17,9 @@ class International(ScrapingUtilities):
 
     .. _KBO Leaderboards: https://www.fangraphs.com/leaders/international
     """
-    __selections = leaders_sel.International.selections
-    __dropdowns = leaders_sel.International.dropdowns
-    __checkboxes = leaders_sel.International.checkboxes
+    __selections = {}
+    __dropdowns = {}
+    __switches = {}
     __waitfor = leaders_sel.International.waitfor
 
     address = "https://www.fangraphs.com/leaders/international"
@@ -29,6 +30,21 @@ class International(ScrapingUtilities):
         """
         super().__init__(browser, self.address)
         self.reset(waitfor=self.__waitfor)
+        self.compile_selectors()
+
+    def compile_selectors(self):
+        for cat, sel in leaders_sel.International.selections.items():
+            self.__selections.setdefault(
+                cat, selectors.Selections(self.soup, sel)
+            )
+        for cat, sel in leaders_sel.International.dropdowns.items():
+            self.__dropdowns.setdefault(
+                cat, selectors.Dropdowns(self.soup, sel, "> div > a")
+            )
+        for cat, sel in leaders_sel.International.switches.items():
+            self.__switches.setdefault(
+                cat, selectors.Switches(self.soup, sel)
+            )
 
     @classmethod
     def list_queries(cls):
@@ -41,7 +57,7 @@ class International(ScrapingUtilities):
         queries = []
         queries.extend(cls.__selections)
         queries.extend(cls.__dropdowns)
-        queries.extend(cls.__checkboxes)
+        queries.extend(cls.__switches)
         return queries
 
     def list_options(self, query: str):
@@ -55,17 +71,10 @@ class International(ScrapingUtilities):
         """
         query = query.lower()
         if query in self.__selections:
-            elems = [
-                self.soup.select(s)[0]
-                for s in self.__selections[query]
-            ]
-            options = [e.getText() for e in elems]
+            options = self.__selections[query].list_options()
         elif query in self.__dropdowns:
-            elems = self.soup.select(
-                f"{self.__dropdowns[query]} > div > a"
-            )
-            options = [e.getText() for e in elems]
-        elif query in self.__checkboxes:
+            options = self.__dropdowns[query].list_options()
+        elif query in self.__switches:
             options = ["True", "False"]
         else:
             raise fangraphs.exceptions.InvalidFilterQuery(query)
@@ -78,23 +87,12 @@ class International(ScrapingUtilities):
         :return:
         """
         query = query.lower()
-        option = ""
         if query in self.__selections:
-            for sel in self.__selections[query]:
-                elem = self.soup.select(sel)[0]
-                if "active" in elem.get("class"):
-                    option = elem.getText()
-                    break
+            option = self.__selections[query].current_option()
         elif query in self.__dropdowns:
-            elem = self.soup.select(
-                f"{self.__dropdowns[query]} > div > span"
-            )[0]
-            option = elem.getText()
-        elif query in self.__checkboxes:
-            elem = self.soup.select(
-                self.__selections["stat"][0]
-            )
-            option = "True" if ",to" in elem[0].get("href") else "False"
+            option = self.__dropdowns[query].current_option(opt_type=3)
+        elif query in self.__switches:
+            option = "True" if ",to" in self.page.url else "False"
         else:
             raise fangraphs.exceptions.InvalidFilterQuery(query)
         return option
@@ -110,65 +108,19 @@ class International(ScrapingUtilities):
         query = query.lower()
         self._close_ad()
         if query in self.__selections:
-            self.__configure_selection(query, option)
+            self.__selections[query].configure(self.page, option)
         elif query in self.__dropdowns:
-            self.__configure_dropdown(query, option)
-        elif query in self.__checkboxes:
-            self.__configure_checkbox(query, option)
+            self.__dropdowns[query].configure(self.page, option)
+        elif query in self.__switches:
+            options = [o.lower() for o in self.list_options(query)]
+            if option not in options:
+                raise fangraphs.exceptions.InvalidFilterOption(option)
+            if option == self.current_option(query):
+                return
+            self.page.click(self.__switches[query])
         else:
             raise fangraphs.exceptions.InvalidFilterQuery(query)
         self._refresh_parser(waitfor=self.__waitfor)
-
-    def __configure_selection(self, query: str, option: str):
-        """
-        Configures a selection-class filter query to an option.
-
-        :param query: The selection-class filter query to be configured
-        :param option: The option to set the filter query to
-        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
-        """
-        options = self.list_options(query)
-        try:
-            index = options.index(option)
-        except ValueError as err:
-            raise fangraphs.exceptions.InvalidFilterOption from err
-        self.page.click(
-            self.__selections[query][index]
-        )
-
-    def __configure_dropdown(self, query: str, option: str):
-        """
-        Configures a dropdown-class filter query to an option.
-
-        :param query: The dropdown-class filter query to be configured
-        :param option: The option to set the filter query to
-        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
-        """
-        options = self.list_options(query)
-        try:
-            index = options.index(option)
-        except ValueError as err:
-            raise fangraphs.exceptions.InvalidFilterOption from err
-        self.page.click(self.__dropdowns[query])
-        elem = self.page.query_selector_all(
-            f"{self.__dropdowns[query]} > div > a"
-        )[index]
-        elem.click()
-
-    def __configure_checkbox(self, query: str, option: str):
-        """
-        Configures a checkbox-class filter query to an option.
-
-        :param query: The checkbox-class filter query to be configured
-        :param option: The option to set the filter query to
-        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
-        """
-        options = self.list_options(query)
-        if option not in options:
-            raise fangraphs.exceptions.InvalidFilterOption
-        if option == self.current_option(query):
-            return
-        self.page.click(self.__checkboxes[query])
 
     def export(self, path=""):
         """

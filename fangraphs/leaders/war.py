@@ -7,6 +7,7 @@ Scraper for the Combined WAR Leaderboards page.
 
 import fangraphs.exceptions
 from fangraphs.leaders import ScrapingUtilities
+from fangraphs import selectors
 from fangraphs.selectors import leaders_sel
 
 
@@ -16,8 +17,7 @@ class WAR(ScrapingUtilities):
 
     .. _Combined WAR Leaderboards: https://www.fangraphs.com/warleaders.aspx
     """
-    __dropdowns = leaders_sel.WAR.dropdowns
-    __dropdown_options = leaders_sel.WAR.dropdown_options
+    __dropdowns = {}
     __waitfor = leaders_sel.WAR.waitfor
 
     address = "https://fangraphs.com/warleaders.aspx"
@@ -28,6 +28,14 @@ class WAR(ScrapingUtilities):
         """
         super().__init__(browser, self.address)
         self.reset(waitfor=self.__waitfor)
+        self.compile_selectors()
+
+    def compile_selectors(self):
+        for cat, sel in leaders_sel.WAR.dropdowns.items():
+            options = leaders_sel.WAR.dropdown_options[cat]
+            self.__dropdowns.setdefault(
+                cat, selectors.Dropdowns(self.soup, sel, "> div > ul > li", options)
+            )
 
     @classmethod
     def list_queries(cls):
@@ -52,10 +60,7 @@ class WAR(ScrapingUtilities):
         """
         query = query.lower()
         if query in self.__dropdowns:
-            elems = self.soup.select(
-                f"{self.__dropdown_options[query]} > ul > li"
-            )
-            options = [e.getText() for e in elems]
+            options = self.__dropdowns[query].list_options()
         else:
             raise fangraphs.exceptions.InvalidFilterQuery(query)
         return options
@@ -71,8 +76,7 @@ class WAR(ScrapingUtilities):
         """
         query = query.lower()
         if query in self.__dropdowns:
-            elem = self.soup.select(self.__dropdowns[query])[0]
-            option = elem.get("value")
+            option = self.__dropdowns[query].current_option(opt_type=1)
         else:
             raise fangraphs.exceptions.InvalidFilterQuery(query)
         return option
@@ -88,29 +92,10 @@ class WAR(ScrapingUtilities):
         query = query.lower()
         self._close_ad()
         if query in self.__dropdowns:
-            self.__configure_dropdown(query, option)
+            self.__dropdowns[query].configure(self.page, option)
         else:
             raise fangraphs.exceptions.InvalidFilterQuery(query)
         self._refresh_parser(waitfor=self.__waitfor)
-
-    def __configure_dropdown(self, query: str, option: str):
-        """
-        Configures a dropdown-class filter query to an option.
-
-        :param query: The dropdown-class filter query to be configured
-        :param option: The option to set the filter query to
-        :raises FanGraphs.exceptions.InvalidFilterOption: Invalid argument ``option``
-        """
-        options = self.list_options(query)
-        try:
-            index = options.index(option)
-        except ValueError as err:
-            raise fangraphs.exceptions.InvalidFilterOption(query, option) from err
-        self.page.click(self.__dropdowns[query])
-        elem = self.page.query_selector_all(
-            f"{self.__dropdown_options} > ul > li"
-        )[index]
-        elem.click()
 
     def export(self, path=""):
         """
