@@ -1,6 +1,15 @@
 CHANGES
 =======
 
+v1.1.0
+------
+
+* Update documentation, add quickstart
+* Update documentation, add quickstart
+* Restructure classes to allow context manager syntax
+* Update requirements
+* Release v1.0.2
+
 v1.0.2
 ------
 
