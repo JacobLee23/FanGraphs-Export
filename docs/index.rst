@@ -4,6 +4,7 @@ FanGraphs documentation
 .. toctree::
     :maxdepth: 4
 
+    quickstart
     api_reference
 
 
