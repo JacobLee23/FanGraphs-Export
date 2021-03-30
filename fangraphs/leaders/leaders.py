@@ -776,7 +776,7 @@ class Splits(ScrapingUtilities):
 
         :param quick_split: The quick split to invoke
         :param autoupdate: If ``True``, :py:meth:`reset_filters` will be called
-        :raises FanGraphs.exceptions.InvalidQuickSplitsException: Invalid argument ``quick_split``
+        :raises FanGraphs.exceptions.InvalidQuickSplits: Invalid argument ``quick_split``
         """
         quick_split = quick_split.lower()
         try:
