@@ -13,10 +13,11 @@ Fangraphs
 
     fangraphs.exceptions
     fangraphs.leaders
+    fangraphs.projections
     fangraphs.selectors
 
 Leaders
-------------------------------------------------------------------------------
+-------
 
 .. autosummary::
 
@@ -24,8 +25,17 @@ Leaders
     fangraphs.leaders.leaders
 
 
+Projections
+-----------
+
+.. autosummary::
+
+    fangraphs.projections
+    fangraphs.projections
+
+
 Exceptions
-------------------------------------------------------------------------------
+----------
 
 .. autosummary::
 
@@ -33,9 +43,10 @@ Exceptions
 
 
 Selectors
-------------------------------------------------------------------------------
+---------
 
 .. autosummary::
 
     fangraphs.selectors
     fangraphs.selectors.leaders_sel
+    fangraphs.selectors.proj_sel

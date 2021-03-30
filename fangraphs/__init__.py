@@ -78,17 +78,14 @@ class ScrapingUtilities:
         if elem:
             elem.click()
 
-    def export(self, path=f"out/{dt.datetime.now().strftime(FORMAT)}.csv"):
+    def export(self, *, path):
         """
         Uses the **Export Data** button on the webpage to export the current leaderboard.
-        The data will be exported as a CSV file and the file will be saved to *out/*.
-        The file will be saved to the filepath ``path``, if specified.
-        Otherwise, the file will be saved to the filepath *./out/%d.%m.%y %H.%M.%S.csv*
+        The file will be saved to the filepath determined by ``path``.
 
         :param path: The path to save the exported data to
         """
         self._close_ad()
-        path = path if os.path.splitext(path)[1] == ".csv" else f"{path}.csv"
         with self.page.expect_download() as down_info:
             self.page.click(self.export_data)
         download = down_info.value
