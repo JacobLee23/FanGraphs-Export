@@ -24,3 +24,5 @@ class Projections:
         "team": "#ProjectionBoard1_rcbTeam_DropDown",
         "league": "#ProjectionBoard1_rcbLeague_DropDown"
     }
+    waitfor = ""
+    export_data = "#ProjectionBoard1_cmdCSV"

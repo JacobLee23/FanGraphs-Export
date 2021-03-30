@@ -24,11 +24,14 @@ class GameSpan(ScrapingUtilities):
     __selections = {}
     __dropdowns = {}
     __waitfor = leaders_sel.GameSpan.waitfor
+    __export_data = leaders_sel.GameSpan.export_data
 
     address = "https://fangraphs.com/leaders/special/60-game-span"
 
     def __init__(self):
-        super().__init__(self.address, waitfor=self.__waitfor)
+        super().__init__(
+            self.address, selector_mod=leaders_sel.GameSpan
+        )
 
     def __enter__(self):
         self._browser_init()
@@ -116,17 +119,6 @@ class GameSpan(ScrapingUtilities):
             raise fangraphs.exceptions.InvalidFilterQuery(query)
         self._refresh_parser()
 
-    def export(self, path=""):
-        """
-        Uses the **Export Data** button on the webpage to export the current leaderboard.
-        The data will be exported as a CSV file and the file will be saved to *out/*.
-        The file will be saved to the filepath ``path``, if specified.
-        Otherwise, the file will be saved to the filepath *./out/%d.%m.%y %H.%M.%S.csv*
-
-        :param path: The path to save the exported data to
-        """
-        self.export_data(".data-export", path)
-
 
 class International(ScrapingUtilities):
     """
@@ -137,12 +129,13 @@ class International(ScrapingUtilities):
     __selections = {}
     __dropdowns = {}
     __switches = {}
-    __waitfor = leaders_sel.International.waitfor
 
     address = "https://www.fangraphs.com/leaders/international"
 
     def __init__(self):
-        super().__init__(self.address, waitfor=self.__waitfor)
+        super().__init__(
+            self.address, selector_mod=leaders_sel.International
+        )
 
     def __enter__(self):
         self._browser_init()
@@ -243,17 +236,6 @@ class International(ScrapingUtilities):
             raise fangraphs.exceptions.InvalidFilterQuery(query)
         self._refresh_parser()
 
-    def export(self, path=""):
-        """
-        Uses the **Export Data** button on the webpage to export the current leaderboard.
-        The data will be exported as a CSV file and the file will be saved to *out/*.
-        The file will be saved to the filepath ``path``, if specified.
-        Otherwise, the file will be saved to the filepath *./out/%d.%m.%y %H.%M.%S.csv*
-
-        :param path: The path to save the exported data to
-        """
-        self.export_data(".data-export", path)
-
 
 class MajorLeague(ScrapingUtilities):
     """
@@ -272,7 +254,9 @@ class MajorLeague(ScrapingUtilities):
     address = "https://fangraphs.com/leaders.aspx"
 
     def __init__(self):
-        super().__init__(self.address, waitfor="")
+        super().__init__(
+            self.address, selector_mod=leaders_sel.MajorLeague
+        )
 
     def __enter__(self):
         self._browser_init()
@@ -379,17 +363,6 @@ class MajorLeague(ScrapingUtilities):
             self.page.click(self.__buttons[query])
         self._refresh_parser()
 
-    def export(self, path=""):
-        """
-        Uses the **Export Data** button on the webpage to export the current leaderboard.
-        The data will be exported as a CSV file and the file will be saved to *out/*.
-        The file will be saved to the filepath ``path``, if specified.
-        Otherwise, the file will be saved to the filepath *./out/%d.%m.%y %H.%M.%S.csv*
-
-        :param path: The path to save the exported data to
-        """
-        self.export_data("#LeaderBoard1_cmdCSV", path)
-
 
 class SeasonStat(ScrapingUtilities):
     """
@@ -399,12 +372,13 @@ class SeasonStat(ScrapingUtilities):
     """
     __selections = {}
     __dropdowns = {}
-    __waitfor = leaders_sel.SeasonStat.waitfor
 
     address = "https://fangraphs.com/leaders/season-stat-grid"
 
     def __init__(self):
-        super().__init__(self.address, waitfor=self.__waitfor)
+        super().__init__(
+            self.address, selector_mod=leaders_sel.SeasonStat
+        )
 
     def __enter__(self):
         self._browser_init()
@@ -559,14 +533,15 @@ class Splits(ScrapingUtilities):
     __selections = {}
     __dropdowns = {}
     __splits = {}
-    __quick_splits = leaders_sel.Splits.quick_splits
     __switches = {}
-    __waitfor = leaders_sel.Splits.waitfor
+    __quick_splits = leaders_sel.Splits.quick_splits
 
     address = "https://fangraphs.com/leaders/splits-leaderboards"
 
     def __init__(self):
-        super().__init__(self.address, waitfor=self.__waitfor)
+        super().__init__(
+            self.address, selector_mod=leaders_sel.Splits
+        )
 
     def __enter__(self):
         self._browser_init()
@@ -788,17 +763,6 @@ class Splits(ScrapingUtilities):
         if autoupdate:
             self.update()
 
-    def export(self, path=""):
-        """
-        Uses the **Export Data** button on the webpage to export the current leaderboard.
-        The data will be exported as a CSV file and the file will be saved to *out/*.
-        The file will be saved to the filepath ``path``, if specified.
-        Otherwise, the file will be saved to the filepath *./out/%d.%m.%y %H.%M.%S.csv*
-
-        :param path: The path to save the exported data to
-        """
-        self.export_data(".data-export", path)
-
 
 class WAR(ScrapingUtilities):
     """
@@ -807,12 +771,13 @@ class WAR(ScrapingUtilities):
     .. _Combined WAR Leaderboards: https://www.fangraphs.com/warleaders.aspx
     """
     __dropdowns = {}
-    __waitfor = leaders_sel.WAR.waitfor
 
     address = "https://fangraphs.com/warleaders.aspx"
 
     def __init__(self):
-        super().__init__(self.address, waitfor=self.__waitfor)
+        super().__init__(
+            self.address, selector_mod=leaders_sel.WAR
+        )
 
     def __enter__(self):
         self._browser_init()

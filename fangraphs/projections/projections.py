@@ -23,7 +23,9 @@ class Projections(ScrapingUtilities):
     address = "https://fangraphs.com/projections.aspx"
 
     def __init__(self):
-        super().__init__(self.address)
+        super().__init__(
+            self.address, selector_mod=proj_sel.Projections
+        )
 
     def __enter__(self):
         self._browser_init()

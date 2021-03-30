@@ -29,6 +29,7 @@ class GameSpan:
         "determine": ".controls-stats.stat-determined > div:nth-child(1) > .fg-selection-box__selection"
     }
     waitfor = ".fg-data-grid.table-type"
+    export_data = ".data-export"
 
 
 class International:
@@ -58,6 +59,7 @@ class International:
         "split_seasons": ".controls-stats > .fg-checkbox"
     }
     waitfor = ".fg-data-grid.table-type"
+    export_data = ".data-export"
 
 
 class MajorLeague:
@@ -105,6 +107,8 @@ class MajorLeague:
         "age1": "#LeaderBoard1_cmdAge",
         "age2": "#LeaderBoard1_cmdAge"
     }
+    waitfor = ""
+    export_data = "#LeaderBoard1_cmdCSV"
 
 
 class SeasonStat:
@@ -136,6 +140,7 @@ class SeasonStat:
         "value": ".season-grid-controls-dropdown-row-stats > div:nth-child(9)"
     }
     waitfor = ".fg-data-grid.undefined"
+    export_data = ""
 
 
 class Splits:
@@ -211,6 +216,7 @@ class Splits:
         "auto_pt": "#stack-buttons > div:nth-child(3)"
     }
     waitfor = ".fg-data-grid.undefined"
+    export_data = ".data-export"
 
 
 class WAR:
@@ -228,3 +234,4 @@ class WAR:
         "type": "#WARBoard1_rcbType_DropDown"
     }
     waitfor = ".rgMasterTable"
+    export_data = "#WARBoard1_cmdCSV"
