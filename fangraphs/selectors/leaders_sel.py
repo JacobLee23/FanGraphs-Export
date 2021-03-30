@@ -2,7 +2,7 @@
 # FanGraphs/selectors/leaders_sel.py
 
 """
-CSS selectors for the classes in :py:mod:`FanGraphs.leaders`.
+CSS selectors for the classes in :py:mod:`fangraphs.leaders.leaders`.
 """
 
 
