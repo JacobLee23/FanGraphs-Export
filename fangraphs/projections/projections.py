@@ -44,3 +44,41 @@ class Projections(ScrapingUtilities):
             self.__dropdowns.setdefault(
                 cat, selectors.Dropdowns(self.soup, sel, "> div > ul > li", options)
             )
+
+    @classmethod
+    def list_queries(cls):
+        queries = []
+        queries.extend(list(cls.__selections))
+        queries.extend(list(cls.__dropdowns))
+        return queries
+
+    def list_options(self, query: str):
+        query = query.lower()
+        if query in self.__selections:
+            option = self.__selections[query].list_options()
+        elif query in self.__dropdowns:
+            option = self.__dropdowns[query].list_options()
+        else:
+            raise fangraphs.exceptions.InvalidFilterQuery(query)
+        return option
+
+    def current_option(self, query: str):
+        query = query.lower()
+        if query in self.__selections:
+            option = self.__selections[query].current_option()
+        elif query in self.__dropdowns:
+            option = self.__dropdowns[query].current_option(opt_type=1)
+        else:
+            raise fangraphs.exceptions.InvalidFilterQuery(query)
+        return option
+
+    def configure(self, query: str, option: str):
+        query = query.lower()
+        self._close_ad()
+        if query in self.__selections:
+            self.__selections[query].configure(self.page, option)
+        elif query in self.__dropdowns:
+            self.__dropdowns[query].configure(self.page, option)
+        else:
+            raise fangraphs.exceptions.InvalidFilterQuery(query)
+        self._refresh_parser()
