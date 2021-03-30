@@ -5,14 +5,10 @@
 Subpackage for scraping the FanGraphs **Leaders** pages.
 """
 
-import datetime as dt
 import os
 
 import bs4
 from playwright.sync_api import sync_playwright
-
-
-FORMAT = "%d.%m.%y %H.%M.%S"
 
 
 class ScrapingUtilities:
@@ -77,6 +73,51 @@ class ScrapingUtilities:
             return
         if elem:
             elem.click()
+
+    @staticmethod
+    def list_queries():
+        """
+        Lists the possible filter queries which can be used to modify search results.
+
+        :return: Filter queries which can be used to modify search results
+        :rtype: list
+        """
+        raise NotImplementedError
+
+    @staticmethod
+    def list_options(query: str):
+        """
+        Lists the possible options which a filter query can be configured to.
+
+        :param query: The filter query
+        :return: Options which the filter query can be configured to
+        :rtype: list
+        :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
+        """
+        raise NotImplementedError
+
+    @staticmethod
+    def current_option(query: str):
+        """
+        Retrieves the option which a filter query is currently set to.
+
+        :param query: The filter query being retrieved of its current option
+        :return: The option which the filter query is currently set to
+        :rtype: str
+        :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
+        """
+        raise NotImplementedError
+
+    @staticmethod
+    def configure(query: str, option: str):
+        """
+        Configures a filter query to a specified option.
+
+        :param query: The filter query to be configured
+        :param option: The option to set the filter query to
+        :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
+        """
+        raise NotImplementedError
 
     def export(self, *, path):
         """
