@@ -10,7 +10,7 @@ import datetime
 import os
 
 import fangraphs.exceptions
-from fangraphs.leaders import ScrapingUtilities
+from fangraphs import ScrapingUtilities
 from fangraphs import selectors
 from fangraphs.selectors import leaders_sel
 
