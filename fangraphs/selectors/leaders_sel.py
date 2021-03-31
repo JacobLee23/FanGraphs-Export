@@ -2,13 +2,13 @@
 # FanGraphs/selectors/leaders_sel.py
 
 """
-CSS selectors for the classes in :py:mod:`FanGraphs.leaders`.
+CSS selectors for the classes in :py:mod:`fangraphs.leaders`.
 """
 
 
 class GameSpan:
     """
-    CSS selectors for :py:mod:`fangraphs.leaders.gamespan`.
+    CSS selectors for :py:class:`fangraphs.leaders.GameSpan`.
     """
     selections = {
         "stat": [
@@ -29,11 +29,12 @@ class GameSpan:
         "determine": ".controls-stats.stat-determined > div:nth-child(1) > .fg-selection-box__selection"
     }
     waitfor = ".fg-data-grid.table-type"
+    export_data = ".data-export"
 
 
 class International:
     """
-    CSS selectors for :py:mod:`fangraphs.leaders.international`.
+    CSS selectors for :py:class:`fangraphs.leaders.International`.
     """
     selections = {
         "stat": [
@@ -58,11 +59,12 @@ class International:
         "split_seasons": ".controls-stats > .fg-checkbox"
     }
     waitfor = ".fg-data-grid.table-type"
+    export_data = ".data-export"
 
 
 class MajorLeague:
     """
-    CSS selectors for :py:mod:`fangraphs.leaders.majorleague`.
+    CSS selectors for :py:class:`fangraphs.leaders.MajorLeague`.
     """
     selections = {
         "group": "#LeaderBoard1_tsGroup",
@@ -105,11 +107,13 @@ class MajorLeague:
         "age1": "#LeaderBoard1_cmdAge",
         "age2": "#LeaderBoard1_cmdAge"
     }
+    waitfor = ""
+    export_data = "#LeaderBoard1_cmdCSV"
 
 
 class SeasonStat:
     """
-    CSS selectors for :py:mod:`fangraphs.leaders.seasonstat`.
+    CSS selectors for :py:class:`fangraphs.leaders.SeasonStat`.
     """
     selections = {
         "stat": [
@@ -136,11 +140,12 @@ class SeasonStat:
         "value": ".season-grid-controls-dropdown-row-stats > div:nth-child(9)"
     }
     waitfor = ".fg-data-grid.undefined"
+    export_data = ""
 
 
 class Splits:
     """
-    CSS selectors for :py:mod:`fangraphs.leaders.splits`.
+    CSS selectors for :py:class:`fangraphs.leaders.Splits`.
     """
     selections = {
         "group": [
@@ -211,11 +216,12 @@ class Splits:
         "auto_pt": "#stack-buttons > div:nth-child(3)"
     }
     waitfor = ".fg-data-grid.undefined"
+    export_data = ".data-export"
 
 
 class WAR:
     """
-    CSS selectors for :py:mod:`fangraphs.leaders.war`.
+    CSS selectors for :py:class:`fangraphs.leaders.WAR`.
     """
     dropdowns = {
         "season": "#WARBoard1_rcbSeason_Input",
@@ -228,3 +234,4 @@ class WAR:
         "type": "#WARBoard1_rcbType_DropDown"
     }
     waitfor = ".rgMasterTable"
+    export_data = "#WARBoard1_cmdCSV"

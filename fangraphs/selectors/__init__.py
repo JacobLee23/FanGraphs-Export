@@ -29,7 +29,7 @@ class Selections:
     def current_option(self):
         if isinstance(self.selector, str):
             elem = self.soup.select(f"{self.selector} .rtsLink.rtsSelected")
-            option = elem.getText()
+            option = elem.getText() if elem else ""
         elif isinstance(self.selector, list):
             option = ""
             for sel in self.selector:

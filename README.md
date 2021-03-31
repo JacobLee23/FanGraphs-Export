@@ -45,7 +45,10 @@ See the [Playwright documentation](https://playwright.dev/python/docs/intro/) fo
 ## Documentation
 
 The **Read the Docs** documentation can be found [here](https://fangraphs-export.readthedocs.io/en/latest/?).
+
 ## Basic Usage
+
+*Note: A more in-depth quickstart is available in the [documentation](#Documentation).*
 
 Each group of FanGraphs pages (e.g. Leaders, Projections, etc.) which is covered has an individual module.
 Each webpage in each group of webpages has an individual class covering the page.
@@ -53,6 +56,7 @@ Each webpage in each group of webpages has an individual class covering the page
 Covered FanGraphs webpage groups:
 
 - [Leaders](#Leaders)
+- [Projections](#Projections)
 
 ### Leaders
 
@@ -66,7 +70,7 @@ FanGraphs Leaders pages:
 - [WAR Leaderboards](https://fangraphs.com/warleaders.aspx)
 
 ```python
-from fangraphs.leaders import leaders
+from fangraphs import leaders
 
 mll = leaders.MajorLeague()
 splits = leaders.Splits()
@@ -74,6 +78,18 @@ ssg = leaders.SeasonStat()
 gsl = leaders.GameSpan()
 intl = leaders.International()
 war = leaders.WAR()
+```
+
+### Projections
+
+FanGraphs Projections pages:
+
+- [Projection Leaderboards](https://fangraphs.com/projections.aspx)
+
+```python
+from fangraphs import projections
+
+projl = projections.Projections()
 ```
 
 ## Tests
