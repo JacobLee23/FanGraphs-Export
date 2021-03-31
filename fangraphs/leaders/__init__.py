@@ -32,6 +32,7 @@ class GameSpan(ScrapingUtilities):
         super().__init__(
             self.address, selector_mod=leaders_sel.GameSpan
         )
+        self.__enter__()
 
     def __enter__(self):
         self._browser_init()
@@ -136,6 +137,7 @@ class International(ScrapingUtilities):
         super().__init__(
             self.address, selector_mod=leaders_sel.International
         )
+        self.__enter__()
 
     def __enter__(self):
         self._browser_init()
@@ -257,6 +259,7 @@ class MajorLeague(ScrapingUtilities):
         super().__init__(
             self.address, selector_mod=leaders_sel.MajorLeague
         )
+        self.__enter__()
 
     def __enter__(self):
         self._browser_init()
@@ -379,6 +382,7 @@ class SeasonStat(ScrapingUtilities):
         super().__init__(
             self.address, selector_mod=leaders_sel.SeasonStat
         )
+        self.__enter__()
 
     def __enter__(self):
         self._browser_init()
@@ -542,6 +546,7 @@ class Splits(ScrapingUtilities):
         super().__init__(
             self.address, selector_mod=leaders_sel.Splits
         )
+        self.__enter__()
 
     def __enter__(self):
         self._browser_init()
@@ -778,6 +783,7 @@ class WAR(ScrapingUtilities):
         super().__init__(
             self.address, selector_mod=leaders_sel.WAR
         )
+        self.__enter__()
 
     def __enter__(self):
         self._browser_init()
