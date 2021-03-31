@@ -2,13 +2,13 @@
 # FanGraphs/selectors/leaders_sel.py
 
 """
-CSS selectors for the classes in :py:mod:`fangraphs.leaders.leaders`.
+CSS selectors for the classes in :py:mod:`fangraphs.leaders`.
 """
 
 
 class GameSpan:
     """
-    CSS selectors for :py:class:`fangraphs.leaders.leaders.GameSpan`.
+    CSS selectors for :py:class:`fangraphs.leaders.GameSpan`.
     """
     selections = {
         "stat": [
@@ -34,7 +34,7 @@ class GameSpan:
 
 class International:
     """
-    CSS selectors for :py:class:`fangraphs.leaders.leaders.International`.
+    CSS selectors for :py:class:`fangraphs.leaders.International`.
     """
     selections = {
         "stat": [
@@ -64,7 +64,7 @@ class International:
 
 class MajorLeague:
     """
-    CSS selectors for :py:class:`fangraphs.leaders.leaders.MajorLeague`.
+    CSS selectors for :py:class:`fangraphs.leaders.MajorLeague`.
     """
     selections = {
         "group": "#LeaderBoard1_tsGroup",
@@ -113,7 +113,7 @@ class MajorLeague:
 
 class SeasonStat:
     """
-    CSS selectors for :py:class:`fangraphs.leaders.leaders.SeasonStat`.
+    CSS selectors for :py:class:`fangraphs.leaders.SeasonStat`.
     """
     selections = {
         "stat": [
@@ -145,7 +145,7 @@ class SeasonStat:
 
 class Splits:
     """
-    CSS selectors for :py:class:`fangraphs.leaders.leaders.Splits`.
+    CSS selectors for :py:class:`fangraphs.leaders.Splits`.
     """
     selections = {
         "group": [
@@ -221,7 +221,7 @@ class Splits:
 
 class WAR:
     """
-    CSS selectors for :py:class:`fangraphs.leaders.leaders.WAR`.
+    CSS selectors for :py:class:`fangraphs.leaders.WAR`.
     """
     dropdowns = {
         "season": "#WARBoard1_rcbSeason_Input",

@@ -28,7 +28,7 @@ The module where the class belongs depends on the group the webpage is in.
 The class depends on the webpage itself.
 
 +---------------------------+---------------------------+---------------------------------------+
-| FanGraphs webpage group   | ``fangraphs`` package     | ``fangraphs`` module                  |
+| FanGraphs webpage group   | ``fangraphs`` package     | ``fangraphs`` package                 |
 +===========================+===========================+=======================================+
 | Leaders                   | ``fangraphs.leaders``     | ``fangraphs.leaders.leaders``         |
 +---------------------------+---------------------------+---------------------------------------+
@@ -40,21 +40,21 @@ Leaders
 
 FanGraphs webpages under the **Leaders** tab.
 
-+-------------------------------+-----------------------------------------------+
-| FanGraphs **Leaders** page    | ``fangraphs.leaders.leaders`` class           |
-+===============================+===============================================+
-| `60-Game Span Leaderboards`_  | ``fangraphs.leaders.leaders.GameSpan``        |
-+-------------------------------+-----------------------------------------------+
-| `KBO Leaders`_                | ``fangraphs.leaders.leaders.International``   |
-+-------------------------------+-----------------------------------------------+
-| `Major League Leaders`_       | ``fangraphs.leaders.leaders.MajorLeague``     |
-+-------------------------------+-----------------------------------------------+
-| `Season Stat Grid`_           | ``fangraphs.leaders.leaders.SeasonStat``      |
-+-------------------------------+-----------------------------------------------+
-| `Splits Leaderboards`_        | ``fangraphs.leaders.leaders.Splits``          |
-+-------------------------------+-----------------------------------------------+
-| `Combined WAR Leaderboards`_  | ``fangraphs.leaders.leaders.WAR``             |
-+-------------------------------+-----------------------------------------------+
++-------------------------------+---------------------------------------+
+| FanGraphs **Leaders** page    | ``fangraphs.leaders`` class           |
++===============================+=======================================+
+| `60-Game Span Leaderboards`_  | ``fangraphs.leaders.GameSpan``        |
++-------------------------------+---------------------------------------+
+| `KBO Leaders`_                | ``fangraphs.leaders.International``   |
++-------------------------------+---------------------------------------+
+| `Major League Leaders`_       | ``fangraphs.leaders.MajorLeague``     |
++-------------------------------+---------------------------------------+
+| `Season Stat Grid`_           | ``fangraphs.leaders.SeasonStat``      |
++-------------------------------+---------------------------------------+
+| `Splits Leaderboards`_        | ``fangraphs.leaders.Splits``          |
++-------------------------------+---------------------------------------+
+| `Combined WAR Leaderboards`_  | ``fangraphs.leaders.WAR``             |
++-------------------------------+---------------------------------------+
 
 .. _60-Game Span Leaderboards: https://fangraphs.com/leaders/special/game-span
 .. _KBO Leaders: https://fangraphs.com/leaders/international
@@ -69,11 +69,11 @@ Projections
 
 FanGraphs webpages under the **Projections** tab.
 
-+-----------------------------------+---------------------------------------------------+
-| FanGraphs **Projections** page    | ``fangraphs.projections.projections`` class       |
-+===================================+===================================================+
-| `Projections Leaderboards`_       | ``fangraphs.projections.projections.Projections`` |
-+-----------------------------------+---------------------------------------------------+
++-----------------------------------+---------------------------------------+
+| FanGraphs **Projections** page    | ``fangraphs.projections`` class       |
++===================================+=======================================+
+| `Projections Leaderboards`_       | ``fangraphs.projections.Projections`` |
++-----------------------------------+---------------------------------------+
 
 Note: The **Projections Leaderboards** page includes all **Projections** pages under the following subcategories:
 
@@ -94,7 +94,7 @@ Leaders
 
 .. code-block:: python
 
-    from fangraphs.leaders import leaders
+    from fangraphs import leaders
 
     gsl = leaders.GameSpan()
     inter = leaders.International()
@@ -108,15 +108,15 @@ Projections
 
 .. code-block:: python
 
-    from fangraphs.projections import projections
+    from fangraphs import projections
     proj = projections.Projections()
 
 Alternatively, the classes can be used as context managers:
 
 .. code-block:: python
 
-    from fangraphs.leaders import leaders
-    from fangraphs.projections import projections
+    from fangraphs import leaders
+    from fangraphs import projections
 
     with leaders.ScraperClass() as scraper:
         # Do stuff here
@@ -131,7 +131,7 @@ Below is a basic example with a ``MajorLeague`` object:
 
 .. code-block:: python
 
-    from fangraphs.leaders import leaders
+    from fangraphs import leaders
     scraper = leaders.MajorLeague()
     scraper.configure("stat", "Pitching")
     scraper.configure("team", "LAD")
@@ -142,7 +142,7 @@ Or, using the context manager syntax:
 
 .. code-block:: python
 
-    from fangraphs.leaders import leaders
+    from fangraphs import leaders
     with leaders.MajorLeague() as scraper:
         scraper.configure("stat", "Pitching")
         scraper.configure("team", "LAD")

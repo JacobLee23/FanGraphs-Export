@@ -2,13 +2,13 @@
 # FanGraphs/selectors/proj_sel.py
 
 """
-CSS selectors for the classes in :py:mod:`fangraphs.projections.projections`.
+CSS selectors for the classes in :py:mod:`fangraphs.projections`.
 """
 
 
 class Projections:
     """
-    CSS selectors for :py:class:`fangraphs.projections.projections.Projections`.
+    CSS selectors for :py:class:`fangraphs.projections.Projections`.
     """
     selections = {
         "stat": "#ProjectionBoard1_tsStats",

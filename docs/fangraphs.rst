@@ -22,7 +22,6 @@ Leaders
 .. autosummary::
 
     fangraphs.leaders
-    fangraphs.leaders.leaders
 
 
 Projections
@@ -30,7 +29,6 @@ Projections
 
 .. autosummary::
 
-    fangraphs.projections
     fangraphs.projections
 
 
