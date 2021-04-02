@@ -1,9 +1,11 @@
 #! python3
 # fangraphs/depth_charts/__init__.py
 
+import csv
+import os
+
 from fangraphs import ScrapingUtilities
 from fangraphs import selectors
-from fangraphs.depth_charts import export_utilities
 import fangraphs.exceptions
 from fangraphs.selectors import dcharts_sel
 
@@ -81,4 +83,64 @@ class DepthCharts(ScrapingUtilities):
 
     def export(self, *, path):
         self._close_ad()
-        pass
+        current_type = self.current_option("type")
+        exp = _Export(
+            current_type, self.soup, path
+        )
+        exp.export()
+
+
+def _write_table_headers(writer: csv.writer, node, headers_sel):
+    elems = node.select(headers_sel)
+    headers = [e.getText() for e in elems]
+    writer.writerow(headers)
+
+
+def _write_table_rows(writer: csv.writer, node, rows_sel):
+    elems = node.select(rows_sel)
+    rows = [[e.getText() for e in row.select("td")] for row in elems]
+    writer.writerows(rows)
+
+
+class _Export:
+    """
+    Exports the **Depth Charts** data tables.
+    """
+    headers = "thead > tr > th"
+    rows = "tr[class*='depth']"
+    tables = "#content > div > table"
+    table_names = "#content > div > a"
+
+    def __init__(self, ttype, soup, path):
+        self.ttype = ttype.lower()
+        self.soup = soup
+        if not os.path.isdir(path):
+            raise Exception(
+                "Argument 'path' must be a valid path to a directory"
+            )
+        self.path = os.path.normpath(path)
+
+    def get_tables(self):
+        tables_sel = self.soup.select(self.tables)
+        tnames_sel = self.soup.select(self.table_names)
+        tnames = [e.getText() for e in tnames_sel]
+        if self.ttype in ["standings", "baseruns", "totals"]:
+            tnames.insert(0, "General")
+        elif self.ttype in [
+            "depth charts",
+            "C", "1B", "2B", "3B", "LF", "CF", "RF", "SP", "RP", "DH"
+        ]:
+            tnames.append("General")
+        else:
+            raise Exception
+        tables = dict(zip(tnames, tables_sel))
+        return tables
+
+    def export(self):
+        tables = self.get_tables()
+        for tname, telem in tables.items():
+            filepath = os.path.join(self.path, f"{tname}.csv")
+            with open(filepath, "w", newline="") as csvfile:
+                writer = csv.writer(csvfile)
+                _write_table_headers(writer, telem, self.headers)
+                _write_table_rows(writer, telem, self.rows)
