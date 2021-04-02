@@ -120,7 +120,7 @@ class _Export:
             )
         self.path = os.path.normpath(path)
 
-    def get_tables(self):
+    def _get_tables(self):
         tables_sel = self.soup.select(self.tables)
         tnames_sel = self.soup.select(self.table_names)
         tnames = [e.getText() for e in tnames_sel]
@@ -137,7 +137,7 @@ class _Export:
         return tables
 
     def export(self):
-        tables = self.get_tables()
+        tables = self._get_tables()
         for tname, telem in tables.items():
             filepath = os.path.join(self.path, f"{tname}.csv")
             with open(filepath, "w", newline="") as csvfile:

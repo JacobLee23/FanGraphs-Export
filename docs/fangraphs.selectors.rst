@@ -14,6 +14,7 @@ Modules
 
     fangraphs.selectors.leaders_sel
     fangraphs.selectors.proj_sel
+    fangraphs.selectors.dcharts_sel
 
 
 Fangraphs.selectors.leaders\_sel
@@ -31,3 +32,10 @@ Fangraphs.selectors.proj\_sel
     :members:
     :show-inheritance:
 
+
+Fangraphs.selectors.dcharts\_sel
+--------------------------------
+
+.. automodule:: fangraphs.selectors.dcharts_sel
+    :members:
+    :show-inheritance:

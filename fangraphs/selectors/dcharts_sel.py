@@ -7,6 +7,9 @@ CSS selectors for the classes in :py:mod:`fangraphs.depth_charts`.
 
 
 class DepthCharts:
+    """
+    CSS selectors for :py:mod:`fangraphs.depth_charts`.
+    """
     selections = {
         "type": "#tsPosition"
     }
