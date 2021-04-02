@@ -2,13 +2,13 @@
 # fangraphs/selectors/dcharts_sel.py
 
 """
-CSS selectors for the classes in :py:mod:`fangraphs.depth_charts`.
+CSS selectors for the classes in :py:mod:`fangraphs.teams`.
 """
 
 
 class DepthCharts:
     """
-    CSS selectors for :py:mod:`fangraphs.depth_charts`.
+    CSS selectors for :py:class:`fangraphs.teams.DepthCharts`.
     """
     selections = {
         "type": "#tsPosition"

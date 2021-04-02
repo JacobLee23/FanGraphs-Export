@@ -1,5 +1,5 @@
 #! python3
-# fangraphs/depth_charts/__init__.py
+# fangraphs/teams/__init__.py
 
 import csv
 import os
@@ -7,7 +7,7 @@ import os
 from fangraphs import ScrapingUtilities
 from fangraphs import selectors
 import fangraphs.exceptions
-from fangraphs.selectors import dcharts_sel
+from fangraphs.selectors import teams_sel
 
 
 class DepthCharts(ScrapingUtilities):
@@ -23,7 +23,7 @@ class DepthCharts(ScrapingUtilities):
 
     def __init__(self):
         super().__init__(
-            self.address, selector_mod=dcharts_sel.DepthCharts
+            self.address, selector_mod=teams_sel.DepthCharts
         )
         self.__enter__()
 
@@ -37,11 +37,11 @@ class DepthCharts(ScrapingUtilities):
         self.quit()
 
     def __compile_selectors(self):
-        for cat, sel in dcharts_sel.DepthCharts.selections.items():
+        for cat, sel in teams_sel.DepthCharts.selections.items():
             self.__selections.setdefault(
                 cat, selectors.Selections(self.soup, sel, "> div > ul > li")
             )
-        for cat, sel in dcharts_sel.DepthCharts.dropdowns.items():
+        for cat, sel in teams_sel.DepthCharts.dropdowns.items():
             self.__dropdowns.setdefault(
                 cat, selectors.Dropdowns(self.soup, sel, "> ul > a")
             )

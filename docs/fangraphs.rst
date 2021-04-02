@@ -13,7 +13,7 @@ Fangraphs
 
     fangraphs.leaders
     fangraphs.projections
-    fangraphs.depth_charts
+    fangraphs.teams
     fangraphs.exceptions
     fangraphs.selectors
 
@@ -34,12 +34,12 @@ Projections
     fangraphs.projections
 
 
-Depth Charts
-------------
+Teams
+-----
 
 .. autosummary::
 
-    fangraphs.depth_charts
+    fangraphs.teams
 
 
 Exceptions
@@ -58,4 +58,4 @@ Selectors
     fangraphs.selectors
     fangraphs.selectors.leaders_sel
     fangraphs.selectors.proj_sel
-    fangraphs.selectors.dcharts_sel
+    fangraphs.selectors.teams_sel
