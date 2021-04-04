@@ -26,6 +26,7 @@ class Projections(ScrapingUtilities):
         super().__init__(
             self.address, selector_mod=proj_sel.Projections
         )
+        self.__enter__()
 
     def __enter__(self):
         self._browser_init()

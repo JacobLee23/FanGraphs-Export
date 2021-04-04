@@ -27,13 +27,15 @@ Each webpages which can be scraped has its own web scraper class.
 The module where the class belongs depends on the group the webpage is in.
 The class depends on the webpage itself.
 
-+---------------------------+---------------------------+---------------------------------------+
-| FanGraphs webpage group   | ``fangraphs`` package     | ``fangraphs`` package                 |
-+===========================+===========================+=======================================+
-| Leaders                   | ``fangraphs.leaders``     | ``fangraphs.leaders.leaders``         |
-+---------------------------+---------------------------+---------------------------------------+
-| Projections               | ``fangraphs.projections`` | ``fangraphs.projections.projections`` |
-+---------------------------+---------------------------+---------------------------------------+
++---------------------------+-------------------------------+
+| FanGraphs webpage group   | ``fangraphs`` package         |
++===========================+===============================+
+| Leaders                   | ``fangraphs.leaders``         |
++---------------------------+-------------------------------+
+| Projections               | ``fangraphs.projections``     |
++---------------------------+-------------------------------+
+| Depth Charts              | ``fangraphs.depth_charts``    |
++---------------------------+-------------------------------+
 
 Leaders
 ^^^^^^^
@@ -84,6 +86,26 @@ Note: The **Projections Leaderboards** page includes all **Projections** pages u
 
 .. _Projections Leaderboards: https://fangraphs.com/projections.aspx
 
+
+Teams
+^^^^^
+
+FanGraphs webpages under the **Teams** tab.
+
++-------------------------------+-----------------------------------+
+| FanGraphs **Teams** page      | ``fangraphs.teams`` class         |
++===============================+===================================+
+| `Team WAR Totals`_            | ``fangraphs.teams.DepthCharts``   |
++-------------------------------+-----------------------------------+
+| `Team Depth Charts`_          | ``fangraphs.teams.DepthCharts``   |
++-------------------------------+-----------------------------------+
+| `Positional Depth Charts`_    | ``fangraphs.teams.DepthCharts``   |
++-------------------------------+-----------------------------------+
+
+.. _Team WAR Totals: https://www.fangraphs.com/depthcharts.aspx?position=Team
+.. _Team Depth Charts: https://www.fangraphs.com/depthcharts.aspx?position=ALL&teamid=1
+.. _Positional Depth Charts: https://www.fangraphs.com/depthcharts.aspx?position=C
+
 Basic Usage
 -----------
 
@@ -111,17 +133,29 @@ Projections
     from fangraphs import projections
     proj = projections.Projections()
 
+Teams
+^^^^^
+
+.. code-block:: python
+
+    from fangraphs import teams
+    teamsl = teams.DepthCharts()
+
 Alternatively, the classes can be used as context managers:
 
 .. code-block:: python
 
     from fangraphs import leaders
     from fangraphs import projections
+    from fangraphs import teams
 
     with leaders.ScraperClass() as scraper:
         # Do stuff here
 
     with projections.ScraperClass() as scraper:
+        # Do stuff here
+
+    with teams.ScraperClass() as scraper:
         # Do stuff here
 
 Example Usage

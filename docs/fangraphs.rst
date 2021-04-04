@@ -11,10 +11,12 @@ Fangraphs
     :numbered:
     :maxdepth: 4
 
-    fangraphs.exceptions
     fangraphs.leaders
     fangraphs.projections
+    fangraphs.teams
+    fangraphs.exceptions
     fangraphs.selectors
+
 
 Leaders
 -------
@@ -30,6 +32,14 @@ Projections
 .. autosummary::
 
     fangraphs.projections
+
+
+Teams
+-----
+
+.. autosummary::
+
+    fangraphs.teams
 
 
 Exceptions
@@ -48,3 +58,4 @@ Selectors
     fangraphs.selectors
     fangraphs.selectors.leaders_sel
     fangraphs.selectors.proj_sel
+    fangraphs.selectors.teams_sel
