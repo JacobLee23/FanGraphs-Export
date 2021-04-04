@@ -173,16 +173,39 @@ class Team(ScrapingUtilities):
 
     @classmethod
     def list_queries(cls):
-        pass
+        queries = []
+        queries.extend(list(cls.__selections))
+        queries.extend(list(cls.__dropdowns))
+        return queries
 
     def list_options(self, query: str):
-        pass
+        query = query.lower()
+        if query in self.__selections:
+            options = self.__selections[query].list_options()
+        elif query in self.__dropdowns:
+            options = self.__dropdowns[query].list_options()
+        else:
+            raise fangraphs.exceptions.InvalidFilterQuery(query)
+        return options
 
     def current_option(self, query: str):
-        pass
+        query = query.lower()
+        if query in self.__selections:
+            option = self.__selections[query].current_option()
+        elif query in self.__dropdowns:
+            option = self.__dropdowns[query].current_options()
+        else:
+            raise fangraphs.exceptions.InvalidFilterQuery(query)
+        return option
 
     def configure(self, query: str, option: str):
-        pass
+        query = query.lower()
+        if query in self.__selections:
+            self.__selections[query].configure(option)
+        elif query in self.__dropdowns:
+            self.__dropdowns[query].configure(option)
+        else:
+            raise fangraphs.exceptions.InvalidFilterQuery(query)
 
     def export(self, *, path):
         pass
