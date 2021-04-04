@@ -135,6 +135,59 @@ class DepthCharts(ScrapingUtilities):
         exp.export()
 
 
+class Team(ScrapingUtilities):
+    """
+    Scraper for the FanGraphs `Teams`_ page.
+
+    .. _Team: https://fangraphs.com/teams
+    """
+    __selections = {}
+    __dropdowns = {}
+
+    address = "https://fangraphs.com/teams"
+
+    def __init__(self):
+        super().__init__(
+            self.address, selector_mod=teams_sel.Teams
+        )
+        self.__enter__()
+
+    def __enter__(self):
+        self._browser_init()
+        self.reset()
+        self.__compile_selectors()
+        return self
+
+    def __exit__(self, exc_type, value, traceback):
+        self.quit()
+
+    def __compile_selectors(self):
+        for cat, sel in teams_sel.Teams.selections:
+            self.__selections.setdefault(
+                cat, selectors.Selections(self.soup, sel, "> .cell")
+            )
+        for cat, sel in teams_sel.Teams.dropdowns:
+            self.__dropdowns.setdefault(
+                cat, selectors.Dropdowns(self.soup, sel, "> option")
+            )
+
+    @classmethod
+    def list_queries(cls):
+        pass
+
+    def list_options(self, query: str):
+        pass
+
+    def current_option(self, query: str):
+        pass
+
+    def configure(self, query: str, option: str):
+        pass
+
+    def export(self, *, path):
+        pass
+
+
 class _Export:
     """
     Exports the **Depth Charts** data tables.
