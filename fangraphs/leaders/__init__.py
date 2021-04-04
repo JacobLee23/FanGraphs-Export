@@ -2,7 +2,7 @@
 # FanGraphs/leaders/__init__.py
 
 """
-Scrpaer for the webpages under the FanGaphs **Leaders** tab.
+Scrapers for the webpages under the FanGaphs **Leaders** tab.
 """
 
 import csv
