@@ -24,3 +24,17 @@ class DepthCharts:
     }
     waitfor = ""
     export_data = ""
+
+
+class Teams:
+    """
+    CSS selectors for :py:class:`fangraphs.teams.Teams`.
+    """
+    selections = {
+        "type": ".team-nav-bar"
+    }
+    dropdowns = {
+        "team": ".select-change-team",
+        "pos_stat": ".pos-stat",
+        "pit_stat": ".pit-stat"
+    }
