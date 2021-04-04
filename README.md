@@ -6,6 +6,10 @@
 ![Last Commit: development](https://img.shields.io/github/last-commit/JLpython-py/FanGraphs-Export/development)
 
 ![Milestone 1](https://img.shields.io/github/milestones/progress/JLpython-py/FanGraphs-Export/1)
+![Milestone 2](https://img.shields.io/github/milestones/progress/JLpython-py/FanGraphs-Export/2)
+![Milestone 3](https://img.shields.io/github/milestones/progress/JLpython-py/FanGraphs-Export/3)
+
+
 ![Latest Release](https://img.shields.io/github/v/tag/JLpython-py/FanGraphs-Export)
 ![License: MIT](https://img.shields.io/github/license/JLpython-py/FanGraphs-Export)
 ![Read the Docs](https://img.shields.io/readthedocs/fangraphs-export)
