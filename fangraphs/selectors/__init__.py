@@ -5,6 +5,9 @@ import fangraphs.exceptions
 
 
 class __Selectors:
+    """
+    General parent class which all public :py:mod:`fangraphs.selectors` classes inherit.
+    """
 
     def __init__(self):
         pass
@@ -23,19 +26,20 @@ class __Selectors:
 
 
 class SelectionsType1(__Selectors):
+    """
 
-    def __init__(self, page, selector: str, descendants: str):
+    """
+
+    def __init__(self, page, selector: str):
         """
 
         :param page:
         :type page: playwright.sync_api._generated.Page
         :param selector:
-        :param descendants:
         """
         super().__init__()
         self.page = page
         self.selector = selector
-        self.descendants = descendants
         self.__root = self.page.query_selector(selector)
 
     def list_options(self):
@@ -44,7 +48,7 @@ class SelectionsType1(__Selectors):
         :return:
         :rtype: list[str]
         """
-        elems = self.__root.query_selector_all(self.descendants)
+        elems = self.__root.query_selector_all("ul > li")
         options = [e.text_content() for e in elems]
         return options
 
@@ -70,11 +74,14 @@ class SelectionsType1(__Selectors):
             index = options.index(option)
         except ValueError as err:
             raise fangraphs.exceptions.InvalidFilterOption(option) from err
-        elem = self.__root.query_selector_all(self.descendants)[index]
+        elem = self.__root.query_selector_all("ul > li")[index]
         elem.click()
 
 
 class SelectionsType2(__Selectors):
+    """
+
+    """
 
     def __init__(self, page, selector: list):
         """
@@ -131,19 +138,17 @@ class DropdownsType1(__Selectors):
     The dropdown option elements are separate from the dropdown menu element.
     """
 
-    def __init__(self, page, selector: str, dd_options: str, descendants: str):
+    def __init__(self, page, selector: str, dd_options: str):
         """
 
         :param page:
         :type page: playwright.sync_api._generated.Page
         :param selector:
         :param dd_options:
-        :param descendants:
         """
         super().__init__()
         self.page = page
         self.selector = selector
-        self.descendants = descendants
         self.dd_options = dd_options
         self.__root = self.page.query_selector(self.selector)
         self.__dd_root = self.page.query_selector(self.dd_options)
@@ -154,7 +159,7 @@ class DropdownsType1(__Selectors):
         :return:
         :rtype: list[str]
         """
-        elems = self.__dd_root.query_selector_all(self.descendants)
+        elems = self.__dd_root.query_selector_all("ul > li")
         options = [e.text_content() for e in elems]
         return options
 
@@ -179,28 +184,26 @@ class DropdownsType1(__Selectors):
         except ValueError as err:
             raise fangraphs.exceptions.InvalidFilterOption(option) from err
         self.page.click(self.selector)
-        elem = self.__root.query_selector_all(self.descendants)[index]
+        elem = self.__root.query_selector_all("ul > li")[index]
         elem.click()
 
 
-class DropdownType2(__Selectors):
+class DropdownsType2(__Selectors):
     """
     Web scraper utility for a FanGraphs dropdown widget variation.
     The dropdown option elements are descedants of the dropdown menu element.
     """
 
-    def __init__(self, page, selector: str, descendants: str):
+    def __init__(self, page, selector: str):
         """
 
         :param page:
         :type page: playwright.sync_api._generated.Page
         :param selector:
-        :param descendants:
         """
         super().__init__()
         self.page = page
         self.selector = selector
-        self.descendants = descendants
         self.__root = self.page.query_selector(selector)
 
     def list_options(self):
@@ -209,7 +212,7 @@ class DropdownType2(__Selectors):
         :return:
         :rtype: list[str]
         """
-        elems = self.__root.query_selector_all(self.descendants)
+        elems = self.__root.query_selector_all("div > a")
         options = [e.text_content() for e in elems]
         return options
 
@@ -235,7 +238,7 @@ class DropdownType2(__Selectors):
         except ValueError as err:
             raise fangraphs.exceptions.InvalidFilterOption(option) from err
         self.page.click(self.selector)
-        elem = self.__root.query_selector_all(self.descendants)[index]
+        elem = self.__root.query_selector_all("div > a")[index]
         elem.click()
 
 
@@ -243,18 +246,16 @@ class DropdownsType3(__Selectors):
     """
 
     """
-    def __init__(self, page, selector: str, descendants: str):
+    def __init__(self, page, selector: str):
         """
 
         :param page:
         :type page: playwright.sync_api._generated.Page
         :param selector:
-        :param descendants:
         """
         super().__init__()
         self.page = page
         self.selector = selector
-        self.descendants = descendants
         self.__root = self.page.query_selector(self.selector)
 
     def list_options(self):
@@ -263,7 +264,7 @@ class DropdownsType3(__Selectors):
         :return:
         :rtype: list[str]
         """
-        elems = self.__root.query_selector_all(self.descendants)
+        elems = self.__root.query_selector_all("ul > li")
         options = [e.text_content() for e in elems]
         return options
 
@@ -274,7 +275,7 @@ class DropdownsType3(__Selectors):
         :return:
         :rtype: str or list
         """
-        elems = self.__root.query_selector_all(self.descendants)
+        elems = self.__root.query_selector_all("ul > li")
         option = [
             e.text_content() for e in elems
             if "highlight-selection" in e.get_attribute("class")
@@ -295,7 +296,7 @@ class DropdownsType3(__Selectors):
         except ValueError as err:
             raise fangraphs.exceptions.InvalidFilterOption(option) from err
         self.page.click(self.selector)
-        elem = self.__root.query_selector_all(self.descendants)[index]
+        elem = self.__root.query_selector_all("ul > li")[index]
         elem.click()
 
 
