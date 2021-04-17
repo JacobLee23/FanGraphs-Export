@@ -17,7 +17,7 @@ class GameSpan:
             ".controls-stats > .fgButton:nth-child(1)",
             ".controls-stats > .fgButton:nth-child(2)"
         ],
-        "type": [
+        "view_type": [
             ".controls-board-view > .fgButton:nth-child(1)",
             ".controls-board-view > .fgButton:nth-child(2)",
             ".controls-board-view > .fgButton:nth-child(3)"
@@ -49,7 +49,7 @@ class International:
             ".controls-stats > .fgButton:nth-child(1)",
             ".controls-stats > .fgButton:nth-child(2)"
         ],
-        "type": [
+        "view_type": [
             ".controls-board-view > .fgButton:nth-child(1)",
             ".controls-board-view > .fgButton:nth-child(2)"
         ]
@@ -86,7 +86,7 @@ class MajorLeague:
         "group": "#LeaderBoard1_tsGroup",
         "stat": "#LeaderBoard1_tsStats",
         "position": "#LeaderBoard1_tsPosition",
-        "type": "#LeaderBoard1_tsType"
+        "view_type": "#LeaderBoard1_tsType"
     }
     __dropdowns_type_1 = {
         "league": ('#LeaderBoard1_rcbAge1_Input', '#LeaderBoard1_rcbAge1_DropDown'),
@@ -133,7 +133,7 @@ class SeasonStat:
             "div[class*='fgButton button-green']:nth-child(1)",
             "div[class*='fgButton button-green']:nth-child(2)"
         ],
-        "type": [
+        "view_type": [
             "div[class*='fgButton button-green']:nth-child(4)",
             "div[class*='fgButton button-green']:nth-child(5)",
             "div[class*='fgButton button-green']:nth-child(6)"
@@ -177,7 +177,7 @@ class Splits:
             ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(6)",
             ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(7)"
         ],
-        "type": [
+        "view_type": [
             "#root-buttons-stats > div:nth-child(1)",
             "#root-buttons-stats > div:nth-child(2)",
             "#root-buttons-stats > div:nth-child(3)"
@@ -217,11 +217,17 @@ class Splits:
 
 
 class QuickSplits:
-    _selector = ".quick-splits"
+    selector = ".quick-splits"
+
+    @classmethod
+    def compile(cls, obj):
+        for key, val in obj.options.items():
+            selector = f"{cls.selector} > {obj.selector} > {val}"
+            yield key, selector
 
     class Batting:
-        _selector = "div:nth-child(1)"
-        __options = {
+        selector = "div:nth-child(1)"
+        options = {
             "home": "div:nth-child(2) > .fgButton:nth-child(1)",
             "away": "div:nth-child(2) > .fgButton:nth-child(2)",
             "vs_lhp": "div:nth-child(3) > .fgButton:nth-child(1)",
@@ -237,13 +243,12 @@ class QuickSplits:
         }
 
         def __init__(self):
-            for key, val in self.__options.items():
-                selector = f"{QuickSplits._selector} > {self._selector} > {val}"
+            for key, selector in QuickSplits.compile(self):
                 setattr(self, key, selector)
 
     class Pitching:
-        _selector = "div:nth-child(1)"
-        __options = {
+        selector = "div:nth-child(1)"
+        options = {
             "as_sp": "div:nth-child(1) .fgButton:nth-child(1)",
             "as_rp": "div:nth-child(1) .fgButton:nth-child(2)",
             "home": "div:nth-child(2) > .fgButton:nth-child(1)",
@@ -261,8 +266,7 @@ class QuickSplits:
         }
 
         def __init__(self):
-            for key, val in self.__options.items():
-                selector = f"{QuickSplits._selector} > {self._selector} > {val}"
+            for key, selector in QuickSplits.compile(self):
                 setattr(self, key, selector)
 
 
@@ -273,7 +277,7 @@ class WAR:
     __dropdowns_type_1 = {
         "season": ("#WARBoard1_rcbSeason_Input", "#WARBoard1_rcbSeason_DropDown"),
         "team": ("#WARBoard1_rcbTeam_Input", "#WARBoard1_rcbTeam_DropDown"),
-        "type": ("#WARBoard1_rcbType_Input", "#WARBoard1_rcbType_DropDown")
+        "view_type": ("#WARBoard1_rcbType_Input", "#WARBoard1_rcbType_DropDown")
     }
     waitfor = ".rgMasterTable"
     export_data = "#WARBoard1_cmdCSV"
