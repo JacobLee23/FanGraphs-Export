@@ -7,8 +7,25 @@ Subpackage for scraping the FanGraphs **Leaders** pages.
 
 import os
 
-import bs4
 from playwright.sync_api import sync_playwright
+
+import fangraphs.exceptions
+
+
+def fangraphs_scraper(func):
+
+    def wrapper(scraper, *, path="out/"):
+        path = os.path.abspath(path)
+        assert os.path.exists(path)
+        with sync_playwright() as play:
+            browser = play.chromium.launch(
+                downloads_path=path
+            )
+            results = func(scraper(browser))
+            browser.close()
+            return results
+
+    return wrapper
 
 
 class ScrapingUtilities:
@@ -17,75 +34,41 @@ class ScrapingUtilities:
     Intializes and manages ``Playwright`` browsers and pages.
     Intializes and manages ``bs4.BeautifulSoup`` objects.
     """
-    def __init__(self, address, *, selector_mod):
+    def __init__(self, browser, address: str, queries):
         """
-        :param address: The base URL address of the FanGraphs page
 
-        .. py:attribute:: address
-            The base URL address of the FanGraphs page
-            :type: str
-
-        .. py:attribute:: page
-            The generated synchronous ``Playwright`` page for browser automation.
-            :type: playwright.sync_api._generated.Page
-
-        .. py:attribute:: soup
-            The ``BeautifulSoup4`` HTML parser for scraping the webpage.
-            :type: bs4.BeautifulSoup
+        :param address:
+        :param queries:
         """
+        self.browser = browser
+        self.page = self.browser.new_page(accept_downloads=True)
         self.address = address
-        self.waitfor = selector_mod.waitfor
-        self.export_data = selector_mod.export_data
-        os.makedirs("out", exist_ok=True)
+        self.queries = queries
 
-        self.__play = None
-        self.__browser = None
-        self.page = None
-
-        self.soup = None
-
-    def _browser_init(self):
-        self.__play = sync_playwright().start()
-        self.__browser = self.__play.chromium.launch(
-            downloads_path=os.path.abspath("out")
-        )
-        self.page = self.__browser.new_page(
-            accept_downloads=True
-        )
-        self._refresh_parser()
-
-    def _refresh_parser(self):
-        """
-        Re-initializes the ``bs4.BeautifulSoup`` object stored in :py:attr:`soup`.
-        """
-        if self.waitfor:
-            self.page.wait_for_selector(self.waitfor)
-        self.soup = bs4.BeautifulSoup(
-            self.page.content(), features="lxml"
-        )
+        self.reset()
 
     def _close_ad(self):
         """
         Closes the ad which may interfere with clicking other page elements.
         """
         elem = self.page.query_selector(".ezmob-footer-close")
-        if self.soup.select("#ezmob-wrapper > div[style='display: none;']"):
+        if self.page.query_selector_all(
+                "#ezmob-wrapper > div[style='display: none;']"
+        ):
             return
         if elem:
             elem.click()
 
-    @staticmethod
-    def list_queries():
+    def list_queries(self):
         """
         Lists the possible filter queries which can be used to modify search results.
 
         :return: Filter queries which can be used to modify search results
         :rtype: list
         """
-        raise NotImplementedError
+        return list(self.queries.__dict__)
 
-    @staticmethod
-    def list_options(query: str):
+    def list_options(self, query: str):
         """
         Lists the possible options which a filter query can be configured to.
 
@@ -94,10 +77,12 @@ class ScrapingUtilities:
         :rtype: list
         :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
         """
-        raise NotImplementedError
+        sel_obj = self.queries.__dict__.get(query.lower())
+        if sel_obj is None:
+            raise fangraphs.exceptions.InvalidFilterQuery(query)
+        return sel_obj.list_options()
 
-    @staticmethod
-    def current_option(query: str):
+    def current_option(self, query: str):
         """
         Retrieves the option which a filter query is currently set to.
 
@@ -106,10 +91,12 @@ class ScrapingUtilities:
         :rtype: str
         :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
         """
-        raise NotImplementedError
+        sel_obj = self.queries.__dict__.get(query.lower())
+        if sel_obj is None:
+            raise fangraphs.exceptions.InvalidFilterQuery(query)
+        return sel_obj.current_option()
 
-    @staticmethod
-    def configure(query: str, option: str):
+    def configure(self, query: str, option: str):
         """
         Configures a filter query to a specified option.
 
@@ -117,7 +104,10 @@ class ScrapingUtilities:
         :param option: The option to set the filter query to
         :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
         """
-        raise NotImplementedError
+        sel_obj = self.queries.__dict__.get(query.lower())
+        if sel_obj is None:
+            raise fangraphs.exceptions.InvalidFilterQuery(query)
+        sel_obj.configure(option)
 
     def export(self, *, path):
         """
@@ -128,7 +118,7 @@ class ScrapingUtilities:
         """
         self._close_ad()
         with self.page.expect_download() as down_info:
-            self.page.click(self.export_data)
+            self.page.click(self.queries.export_data)
         download = down_info.value
         download_path = download.path()
         os.rename(download_path, path)
@@ -138,11 +128,5 @@ class ScrapingUtilities:
         Navigates :py:attr:`page` to :py:attr:`address`.
         """
         self.page.goto(self.address, timeout=0)
-        self._refresh_parser()
-
-    def quit(self):
-        """
-        Terminates the ``Playwright`` browser and context manager.
-        """
-        self.__browser.close()
-        self.__play.stop()
+        if self.queries.waitfor:
+            self.page.wait_for_selector(self.queries.waitfor)

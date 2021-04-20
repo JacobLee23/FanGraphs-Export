@@ -24,7 +24,7 @@ class GameSpan:
         ]
     }
     __dropdowns_type_2 = {
-        "min_pa": ".controls-stats:nth-child(1) > div:nth-child(3) > .fg-selection-box__selection",
+        "minimum": ".controls-stats:nth-child(1) > div:nth-child(3) > .fg-selection-box__selection",
         "single_season": ".controls-stats:nth-child(2) > div:nth-child(1) > .fg-selection-box__selection",
         "season1": ".controls-stats:nth-child(2) > div:nth-child(2) > .fg-selection-box__selection",
         "season2": ".controls-stats:nth-child(2) > div:nth-child(3) > .fg-selection-box__selection",
@@ -35,9 +35,9 @@ class GameSpan:
 
     def __init__(self, page):
         for key, val in self.__selections_type_2.items():
-            setattr(self, key, selectors.SelectionsType2(page, val))
+            self.__setattr__(key, selectors.SelectionsType2(page, val))
         for key, val in self.__dropdowns_type_2.items():
-            setattr(self, key, selectors.DropdownsType2(page, val))
+            self.__setattr__(key, selectors.DropdownsType2(page, val))
 
 
 class International:
@@ -56,26 +56,26 @@ class International:
     }
     __dropdowns_type_2 = {
         "position": ".controls-stats:nth-child(1) > div:nth-child(3) > .fg-selection-box__selection",
-        "min": ".controls-stats:nth-child(1) > div:nth-child(4) > .fg-selection-box__selection",
+        "minimum": ".controls-stats:nth-child(1) > div:nth-child(4) > .fg-selection-box__selection",
         "single_season": ".controls-stats:nth-child(2) > div:nth-child(1) > .fg-selection-box__selection",
         "season1": ".controls-stats:nth-child(2) > div:nth-child(2) > .fg-selection-box__selection",
         "season2": ".controls-stats:nth-child(2) > div:nth-child(3) > .fg-selection-box__selection",
         "league": ".controls-stats:nth-child(3) > div:nth-child(1) > .fg-selection-box__selection",
         "team": ".controls-stats:nth-child(3) > div:nth-child(2) > .fg-selection-box__selection",
     }
-    __switches_type_3 = {
-        "split_seasons": ".controls-stats > .fg-checkbox"
+    __checkboxes = {
+        "split_seasons": ".controls-stats > label.fg-checkbox"
     }
     waitfor = ".fg-data-grid.table-type"
     export_data = ".data-export"
 
     def __init__(self, page):
         for key, val in self.__selections_type_2.items():
-            setattr(self, key, selectors.SelectionsType2(page, val))
+            self.__setattr__(key, selectors.SelectionsType2(page, val))
         for key, val in self.__dropdowns_type_2.items():
-            setattr(self, key, selectors.DropdownsType2(page, val))
-        for key, val in self.__switches_type_3.items():
-            setattr(self, key, selectors.SwitchesType3(page, val, "to"))
+            self.__setattr__(key, selectors.DropdownsType2(page, val))
+        for key, val in self.__checkboxes.items():
+            self.__setattr__(key, selectors.Checkboxes(page, val))
 
 
 class MajorLeague:
@@ -99,7 +99,7 @@ class MajorLeague:
         "age1": ('#LeaderBoard1_rcbAge1_Input', '#LeaderBoard1_rcbAge1_DropDown'),
         "age2": ('#LeaderBoard1_rcbAge2_Input', '#LeaderBoard1_rcbAge2_DropDown')
     }
-    __switches_type_1 = {
+    __checkboxes = {
         "split_teams": "#LeaderBoard1_cbTeams",
         "active_roster": "#LeaderBoard1_cbActive",
         "hof": "#LeaderBoard1_cbHOF",
@@ -117,11 +117,11 @@ class MajorLeague:
 
     def __init__(self, page):
         for key, val in self.__selections_type_1.items():
-            setattr(self, key, selectors.SelectionsType1(page, val))
+            self.__setattr__(key, selectors.SelectionsType1(page, val))
         for key, val in self.__dropdowns_type_1.items():
-            setattr(self, key, selectors.DropdownsType1(page, *val))
-        for key, val in self.__switches_type_1.items():
-            setattr(self, key, selectors.SwitchesType1(page, val))
+            self.__setattr__(key, selectors.DropdownsType1(page, *val))
+        for key, val in self.__checkboxes.items():
+            self.__setattr__(key, selectors.Checkboxes(page, val))
 
 
 class SeasonStat:
@@ -157,9 +157,9 @@ class SeasonStat:
 
     def __init__(self, page):
         for key, val in self.__selections_type_2.items():
-            setattr(self, key, selectors.SelectionsType2(page, val))
+            self.__setattr__(key, selectors.SelectionsType2(page, val))
         for key, val in self.__dropdowns_type_3.items():
-            setattr(self, key, selectors.DropdownsType3(page, val))
+            self.__setattr__(key, selectors.DropdownsType3(page, val))
 
 
 class Splits:
@@ -200,7 +200,7 @@ class Splits:
         "team": ".fgBin:nth-child(3) > .fg-dropdown.splits.multi-choice:nth-child(1)",
         "opponent": ".fgBin:nth-child(3) > .fg-dropdown.splits.multi-choice:nth-child(2)"
     }
-    __switches_type_2 = {
+    __switches = {
         "split_teams": "#stack-buttons > div:nth-child(2)",
         "auto_pt": "#stack-buttons > div:nth-child(3)"
     }
@@ -209,11 +209,11 @@ class Splits:
 
     def __init__(self, page):
         for key, val in self.__selections_type_2.items():
-            setattr(self, key, selectors.SelectionsType2(page, val))
+            self.__setattr__(key, selectors.SelectionsType2(page, val))
         for key, val in self.__dropdowns_type_3.items():
-            setattr(self, key, selectors.DropdownsType3(page, val))
-        for key, val in self.__switches_type_2.items():
-            setattr(self, key, selectors.SwitchesType2(page, val))
+            self.__setattr__(key, selectors.DropdownsType3(page, val))
+        for key, val in self.__switches.items():
+            self.__setattr__(key, selectors.Switches(page, val))
 
 
 class QuickSplits:
@@ -244,7 +244,7 @@ class QuickSplits:
 
         def __init__(self):
             for key, selector in QuickSplits.compile(self):
-                setattr(self, key, selector)
+                self.__setattr__(key, selector)
 
     class Pitching:
         selector = "div:nth-child(1)"
@@ -267,7 +267,7 @@ class QuickSplits:
 
         def __init__(self):
             for key, selector in QuickSplits.compile(self):
-                setattr(self, key, selector)
+                self.__setattr__(key, selector)
 
 
 class WAR:
@@ -284,4 +284,4 @@ class WAR:
 
     def __init__(self, page):
         for key, val in self.__dropdowns_type_1.items():
-            setattr(self, key, selectors.DropdownsType1(page, *val))
+            self.__setattr__(key, selectors.DropdownsType1(page, *val))

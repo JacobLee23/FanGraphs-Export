@@ -300,7 +300,7 @@ class DropdownsType3(__Selectors):
         elem.click()
 
 
-class SwitchesType1(__Selectors):
+class Checkboxes(__Selectors):
 
     def __init__(self, page, selector: str):
         """
@@ -312,7 +312,7 @@ class SwitchesType1(__Selectors):
         super().__init__()
         self.page = page
         self.selector = selector
-        self.__root = self.page.query_selector(selector)
+        self.__root = self.page.query_selector(self.selector)
 
     def list_options(self):
         """
@@ -324,23 +324,21 @@ class SwitchesType1(__Selectors):
     def current_option(self):
         """
 
-        :return:
-        :rtype: bool
+        :return: bool
         """
-        option = self.__root.get_attribute("checked") == "checked"
-        return option
+        return self.__root.is_checked()
 
     def configure(self, option: bool):
         """
 
         :param option:
-        :rtype: None
+        :return:
         """
         if option is not self.current_option():
             self.__root.click()
 
 
-class SwitchesType2(__Selectors):
+class Switches(__Selectors):
 
     def __init__(self, page, selector: str):
         """
@@ -368,48 +366,6 @@ class SwitchesType2(__Selectors):
         :rtype: bool
         """
         option = "isActive" in self.__root.get_attribute("class")
-        return option
-
-    def configure(self, option: bool):
-        """
-
-        :param option:
-        :rtype: None
-        """
-        if option is not self.current_option():
-            self.__root.click()
-
-
-class SwitchesType3(__Selectors):
-
-    def __init__(self, page, selector: str, substr: str):
-        """
-
-        :param page:
-        :type page: playwright.sync_api._generated.Page
-        :param substr:
-        """
-        super().__init__()
-        self.page = page
-        self.selector = selector
-        self.substr = substr
-        self.__root = self.page.query_selector(self.selector)
-
-    def list_options(self):
-        """
-
-        :return:
-        :rtype: list[bool]
-        """
-        return [True, False]
-
-    def current_option(self):
-        """
-
-        :return:
-        :rtype: bool
-        """
-        option = self.substr in self.page.url
         return option
 
     def configure(self, option: bool):

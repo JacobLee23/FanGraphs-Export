@@ -27,6 +27,6 @@ class Projections:
 
     def __init__(self, page):
         for key, val in self.__selections_type_1.items():
-            setattr(self, key, selectors.SelectionsType1(page, val))
+            self.__setattr__(key, selectors.SelectionsType1(page, val))
         for key, val in self.__dropdowns_type_1.items():
-            setattr(self, key, selectors.DropdownsType1(page, *val))
+            self.__setattr__(key, selectors.DropdownsType1(page, *val))

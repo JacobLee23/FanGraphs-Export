@@ -20,7 +20,7 @@ class DepthCharts:
 
     def __init__(self, page):
         for key, val in self.__selections_type_1.items():
-            setattr(self, key, selectors.SelectionsType1(page, val))
+            self.__setattr__(key, selectors.SelectionsType1(page, val))
 
 
 class Team:
@@ -41,7 +41,7 @@ class Team:
 
         def __init__(self):
             for key, selector in Team.compile(self):
-                setattr(self, key, selector)
+                self.__setattr__(key, selector)
 
     class ALCentral:
         selector = ".menu-team-header:nth-child(2)"
@@ -49,7 +49,7 @@ class Team:
 
         def __init__(self):
             for key, selector in Team.compile(self):
-                setattr(self, key, selector)
+                self.__setattr__(key, selector)
 
     class ALWest:
         selector = ".menu-team-header:nth-child(3)"
@@ -57,7 +57,7 @@ class Team:
 
         def __init__(self):
             for key, selector in Team.compile(self):
-                setattr(self, key, selector)
+                self.__setattr__(key, selector)
 
     class NLEast:
         selector = ".menu-team-header:nth-child(4)"
@@ -65,7 +65,7 @@ class Team:
 
         def __init__(self):
             for key, selector in Team.compile(self):
-                setattr(self, key, selector)
+                self.__setattr__(key, selector)
 
     class NLCentral:
         selector = ".menu-team-header:nth-child(5)"
@@ -73,7 +73,7 @@ class Team:
 
         def __init__(self):
             for key, selector in Team.compile(self):
-                setattr(self, key, selector)
+                self.__setattr__(key, selector)
 
     class NLWest:
         selector = ".menu-team-header:nth-child(6)"
@@ -81,4 +81,4 @@ class Team:
 
         def __init__(self):
             for key, selector in Team.compile(self):
-                setattr(self, key, selector)
+                self.__setattr__(key, selector)
