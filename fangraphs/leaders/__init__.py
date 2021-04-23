@@ -9,8 +9,6 @@ import csv
 import datetime
 import os
 
-import bs4
-
 import fangraphs.exceptions
 from fangraphs import ScrapingUtilities
 from fangraphs.selectors import leaders_sel
@@ -36,9 +34,6 @@ class International(ScrapingUtilities):
 
     .. _KBO Leaderboards: https://www.fangraphs.com/leaders/international
     """
-    __selections = {}
-    __dropdowns = {}
-    __switches = {}
 
     address = "https://www.fangraphs.com/leaders/international"
 
@@ -78,28 +73,32 @@ class SeasonStat(ScrapingUtilities):
         self.queries = leaders_sel.SeasonStat(self.page)
 
     @staticmethod
-    def _write_table_headers(soup, writer: csv.writer):
+    def _write_table_headers(page, writer: csv.writer):
         """
         Writes the headers of the data table to the CSV file.
 
+        :param page:
+        :type page: playwright.sync_api._generated.Page
         :param writer: The ``csv.writer`` object
         """
-        elems = soup.select(".table-scroll thead tr th")
-        headers = [e.getText() for e in elems]
+        elems = page.query_selector_all(".table-scroll thead tr th")
+        headers = [e.text_content() for e in elems]
         writer.writerow(headers)
 
     @staticmethod
-    def _write_table_rows(soup, writer: csv.writer):
+    def _write_table_rows(page, writer: csv.writer):
         """
         Iterates through the rows of the current data table.
         The data in each row is written to the CSV file.
 
+        :param page:
+        :type page: playwright.sync_api._generated.Page
         :param writer: The ``csv.writer`` object
         """
-        row_elems = soup.select(".table-scroll tbody tr")
+        row_elems = page.query_selector_all(".table-scroll tbody tr")
         for row in row_elems:
-            elems = row.select("td")
-            items = [e.getText() for e in elems]
+            elems = row.query_selector_all("td")
+            items = [e.text_content() for e in elems]
             writer.writerow(items)
 
     def export(self, path):
@@ -128,17 +127,11 @@ class SeasonStat(ScrapingUtilities):
         )
         with open(path, "w", newline="") as file:
             writer = csv.writer(file)
-            soup = bs4.BeautifulSoup(
-                self.page.content(), features="lxml"
-            )
-            self._write_table_headers(soup, writer)
+            self._write_table_headers(self.page, writer)
             for _ in range(0, total_pages):
-                self._write_table_rows(soup, writer)
+                self._write_table_rows(self.page, writer)
                 self.page.click(
                     ".table-page-control:nth-last-child(1) > .next"
-                )
-                soup = bs4.BeautifulSoup(
-                    self.page.content(), features="lxml"
                 )
 
 
