@@ -5,9 +5,7 @@
 Scraper for the webpages under the FanGraphs **Projections** tab.
 """
 
-import fangraphs.exceptions
 from fangraphs import ScrapingUtilities
-from fangraphs import selectors
 from fangraphs.selectors import proj_sel
 
 
@@ -17,8 +15,6 @@ class Projections(ScrapingUtilities):
 
     .. _Projections: https://fangraphs.com/projections.aspx
     """
-    __selections = {}
-    __dropdowns = {}
 
     address = "https://fangraphs.com/projections.aspx"
 

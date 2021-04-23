@@ -18,8 +18,6 @@ class DepthCharts(ScrapingUtilities):
 
     .. _Depth Charts: https://fangraphs.com/depthcharts.aspx
     """
-    __selections = {}
-    __dropdowns = {}
 
     address = "https://fangraphs.com/depthcharts.aspx"
 
