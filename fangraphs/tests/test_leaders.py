@@ -6,10 +6,8 @@ The docstring in each class identifies the class in :py:mod:`FanGraphs.leaders` 
 The docstring in each test identifies the class attribute(s)/method(s) being tested.
 """
 
-import bs4
 from playwright.sync_api import sync_playwright
 import pytest
-import requests
 
 from fangraphs.selectors import leaders_sel
 

@@ -1,4 +1,13 @@
+atomicwrites==1.4.0
+attrs==20.3.0
+colorama==0.4.4
 greenlet==1.0.0
+iniconfig==1.1.1
+packaging==20.9
 playwright==1.10.0
+pluggy==0.13.1
+py==1.10.0
 pyee==8.1.0
-
+pyparsing==2.4.7
+pytest==6.2.3
+toml==0.10.2
