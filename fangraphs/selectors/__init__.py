@@ -40,7 +40,6 @@ class SelectionsType1(__Selectors):
         super().__init__()
         self.page = page
         self.selector = selector
-        self.__root = self.page.query_selector(selector)
 
     def list_options(self):
         """
@@ -48,7 +47,9 @@ class SelectionsType1(__Selectors):
         :return:
         :rtype: list[str]
         """
-        elems = self.__root.query_selector_all("ul > li")
+        elems = self.page.query_selector(
+            self.selector
+        ).query_selector_all("ul > li")
         options = [e.text_content() for e in elems]
         return options
 
@@ -58,7 +59,9 @@ class SelectionsType1(__Selectors):
         :return:
         :rtype: str
         """
-        elem = self.__root.query_selector(".rtsLink.rtsSelected")
+        elem = self.page.query_selector(
+            self.selector
+        ).query_selector(".rtsLink.rtsSelected")
         option = elem.text_content() if elem else ""
         return option
 
@@ -74,7 +77,9 @@ class SelectionsType1(__Selectors):
             index = options.index(option)
         except ValueError as err:
             raise fangraphs.exceptions.InvalidFilterOption(option) from err
-        elem = self.__root.query_selector_all("ul > li")[index]
+        elem = self.page.query_selector(
+            self.selector
+        ).query_selector_all("ul > li")[index]
         elem.click()
 
 
@@ -150,7 +155,6 @@ class DropdownsType1(__Selectors):
         self.page = page
         self.selector = selector
         self.dd_options = dd_options
-        self.__root = self.page.query_selector(self.selector)
         self.__dd_root = self.page.query_selector(self.dd_options)
 
     def list_options(self):
@@ -159,7 +163,9 @@ class DropdownsType1(__Selectors):
         :return:
         :rtype: list[str]
         """
-        elems = self.__dd_root.query_selector_all("ul > li")
+        elems = self.page.query_selector(
+            self.dd_options
+        ).query_selector_all("ul > li")
         options = [e.text_content() for e in elems]
         return options
 
@@ -169,7 +175,9 @@ class DropdownsType1(__Selectors):
         :return:
         :rtype: str
         """
-        option = self.__root.get_attribute("value")
+        option = self.page.query_selector(
+            self.selector
+        ).get_attribute("value")
         return option
 
     def configure(self, option: str):
@@ -184,7 +192,9 @@ class DropdownsType1(__Selectors):
         except ValueError as err:
             raise fangraphs.exceptions.InvalidFilterOption(option) from err
         self.page.click(self.selector)
-        elem = self.__root.query_selector_all("ul > li")[index]
+        elem = self.page.query_selector(
+            self.selector
+        ).query_selector_all("ul > li")[index]
         elem.click()
 
 
@@ -204,7 +214,6 @@ class DropdownsType2(__Selectors):
         super().__init__()
         self.page = page
         self.selector = selector
-        self.__root = self.page.query_selector(selector)
 
     def list_options(self):
         """
@@ -212,7 +221,9 @@ class DropdownsType2(__Selectors):
         :return:
         :rtype: list[str]
         """
-        elems = self.__root.query_selector_all("div > a")
+        elems = self.page.query_selector(
+            self.selector
+        ).query_selector_all("a")
         options = [e.text_content() for e in elems]
         return options
 
@@ -222,7 +233,9 @@ class DropdownsType2(__Selectors):
         :return:
         :rtype: str
         """
-        elem = self.__root.query_selector("div > span")
+        elem = self.page.query_selector(
+            self.selector
+        ).query_selector("span")
         option = elem.text_content()
         return option
 
@@ -238,7 +251,9 @@ class DropdownsType2(__Selectors):
         except ValueError as err:
             raise fangraphs.exceptions.InvalidFilterOption(option) from err
         self.page.click(self.selector)
-        elem = self.__root.query_selector_all("div > a")[index]
+        elem = self.page.query_selector(
+            self.selector
+        ).query_selector_all("a")[index]
         elem.click()
 
 
@@ -256,7 +271,6 @@ class DropdownsType3(__Selectors):
         super().__init__()
         self.page = page
         self.selector = selector
-        self.__root = self.page.query_selector(self.selector)
 
     def list_options(self):
         """
@@ -264,7 +278,9 @@ class DropdownsType3(__Selectors):
         :return:
         :rtype: list[str]
         """
-        elems = self.__root.query_selector_all("ul > li")
+        elems = self.page.query_selector(
+            self.selector
+        ).query_selector_all("ul > li")
         options = [e.text_content() for e in elems]
         return options
 
@@ -275,7 +291,9 @@ class DropdownsType3(__Selectors):
         :return:
         :rtype: str or list
         """
-        elems = self.__root.query_selector_all("ul > li")
+        elems = self.page.query_selector(
+            self.selector
+        ).query_selector_all("ul > li")
         option = [
             e.text_content() for e in elems
             if "highlight-selection" in e.get_attribute("class")
@@ -296,7 +314,9 @@ class DropdownsType3(__Selectors):
         except ValueError as err:
             raise fangraphs.exceptions.InvalidFilterOption(option) from err
         self.page.click(self.selector)
-        elem = self.__root.query_selector_all("ul > li")[index]
+        elem = self.page.query_selector(
+            self.selector
+        ).query_selector_all("ul > li")[index]
         elem.click()
 
 
@@ -312,7 +332,6 @@ class Checkboxes(__Selectors):
         super().__init__()
         self.page = page
         self.selector = selector
-        self.__root = self.page.query_selector(self.selector)
 
     def list_options(self):
         """
@@ -326,7 +345,9 @@ class Checkboxes(__Selectors):
 
         :return: bool
         """
-        return self.__root.is_checked()
+        return self.page.query_selector(
+            self.selector
+        ).is_checked()
 
     def configure(self, option: bool):
         """
@@ -335,7 +356,7 @@ class Checkboxes(__Selectors):
         :return:
         """
         if option is not self.current_option():
-            self.__root.click()
+            self.page.click(self.selector)
 
 
 class Switches(__Selectors):
@@ -350,7 +371,6 @@ class Switches(__Selectors):
         super().__init__()
         self.page = page
         self.selector = selector
-        self.__root = self.page.query_selector(selector)
 
     def list_options(self):
         """
@@ -365,7 +385,9 @@ class Switches(__Selectors):
         :return:
         :rtype: bool
         """
-        option = "isActive" in self.__root.get_attribute("class")
+        option = "isActive" in self.page.query_selector(
+            self.selector
+        ).get_attribute("class")
         return option
 
     def configure(self, option: bool):
@@ -375,4 +397,4 @@ class Switches(__Selectors):
         :rtype: None
         """
         if option is not self.current_option():
-            self.__root.click()
+            self.page.click(self.selector)

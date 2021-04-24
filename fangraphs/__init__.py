@@ -14,11 +14,12 @@ import fangraphs.exceptions
 
 def fangraphs_scraper(func):
 
-    def wrapper(scraper, *, path="out/"):
+    def wrapper(scraper, /, path="out/", *, headless=True):
         path = os.path.abspath(path)
         assert os.path.exists(path)
         with sync_playwright() as play:
             browser = play.chromium.launch(
+                headless=headless,
                 downloads_path=path
             )
             results = func(scraper(browser))
@@ -104,6 +105,7 @@ class ScrapingUtilities:
         :param option: The option to set the filter query to
         :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
         """
+        self._close_ad()
         sel_obj = self.queries.__dict__.get(query.lower())
         if sel_obj is None:
             raise fangraphs.exceptions.InvalidFilterQuery(query)

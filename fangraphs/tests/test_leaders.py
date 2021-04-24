@@ -2,8 +2,7 @@
 # tests/test_leaders.py
 
 """
-The docstring in each class identifies the class in :py:mod:`fangraphs.leaders` being tested.
-The docstring in each test identifies the class attribute(s)/method(s) being tested.
+Unit tests for :py:mod:`fangraphs.leaders.
 """
 
 from urllib.request import urlopen
