@@ -12,6 +12,32 @@ from playwright.sync_api import sync_playwright
 import fangraphs.exceptions
 
 
+class __DecoratorAdapter:
+    """
+    Adapts a decorator for both function and method usage.
+    """
+
+    def __init__(self, decorator, func):
+        self.decorator = decorator
+        self.func = func
+
+    def __call__(self, *args, **kwargs):
+        return self.decorator(self.func)(*args, **kwargs)
+
+    def __get__(self, instance, owner):
+        return self.decorator(self.func.__get__(instance, owner))
+
+
+def __adapt(decorator):
+    """
+    Decorator for adapting decorators for function or method usage.
+    """
+    def wrapper(func):
+        return __DecoratorAdapter(decorator, func)
+    return wrapper
+
+
+@__adapt
 def fangraphs_scraper(func):
 
     def wrapper(scraper, /, path="out/", *, headless=True):
