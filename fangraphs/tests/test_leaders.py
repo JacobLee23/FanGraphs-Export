@@ -2,7 +2,7 @@
 # tests/test_leaders.py
 
 """
-Unit tests for :py:mod:`fangraphs.leaders.
+Unit tests for :py:mod:`fangraphs.leaders`.
 """
 
 from urllib.request import urlopen
