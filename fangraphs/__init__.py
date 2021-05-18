@@ -12,13 +12,40 @@ from playwright.sync_api import sync_playwright
 import fangraphs.exceptions
 
 
+class __DecoratorAdapter:
+    """
+    Adapts a decorator for both function and method usage.
+    """
+
+    def __init__(self, decorator, func):
+        self.decorator = decorator
+        self.func = func
+
+    def __call__(self, *args, **kwargs):
+        return self.decorator(self.func)(*args, **kwargs)
+
+    def __get__(self, instance, owner):
+        return self.decorator(self.func.__get__(instance, owner))
+
+
+def __adapt(decorator):
+    """
+    Decorator for adapting decorators for function or method usage.
+    """
+    def wrapper(func):
+        return __DecoratorAdapter(decorator, func)
+    return wrapper
+
+
+@__adapt
 def fangraphs_scraper(func):
 
-    def wrapper(scraper, *, path="out/"):
+    def wrapper(scraper, /, path="out/", *, headless=True):
         path = os.path.abspath(path)
         assert os.path.exists(path)
         with sync_playwright() as play:
             browser = play.chromium.launch(
+                headless=headless,
                 downloads_path=path
             )
             results = func(scraper(browser))
@@ -104,6 +131,7 @@ class ScrapingUtilities:
         :param option: The option to set the filter query to
         :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
         """
+        self._close_ad()
         sel_obj = self.queries.__dict__.get(query.lower())
         if sel_obj is None:
             raise fangraphs.exceptions.InvalidFilterQuery(query)
