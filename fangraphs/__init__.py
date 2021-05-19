@@ -7,6 +7,7 @@ Subpackage for scraping the FanGraphs **Leaders** pages.
 
 import os
 
+import pandas as pd
 from playwright.sync_api import sync_playwright
 
 import fangraphs.exceptions
@@ -137,19 +138,26 @@ class ScrapingUtilities:
             raise fangraphs.exceptions.InvalidFilterQuery(query)
         sel_obj.configure(option)
 
-    def export(self, *, path):
+    def export(self, *, cleanup=True):
         """
         Uses the **Export Data** button on the webpage to export the current leaderboard.
-        The file will be saved to the filepath determined by ``path``.
+        The CSV file is read and the data is stored in a DataFrame.
 
-        :param path: The path to save the exported data to
+        :param cleanup: Whether to delete the downloaded file
+        :return: The DataFrame containing the CSV data.
+        If ``cleanup`` is ``False``, the path to the CSV file will be returned.
         """
         self._close_ad()
         with self.page.expect_download() as down_info:
             self.page.click(self.queries.export_data)
         download = down_info.value
         download_path = download.path()
-        os.rename(download_path, path)
+        dataframe = pd.read_csv(download_path)
+        if cleanup:
+            os.remove(download_path)
+            return dataframe
+        else:
+            return dataframe, download_path
 
     def reset(self):
         """
@@ -157,4 +165,4 @@ class ScrapingUtilities:
         """
         self.page.goto(self.address, timeout=0)
         if self.queries.waitfor:
-            self.page.wait_for_selector(self.queries.waitfor)
+            self.page.wait_for_selector(".fg-data-grid")
