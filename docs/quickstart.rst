@@ -16,9 +16,8 @@ All the classes share a few methods which perform the same tasks:
 Since each class inherits the same parent class,
 the following methods inherited from ``fangraphs.ScrapingUtilities`` are also available to each class:
 
-- `export(self, *, path)`: Export the current data table as a CSV file, to ``path``.
+- `export(self)`: Export the current data table, returning the data in a ``pandas.DataFrame`` object.
 - `reset(self)`: Navigates the remote browser to the original webpage.
-- `quit(self)`: Terminates the remote browser.
 
 Pages
 -----
@@ -28,13 +27,13 @@ The module where the class belongs depends on the group the webpage is in.
 The class depends on the webpage itself.
 
 +---------------------------+-------------------------------+
-| FanGraphs webpage group   | ``fangraphs`` package         |
+| FanGraphs webpage group   | ``fangraphs`` module          |
 +===========================+===============================+
 | Leaders                   | ``fangraphs.leaders``         |
 +---------------------------+-------------------------------+
 | Projections               | ``fangraphs.projections``     |
 +---------------------------+-------------------------------+
-| Depth Charts              | ``fangraphs.depth_charts``    |
+| Teams                     | ``fangraphs.teams``           |
 +---------------------------+-------------------------------+
 
 Leaders
@@ -109,54 +108,84 @@ FanGraphs webpages under the **Teams** tab.
 Basic Usage
 -----------
 
-An object can be created to scrape the corresponding webpage by calling the class, with no arguments.
+A scraper object can be created to scrape the corresponding webpage by calling the class.
+The only required argument is ``browser``, which must be a Playwright ``Browser`` object.
+This argument can be passed by nesting the call in the context manager.
+
+.. code-block:: python
+
+    from playwright.sync_api import sync_playwright
+    from fangraphs.leaders import MajorLeague
+
+    with sync_playwright() as play:
+        browser_type = play.chromium    # OR play.firefox OR play.webkit
+        browser = browser_type.launch(
+            accept_downloads=True
+        )
+        scraper = MajorLeague(browser)
+        # Do stuff with 'scraper'
+        browser.close()
+
+Alternatively, the :py:func:`fangraphs.fangraphs_scraper` function decorator can be used.
+Using the function decorator is recommended, as it allows for the simple reuse of the decorated function.
+
+.. code-block:: python
+
+    from fangraphs import fangraphs_scraper
+    from fangraphs.leaders import MajorLeague
+
+    @fangraphs_scraper
+    def scrape_leaderboard(scraper):
+        # Do stuff with 'scraper'
+
+    scrape_leaderboards(MajorLeague)
 
 Leaders
 ^^^^^^^
 
 .. code-block:: python
 
+    from fangraphs import fangraphs_scraper
     from fangraphs import leaders
 
-    gsl = leaders.GameSpan()
-    inter = leaders.International()
-    mll = leaders.MajorLeague()
-    ssg = leaders.SeasonStat()
-    splitsl = leaders.Splits()
-    warl = leaders.WAR()
+    @fangraphs_scraper
+    def scrape_leaderboard(scraper):
+        pass
+
+    scrape_leaderboard(leaders.GameSpan)
+    scrape_leaderboard(leaders.International)
+    scrape_leaderboard(leaders.MajorLeague)
+    scrape_leaderboard(leaders.SeasonStat)
+    scrape_leaderboard(leaders.Splits)
+    scrape_leaderboard(leaders.WAR)
 
 Projections
 ^^^^^^^^^^^
 
 .. code-block:: python
 
+    from fangraphs import fangraphs_scraper
     from fangraphs import projections
-    proj = projections.Projections()
+
+    @fangraphs_scraper
+    def scrape_leaderboard(scraper):
+        pass
+
+    scrape_leaderboard(projections.Projections)
 
 Teams
 ^^^^^
 
 .. code-block:: python
 
-    from fangraphs import teams
-    teamsl = teams.DepthCharts()
-
-Alternatively, the classes can be used as context managers:
-
-.. code-block:: python
-
-    from fangraphs import leaders
-    from fangraphs import projections
+    from fangraphs import fangraphs_scraper
     from fangraphs import teams
 
-    with leaders.ScraperClass() as scraper:
-        # Do stuff here
+    @fangraphs_scraper
+    def scrape_leaderboard(scraper):
+        pass
 
-    with projections.ScraperClass() as scraper:
-        # Do stuff here
-
-    with teams.ScraperClass() as scraper:
-        # Do stuff here
+    scrape_leaderboard(teams.DepthCharts)
 
 Example Usage
 -------------
@@ -165,19 +194,14 @@ Below is a basic example with a ``MajorLeague`` object:
 
 .. code-block:: python
 
+    from fangraphs import fangraphs_scraper
     from fangraphs import leaders
-    scraper = leaders.MajorLeague()
-    scraper.configure("stat", "Pitching")
-    scraper.configure("team", "LAD")
-    scraper.export(path="LADPitching.csv")
-    scraper.quit()
 
-Or, using the context manager syntax:
-
-.. code-block:: python
-
-    from fangraphs import leaders
-    with leaders.MajorLeague() as scraper:
+    @fangraphs_scraper
+    def get_dodgers_pitching(scraper):
         scraper.configure("stat", "Pitching")
         scraper.configure("team", "LAD")
-        scraper.export(path="LADPitching.csv")
+        dataframe = scraper.export()
+        return dataframe
+
+    df = get_dodgers_pitching(leaders.MajorLeague)

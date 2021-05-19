@@ -1,5 +1,5 @@
 #! python3
-# FanGraphs/selectors/proj_sel.py
+# fangraphs/selectors/proj_sel.py
 
 from fangraphs import selectors
 

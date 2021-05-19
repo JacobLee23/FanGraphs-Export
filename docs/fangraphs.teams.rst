@@ -1,5 +1,5 @@
-Fangraphs.teams Package
-=======================
+Fangraphs.teams Module
+======================
 
 .. automodule:: fangraphs.teams
     :members:

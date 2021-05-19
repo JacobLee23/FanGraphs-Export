@@ -1,5 +1,5 @@
 #! python3
-# FanGraphs/selectors/leaders_sel.py
+# fangraphs/selectors/leaders_sel.py
 
 from fangraphs import selectors
 
@@ -217,15 +217,29 @@ class Splits:
 
 
 class QuickSplits:
+    """
+    CSS selectors for the quick splits available on the Splits leaderboard.
+    """
     selector = ".quick-splits"
 
     @classmethod
     def compile(cls, obj):
+        """
+        Compiles the full CSS selector for each of the items in the ``object`` class attribute.
+
+        :param obj: An object
+        :return: The name and the full CSS selector for each attribute
+        :rtype: tuple[str, str]
+        """
         for key, val in obj.options.items():
             selector = f"{cls.selector} > {obj.selector} > {val}"
             yield key, selector
 
     class Batting:
+        """
+        CSS selectors for batting-related quick splits.
+        """
+
         selector = "div:nth-child(1)"
         options = {
             "home": "div:nth-child(2) > .fgButton:nth-child(1)",
@@ -247,6 +261,10 @@ class QuickSplits:
                 self.__setattr__(key, selector)
 
     class Pitching:
+        """
+        CSS selectors for pitching-related quick splits.
+        """
+
         selector = "div:nth-child(1)"
         options = {
             "as_sp": "div:nth-child(1) .fgButton:nth-child(1)",

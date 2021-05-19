@@ -1,13 +1,11 @@
 #! python3
-# FanGraphs/leaders/__init__.py
+# fangraphs/leaders.py
 
 """
 Scrapers for the webpages under the FanGaphs **Leaders** tab.
 """
 
-import csv
-import datetime
-import os
+import pandas as pd
 
 import fangraphs.exceptions
 from fangraphs import ScrapingUtilities
@@ -24,8 +22,11 @@ class GameSpan(ScrapingUtilities):
     address = "https://fangraphs.com/leaders/special/60-game-span"
 
     def __init__(self, browser):
+        """
+        :param browser: A Playwright ``Browser`` object A Playwright ``Browser`` object
+        :type browser: playwright.sync_api._generated.Browser
+        """
         ScrapingUtilities.__init__(self, browser, self.address, leaders_sel.GameSpan)
-        self.queries = leaders_sel.GameSpan(self.page)
 
 
 class International(ScrapingUtilities):
@@ -38,8 +39,13 @@ class International(ScrapingUtilities):
     address = "https://www.fangraphs.com/leaders/international"
 
     def __init__(self, browser):
+        """
+        :param browser: A Playwright ``Browser`` object
+        :type browser: playwright.sync_api._generated.Browser
+
+        .. py:attribute:: browser
+        """
         ScrapingUtilities.__init__(self, browser, self.address, leaders_sel.International)
-        self.queries = leaders_sel.International(self.page)
 
 
 class MajorLeague(ScrapingUtilities):
@@ -55,8 +61,13 @@ class MajorLeague(ScrapingUtilities):
     address = "https://fangraphs.com/leaders.aspx"
 
     def __init__(self, browser):
+        """
+        :param browser: A Playwright ``Browser`` object
+        :type browser: playwright.sync_api._generated.Browser
+
+        .. py:attribute:: browser
+        """
         ScrapingUtilities.__init__(self, browser, self.address, leaders_sel.MajorLeague)
-        self.queries = leaders_sel.MajorLeague(self.page)
 
 
 class SeasonStat(ScrapingUtilities):
@@ -69,70 +80,62 @@ class SeasonStat(ScrapingUtilities):
     address = "https://fangraphs.com/leaders/season-stat-grid"
 
     def __init__(self, browser):
+        """
+        :param browser: A Playwright ``Browser`` object
+        :type browser: playwright.sync_api._generated.Browser
+        """
         ScrapingUtilities.__init__(self, browser, self.address, leaders_sel.SeasonStat)
-        self.queries = leaders_sel.SeasonStat(self.page)
 
-    @staticmethod
-    def _write_table_headers(page, writer: csv.writer):
+    def _write_table_headers(self):
         """
-        Writes the headers of the data table to the CSV file.
+        Initializes a new DataFrame with columns corresponding to the table headers.
 
-        :param page:
-        :type page: playwright.sync_api._generated.Page
-        :param writer: The ``csv.writer`` object
+        :return: A DataFrame with columns set to the table headers
+        :rtype: pandas.DataFrame
         """
-        elems = page.query_selector_all(".table-scroll thead tr th")
+        elems = self.page.query_selector_all(".table-scroll thead tr th")
         headers = [e.text_content() for e in elems]
-        writer.writerow(headers)
+        dataframe = pd.DataFrame(columns=headers[1:])
+        return dataframe
 
-    @staticmethod
-    def _write_table_rows(page, writer: csv.writer):
+    def _write_table_rows(self, dataframe):
         """
-        Iterates through the rows of the current data table.
-        The data in each row is written to the CSV file.
+        Writes the data from each of the rows of each of the tables to the DataFrame.
 
-        :param page:
-        :type page: playwright.sync_api._generated.Page
-        :param writer: The ``csv.writer`` object
+        :param dataframe: The DataFrame to modify
+        :type dataframe: pandas.DataFrame
+        :return: The DataFrame updated with all the table leaderboard data
+        :rtype: pandas.DataFrame
         """
-        row_elems = page.query_selector_all(".table-scroll tbody tr")
-        for row in row_elems:
-            elems = row.query_selector_all("td")
-            items = [e.text_content() for e in elems]
-            writer.writerow(items)
-
-    def export(self, path):
-        """
-        Scrapes and saves the data from the table of the current leaderboards.
-        The data will be exported as a CSV file and the file will be saved to *out/*.
-        The file will be saved to the filepath ``path``, if specified.
-        Otherwise, the file will be saved to the filepath *out/%d.%m.%y %H.%M.%S.csv*.
-
-        *Note: This is a 'manual' export of the data.
-        In other words, the data is scraped from the table.
-        This is unlike other forms of export where a button is clicked.
-        Thus, there will be no record of a download when the data is exported.*
-
-        :param path: The path to save the exported file to
-        """
-        self._close_ad()
-        if not path or os.path.splitext(path)[1] != ".csv":
-            path = "out/{}.csv".format(
-                datetime.datetime.now().strftime("%d.%m.%y %H.%M.%S")
-            )
         total_pages = int(
             self.page.query_selector(
                 ".table-page-control:nth-last-child(1) > .table-control-total"
             ).text_content()
         )
-        with open(path, "w", newline="") as file:
-            writer = csv.writer(file)
-            self._write_table_headers(self.page, writer)
-            for _ in range(0, total_pages):
-                self._write_table_rows(self.page, writer)
-                self.page.click(
-                    ".table-page-control:nth-last-child(1) > .next"
-                )
+        index = 0
+        for page in range(total_pages):
+            row_elems = self.page.query_selector_all(".table-scroll tbody tr")
+            for i, row in enumerate(row_elems):
+                elems = row.query_selector_all("td")
+                items = [e.text_content() for e in elems]
+                dataframe.loc[index+i] = items[1:]
+            index += len(row_elems)
+            self.page.click(".table-page-control:nth-last-child(1) > .next")
+        return dataframe
+
+    def export(self):
+        """
+        Exports the data in the current leaderboard as a DataFrame.
+
+        :return: A DataFrame containing the table data
+        :rtype: pandas.DataFrame
+        """
+        self._close_ad()
+
+        dataframe = self._write_table_headers()
+        dataframe = self._write_table_rows(dataframe)
+
+        return dataframe
 
 
 class Splits(ScrapingUtilities):
@@ -145,8 +148,25 @@ class Splits(ScrapingUtilities):
     address = "https://fangraphs.com/leaders/splits-leaderboards"
 
     def __init__(self, browser):
+        """
+        :param browser: A Playwright ``Browser`` object
+        :type browser: playwright.sync_api._generated.Browser
+
+        .. py:attribute:: qsbatting
+
+            Contains the CSS selectors for the batting-related quick splits.
+            Allows for the configuration of the Splits leaderboard to any batting quick split.
+
+            :type: fangraphs.leaders_sel.QuickSplits.Batting
+
+        .. py:attribute:: qspitching
+
+            Contains the CSS selectors for the pitching-related quick splits.
+            Allows for the configuration of the Splits leaderboard to any pitching quick split.
+
+            :type: fangraphs.leaders_sel.QuickSplits.Pitching
+        """
         ScrapingUtilities.__init__(self, browser, self.address, leaders_sel.Splits)
-        self.queries = leaders_sel.Splits(self.page)
         self.qsbatting = leaders_sel.QuickSplits.Batting()
         self.qspitching = leaders_sel.QuickSplits.Pitching()
 
@@ -156,6 +176,7 @@ class Splits(ScrapingUtilities):
         All configured filters are submitted and the page is refreshed.
 
         :raises FanGraphs.exceptions.FilterUpdateIncapability: No filter queries to update
+        :rtype: None
         """
         elem = self.page.query_selector("#button-update")
         if elem is None:
@@ -165,10 +186,10 @@ class Splits(ScrapingUtilities):
 
     def list_filter_groups(self):
         """
-        Lists the possible groups of filter queries which can be used
+        Lists the possible groups of filter queries which can be used.
 
         :return: Names of the groups of filter queries
-        :rtype: list
+        :rtype: list[str]
         """
         elems = self.page.query_selector_all(".fgBin.splits-bin-controller div")
         groups = [e.text_content() for e in elems]
@@ -176,9 +197,10 @@ class Splits(ScrapingUtilities):
 
     def set_filter_group(self, group="Show All"):
         """
-        Configures the available filters to a specified group of filters
+        Configures the available filters to a specified group of filters.
 
         :param group: The name of the group of filters
+        :rtype: None
         """
         options = [o.lower() for o in self.list_filter_groups()]
         try:
@@ -203,6 +225,8 @@ class Splits(ScrapingUtilities):
         - ``preset_range``
         - ``auto_pt``
         - ``split_teams``
+
+        :rypte: None
         """
         elem = self.page.query_selector(
             "#stack-buttons .fgButton.small:nth-last-child(1)"
@@ -218,7 +242,7 @@ class Splits(ScrapingUtilities):
         Quick splits allow for the configuration of multiple filter queries at once.
 
         :return: All available quick splits
-        :rtype: list
+        :rtype: list[str]
         """
         quick_splits = []
         quick_splits.extend(list(self.qsbatting.__dict__))
@@ -239,6 +263,7 @@ class Splits(ScrapingUtilities):
         :param quick_split_selector: The CSS selector which corresponds to the quick split
         :param autoupdate: If ``True``, :py:meth:`reset_filters` will be called
         :raises FanGraphs.exceptions.InvalidQuickSplits: Invalid argument ``quick_split``
+        :rtype: None
         """
         self.page.click(quick_split_selector)
         if autoupdate:
@@ -255,5 +280,8 @@ class WAR(ScrapingUtilities):
     address = "https://fangraphs.com/warleaders.aspx"
 
     def __init__(self, browser):
+        """
+        :param browser: A Playwright ``Browser`` object
+        :type browser: playwright.sync_api._generated.Browser
+        """
         ScrapingUtilities.__init__(self, browser, self.address, leaders_sel.WAR)
-        self.queries = leaders_sel.WAR(self.page)
