@@ -1,5 +1,5 @@
 #! python3
-# FanGraphs/__init__.py
+# fangraphs/__init__.py
 
 """
 Subpackage for scraping the FanGraphs **Leaders** pages.
@@ -41,13 +41,10 @@ def __adapt(decorator):
 @__adapt
 def fangraphs_scraper(func):
 
-    def wrapper(scraper, /, path="out/", *, headless=True):
-        path = os.path.abspath(path)
-        assert os.path.exists(path)
+    def wrapper(scraper, /,  *, headless=True):
         with sync_playwright() as play:
             browser = play.chromium.launch(
                 headless=headless,
-                downloads_path=path
             )
             results = func(scraper(browser))
             browser.close()
@@ -58,20 +55,20 @@ def fangraphs_scraper(func):
 
 class ScrapingUtilities:
     """
-    Manages the various objects used for scraping the FanGraphs webpages.
-    Intializes and manages ``Playwright`` browsers and pages.
-    Intializes and manages ``bs4.BeautifulSoup`` objects.
+    Parent class inherited by all classes in ``fangraphs.*`` modules.
     """
+
     def __init__(self, browser, address: str, queries):
         """
-
-        :param address:
-        :param queries:
+        :param browser: A Playwright ``Browser`` object
+        :param address: The URL to the FanGraphs leaderboard
+        :param queries: A class (to initialize) containing all necessary CSS selectors
+        :type queries: type
         """
         self.browser = browser
         self.page = self.browser.new_page(accept_downloads=True)
         self.address = address
-        self.queries = queries
+        self.queries = queries(self.page)
 
         self.reset()
 
@@ -94,7 +91,7 @@ class ScrapingUtilities:
         :return: Filter queries which can be used to modify search results
         :rtype: list
         """
-        return list(self.queries.__dict__)
+        return list(vars(self.queries))
 
     def list_options(self, query: str):
         """
@@ -105,7 +102,7 @@ class ScrapingUtilities:
         :rtype: list
         :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
         """
-        sel_obj = self.queries.__dict__.get(query.lower())
+        sel_obj = vars(self.queries).get(query.lower())
         if sel_obj is None:
             raise fangraphs.exceptions.InvalidFilterQuery(query)
         return sel_obj.list_options()
@@ -119,7 +116,7 @@ class ScrapingUtilities:
         :rtype: str
         :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
         """
-        sel_obj = self.queries.__dict__.get(query.lower())
+        sel_obj = vars(self.queries).get(query.lower())
         if sel_obj is None:
             raise fangraphs.exceptions.InvalidFilterQuery(query)
         return sel_obj.current_option()
@@ -133,19 +130,20 @@ class ScrapingUtilities:
         :raises FanGraphs.exceptions.InvalidFilterQuery: Invalid argument ``query``
         """
         self._close_ad()
-        sel_obj = self.queries.__dict__.get(query.lower())
+        sel_obj = vars(self.queries).get(query.lower())
         if sel_obj is None:
             raise fangraphs.exceptions.InvalidFilterQuery(query)
         sel_obj.configure(option)
 
-    def export(self, *, cleanup=True):
+    def export(self):
         """
-        Uses the **Export Data** button on the webpage to export the current leaderboard.
-        The CSV file is read and the data is stored in a DataFrame.
+        Exports the data in the current leaderboard as a DataFrame.
 
-        :param cleanup: Whether to delete the downloaded file
-        :return: The DataFrame containing the CSV data.
-        If ``cleanup`` is ``False``, the path to the CSV file will be returned.
+        The **Export Data** button is clicked, downloading a CSV file containing the data.
+        The CSV is read and the data is stored in a DataFrame.
+
+        :return: The leaderboard data
+        :rtype: pandas.DataFrame
         """
         self._close_ad()
         with self.page.expect_download() as down_info:
@@ -153,11 +151,9 @@ class ScrapingUtilities:
         download = down_info.value
         download_path = download.path()
         dataframe = pd.read_csv(download_path)
-        if cleanup:
-            os.remove(download_path)
-            return dataframe
-        else:
-            return dataframe, download_path
+
+        os.remove(download_path)
+        return dataframe
 
     def reset(self):
         """

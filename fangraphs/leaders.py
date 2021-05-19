@@ -22,8 +22,11 @@ class GameSpan(ScrapingUtilities):
     address = "https://fangraphs.com/leaders/special/60-game-span"
 
     def __init__(self, browser):
+        """
+        :param browser: A Playwright ``Browser`` object A Playwright ``Browser`` object
+        :type browser: playwright.sync_api._generated.Browser
+        """
         ScrapingUtilities.__init__(self, browser, self.address, leaders_sel.GameSpan)
-        self.queries = leaders_sel.GameSpan(self.page)
 
 
 class International(ScrapingUtilities):
@@ -36,8 +39,13 @@ class International(ScrapingUtilities):
     address = "https://www.fangraphs.com/leaders/international"
 
     def __init__(self, browser):
+        """
+        :param browser: A Playwright ``Browser`` object
+        :type browser: playwright.sync_api._generated.Browser
+
+        .. py:attribute:: browser
+        """
         ScrapingUtilities.__init__(self, browser, self.address, leaders_sel.International)
-        self.queries = leaders_sel.International(self.page)
 
 
 class MajorLeague(ScrapingUtilities):
@@ -53,8 +61,13 @@ class MajorLeague(ScrapingUtilities):
     address = "https://fangraphs.com/leaders.aspx"
 
     def __init__(self, browser):
+        """
+        :param browser: A Playwright ``Browser`` object
+        :type browser: playwright.sync_api._generated.Browser
+
+        .. py:attribute:: browser
+        """
         ScrapingUtilities.__init__(self, browser, self.address, leaders_sel.MajorLeague)
-        self.queries = leaders_sel.MajorLeague(self.page)
 
 
 class SeasonStat(ScrapingUtilities):
@@ -67,11 +80,18 @@ class SeasonStat(ScrapingUtilities):
     address = "https://fangraphs.com/leaders/season-stat-grid"
 
     def __init__(self, browser):
+        """
+        :param browser: A Playwright ``Browser`` object
+        :type browser: playwright.sync_api._generated.Browser
+        """
         ScrapingUtilities.__init__(self, browser, self.address, leaders_sel.SeasonStat)
-        self.queries = leaders_sel.SeasonStat(self.page)
 
     def _write_table_headers(self):
         """
+        Initializes a new DataFrame with columns corresponding to the table headers.
+
+        :return: A DataFrame with columns set to the table headers
+        :rtype: pandas.DataFrame
         """
         elems = self.page.query_selector_all(".table-scroll thead tr th")
         headers = [e.text_content() for e in elems]
@@ -80,9 +100,12 @@ class SeasonStat(ScrapingUtilities):
 
     def _write_table_rows(self, dataframe):
         """
+        Writes the data from each of the rows of each of the tables to the DataFrame.
 
-        :param dataframe:
+        :param dataframe: The DataFrame to modify
         :type dataframe: pandas.DataFrame
+        :return: The DataFrame updated with all the table leaderboard data
+        :rtype: pandas.DataFrame
         """
         total_pages = int(
             self.page.query_selector(
@@ -100,8 +123,12 @@ class SeasonStat(ScrapingUtilities):
             self.page.click(".table-page-control:nth-last-child(1) > .next")
         return dataframe
 
-    def export(self, *, cleanup=True):
+    def export(self):
         """
+        Exports the data in the current leaderboard as a DataFrame.
+
+        :return: A DataFrame containing the table data
+        :rtype: pandas.DataFrame
         """
         self._close_ad()
 
@@ -121,8 +148,25 @@ class Splits(ScrapingUtilities):
     address = "https://fangraphs.com/leaders/splits-leaderboards"
 
     def __init__(self, browser):
+        """
+        :param browser: A Playwright ``Browser`` object
+        :type browser: playwright.sync_api._generated.Browser
+
+        .. py:attribute:: qsbatting
+
+            Contains the CSS selectors for the batting-related quick splits.
+            Allows for the configuration of the Splits leaderboard to any batting quick split.
+
+            :type: fangraphs.leaders_sel.QuickSplits.Batting
+
+        .. py:attribute:: qspitching
+
+            Contains the CSS selectors for the pitching-related quick splits.
+            Allows for the configuration of the Splits leaderboard to any pitching quick split.
+
+            :type: fangraphs.leaders_sel.QuickSplits.Pitching
+        """
         ScrapingUtilities.__init__(self, browser, self.address, leaders_sel.Splits)
-        self.queries = leaders_sel.Splits(self.page)
         self.qsbatting = leaders_sel.QuickSplits.Batting()
         self.qspitching = leaders_sel.QuickSplits.Pitching()
 
@@ -132,6 +176,7 @@ class Splits(ScrapingUtilities):
         All configured filters are submitted and the page is refreshed.
 
         :raises FanGraphs.exceptions.FilterUpdateIncapability: No filter queries to update
+        :rtype: None
         """
         elem = self.page.query_selector("#button-update")
         if elem is None:
@@ -141,10 +186,10 @@ class Splits(ScrapingUtilities):
 
     def list_filter_groups(self):
         """
-        Lists the possible groups of filter queries which can be used
+        Lists the possible groups of filter queries which can be used.
 
         :return: Names of the groups of filter queries
-        :rtype: list
+        :rtype: list[str]
         """
         elems = self.page.query_selector_all(".fgBin.splits-bin-controller div")
         groups = [e.text_content() for e in elems]
@@ -152,9 +197,10 @@ class Splits(ScrapingUtilities):
 
     def set_filter_group(self, group="Show All"):
         """
-        Configures the available filters to a specified group of filters
+        Configures the available filters to a specified group of filters.
 
         :param group: The name of the group of filters
+        :rtype: None
         """
         options = [o.lower() for o in self.list_filter_groups()]
         try:
@@ -179,6 +225,8 @@ class Splits(ScrapingUtilities):
         - ``preset_range``
         - ``auto_pt``
         - ``split_teams``
+
+        :rypte: None
         """
         elem = self.page.query_selector(
             "#stack-buttons .fgButton.small:nth-last-child(1)"
@@ -194,7 +242,7 @@ class Splits(ScrapingUtilities):
         Quick splits allow for the configuration of multiple filter queries at once.
 
         :return: All available quick splits
-        :rtype: list
+        :rtype: list[str]
         """
         quick_splits = []
         quick_splits.extend(list(self.qsbatting.__dict__))
@@ -215,6 +263,7 @@ class Splits(ScrapingUtilities):
         :param quick_split_selector: The CSS selector which corresponds to the quick split
         :param autoupdate: If ``True``, :py:meth:`reset_filters` will be called
         :raises FanGraphs.exceptions.InvalidQuickSplits: Invalid argument ``quick_split``
+        :rtype: None
         """
         self.page.click(quick_split_selector)
         if autoupdate:
@@ -231,5 +280,8 @@ class WAR(ScrapingUtilities):
     address = "https://fangraphs.com/warleaders.aspx"
 
     def __init__(self, browser):
+        """
+        :param browser: A Playwright ``Browser`` object
+        :type browser: playwright.sync_api._generated.Browser
+        """
         ScrapingUtilities.__init__(self, browser, self.address, leaders_sel.WAR)
-        self.queries = leaders_sel.WAR(self.page)
