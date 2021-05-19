@@ -1,5 +1,5 @@
-Fangraphs.projections Package
-=============================
+Fangraphs.projections Module
+============================
 
 .. automodule:: fangraphs.projections
     :members:
