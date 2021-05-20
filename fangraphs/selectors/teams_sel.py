@@ -59,3 +59,30 @@ class Schedule:
     def __init__(self, page):
         for key, val in self.__dropdowns_type_4.items():
             self.__setattr__(key, selectors.DropdownsType4(page, val))
+
+
+class PlayerUsage:
+    """
+    CSS selectors for :py:class:`fangraphs.teams.PlayerUsage`.
+    """
+
+    __dropdowns_type_4 = {
+        "team": "select.select-change-team"
+    }
+    __dropdowns_type_3 = {
+        "season": "#root-team-lineup div:nth-child(3)"
+    }
+    __selections_type_3 = {
+        "mode": "#root-team-lineup div:nth-child(1)",
+        "handedness": "#root-team-lineup div:nth-child(2)"
+    }
+    waitfor = ""
+    export_data = ""
+
+    def __init__(self, page):
+        for key, val in self.__dropdowns_type_4.items():
+            self.__setattr__(key, selectors.DropdownsType4(page, val))
+        for key, val in self.__dropdowns_type_3.items():
+            self.__setattr__(key, selectors.DropdownsType3(page, val))
+        for key, val in self.__selections_type_3.items():
+            self.__setattr__(key, selectors.SelectionsType3(page, val))

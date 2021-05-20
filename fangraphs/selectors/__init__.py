@@ -135,6 +135,60 @@ class SelectionsType2(__Selectors):
         self.page.click(self.selector[index])
 
 
+class SelectionsType3(__Selectors):
+
+    def __init__(self, page, selector: str):
+        """
+        :param page:
+        :type page: playwright.sync_api._generated.Page
+        :param selector:
+        """
+        super().__init__()
+        self.page = page
+        self.selector = selector
+
+    def list_options(self):
+        """
+
+        :return:
+        :rtype: list[str]
+        """
+        elems = self.page.query_selector(
+            self.selector
+        ).query_selector_all("a")
+        options = [e.text_content() for e in elems]
+        return options
+
+    def current_option(self):
+        """
+        :return:
+        :rtype: str or None
+        """
+        elems = self.page.query_selector(
+            self.selector
+        ).query_selector_all("a")
+        for elem in elems:
+            if "active" in elem.get_attribute("class"):
+                option = elem.text_content()
+                return option
+
+    def configure(self, option: str):
+        """
+
+        :param option:
+        :rtype: None
+        """
+        options = [o.lower() for o in self.list_options()]
+        try:
+            index = options.index(option.lower())
+        except ValueError as err:
+            raise fangraphs.exceptions.InvalidFilterOption(option) from err
+        elem = self.page.query_selector(
+            self.selector
+        ).query_selector_all("a")[index]
+        elem.click()
+
+
 class DropdownsType1(__Selectors):
     """
     Web scraper utility for a FanGraphs dropdown widget variation.
@@ -291,7 +345,7 @@ class DropdownsType3(__Selectors):
         ).query_selector_all("ul > li")
         option = [
             e.text_content() for e in elems
-            if "highlight-selection" in e.get_attribute("class")
+            if "highlight" in e.get_attribute("class")
         ]
         if not multiple:
             return option[0] if option else ""
