@@ -191,6 +191,22 @@ class Schedule(ScrapingUtilities):
         """
         ScrapingUtilities.__init__(self, browser, self.address, teams_sel.Schedule)
 
+    @staticmethod
+    def _get_table_headers(node):
+        """
+
+        :param node:
+        :type node: playwright.sync_api._generated.ElementHandle
+        :return:
+        :rtype: list[str]
+        """
+        headers = [e.text_content() for e in node.query_selector_all("th")]
+        headers[1] = "vs/at"
+        headers.extend(
+            [f"{headers[-2]} Player ID", f"{headers[-1]} Player ID"]
+        )
+        return headers
+
     def _scrape_table(self):
         """
 
@@ -200,14 +216,8 @@ class Schedule(ScrapingUtilities):
         elems = self.page.query_selector_all(
             ".team-schedule-table tbody > tr"
         )
-
-        # Get header data
         header_elem = elems.pop(0)
-        headers = [e.text_content() for e in header_elem.query_selector_all("th")]
-        headers[1] = "VS/AT"
-        headers.extend(
-            [f"{headers[-2]} Player ID", f"{headers[-1]} Player ID"]
-        )
+        headers = self._get_table_headers(header_elem)
 
         # Initialize objects
         dataframe = pd.DataFrame(columns=headers)
@@ -223,16 +233,29 @@ class Schedule(ScrapingUtilities):
             )
             data[0] = f"{dates[0]} ({dates[1]})"
 
+            # Edit pitchers
+            pitchers = (
+                row.query_selector("td.alignL:nth-last-child(2)"),
+                row.query_selector("td.alignL:nth-last-child(1)")
+            )
+            for pitch_elem, pitch in zip(pitchers, data[-2:]):
+                if pitch and "probable" in pitch_elem.get_attribute("class"):
+                    data[data.index(pitch)] = f"{pitch}*"
+
             # Add pitcher player IDs
-            hrefs = row.query_selector_all("td.alignL.hi > a")
-            pitcher_ids = [
-                regex.search(h.get_attribute("href")).group(1)
-                for h in hrefs
-            ]
-            if pitcher_ids:
-                data.extend(pitcher_ids)
-            else:
-                data.extend([np.NaN, np.NaN])
+            pitcher_ids = []
+            for elem in pitchers:
+                try:
+                    pitcher_ids.append(
+                        regex.search(
+                            elem.query_selector(
+                                "a"
+                            ).get_attribute("href")
+                        ).group(1)
+                    )
+                except AttributeError:
+                    pitcher_ids.append(np.NaN)
+            data.extend(pitcher_ids)
 
             # Update DataFrame
             dataframe.loc[i] = data
@@ -241,6 +264,8 @@ class Schedule(ScrapingUtilities):
 
     def export(self):
         """
+
+        _Note: An asterisk (*) next to a pitcher's name denotes a probably start._
 
         :return:
         :rtype: pd.DataFrame
