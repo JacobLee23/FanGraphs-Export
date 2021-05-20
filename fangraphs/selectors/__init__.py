@@ -32,7 +32,6 @@ class SelectionsType1(__Selectors):
 
     def __init__(self, page, selector: str):
         """
-
         :param page:
         :type page: playwright.sync_api._generated.Page
         :param selector:
@@ -90,7 +89,6 @@ class SelectionsType2(__Selectors):
 
     def __init__(self, page, selector: list):
         """
-
         :param page:
         :type page: playwright.sync_api._generated.Page
         :param selector:
@@ -145,7 +143,6 @@ class DropdownsType1(__Selectors):
 
     def __init__(self, page, selector: str, dd_options: str):
         """
-
         :param page:
         :type page: playwright.sync_api._generated.Page
         :param selector:
@@ -206,7 +203,6 @@ class DropdownsType2(__Selectors):
 
     def __init__(self, page, selector: str):
         """
-
         :param page:
         :type page: playwright.sync_api._generated.Page
         :param selector:
@@ -263,7 +259,6 @@ class DropdownsType3(__Selectors):
     """
     def __init__(self, page, selector: str):
         """
-
         :param page:
         :type page: playwright.sync_api._generated.Page
         :param selector:
@@ -320,11 +315,60 @@ class DropdownsType3(__Selectors):
         elem.click()
 
 
+class DropdownsType4(__Selectors):
+    """
+
+    """
+    def __init__(self, page, selector: str):
+        """
+        :param page:
+        :type page: playwright.sync_api._generated.Page
+        :param selector:
+        """
+        super().__init__()
+        self.page = page
+        self.selector = selector
+
+    def list_options(self):
+        """
+
+        :return:
+        :rtype: list[str]
+        """
+        elems = self.page.query_selector(
+            self.selector
+        ).query_selector_all("option")
+        options = [e.text_content() for e in elems]
+        return options
+
+    def current_option(self):
+        """
+
+        :return:
+        :rtype: str
+        """
+        option = self.page.eval_on_selector(
+            self.selector, "el => el.value"
+        )
+        return option
+
+    def configure(self, option: str):
+        """
+
+        :param option:
+        :rtype: None
+        """
+        for opt in self.list_options():
+            if opt.lower() == option.lower():
+                self.page.select_option(self.selector, label=opt)
+                return
+        raise fangraphs.exceptions.InvalidFilterOption(option)
+
+
 class Checkboxes(__Selectors):
 
     def __init__(self, page, selector: str):
         """
-
         :param page:
         :type page: playwright.sync_api._generated.Page
         :param selector:
@@ -363,7 +407,6 @@ class Switches(__Selectors):
 
     def __init__(self, page, selector: str):
         """
-
         :param page:
         :type page: playwright.sync_api._generated.Page
         :param selector:

@@ -8,7 +8,7 @@ Unit tests for :py:mod:`fangraphs.teams`.
 from urllib.request import urlopen
 
 
-class TestTeams:
+class TestSummary:
     """
     :py:class:`fangraphs.teams.Teams`.
     """
