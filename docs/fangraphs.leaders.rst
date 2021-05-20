@@ -1,5 +1,5 @@
-Fangraphs.leaders Package
-=========================
+Fangraphs.leaders Module
+========================
 
 .. automodule:: fangraphs.leaders
     :members:
