@@ -3,6 +3,9 @@
 
 """
 Scrapers for the webpages under the FanGraphs **Teams** tab.
+
+_Note: The default team is the Los Angeles Angels of Anaheim.
+Thus, the base URL always navigates to the stats concerning the Angels._
 """
 
 import re
@@ -14,13 +17,54 @@ from fangraphs import ScrapingUtilities
 from fangraphs.selectors import teams_sel
 
 
+def _scrape_table_headers(node):
+    """
+
+    :return:
+    :rtype: pd.DataFrame
+    """
+    elems = node.query_selector_all("thead > tr > th")
+    headers = [e.text_content() for e in elems]
+    headers.extend(["Player ID", "Position(s)"])
+    dataframe = pd.DataFrame(columns=headers)
+    return dataframe
+
+
+def _scrape_table_rows(dataframe, node):
+    """
+
+    :param dataframe:
+    :type dataframe: pd.DataFrame
+    :param node:
+    :type node: playwright.sync_api._generated.ElementHandle
+    :return:
+    :rtype: pd.DataFrame
+    """
+    elems = node.query_selector_all("tbody > tr[role='row']")
+    regex = re.compile(r"/statss\.aspx\?playerid=(\d+)&position=(.*)")
+    for i, elem in enumerate(elems):
+        row = [e.text_content() for e in elem.query_selector_all("td")]
+        try:
+            href = elem.query_selector("td.frozen > a").get_attribute("href")
+            pid, pos = regex.search(href).groups()
+            row.extend([int(pid), pos])
+        except AttributeError:
+            row.extend([np.NaN, ""])
+        dataframe.loc[i] = row
+    foot = node.query_selector("tfoot > tr[role='row']")
+    footer_row = [e.text_content() for e in foot.query_selector_all("td")]
+    footer_row.extend([np.NaN, ""])
+    dataframe.loc["Total"] = footer_row
+    return dataframe
+
+
 class Summary(ScrapingUtilities):
     """
-    Scrapes the FanGraphs `Teams`_ pages.
+    Scrapes the `Summary`_ tab of the FanGraphs **Teams** pages.
 
     _Note: The default team is the Los Angeles Angels of Anaheim
 
-    .. _Teams: https://fangraphs.com/teams/angels
+    .. _Summary: https://fangraphs.com/teams/angels/
     """
 
     address = "https://fangraphs.com/teams/angels"
@@ -32,48 +76,7 @@ class Summary(ScrapingUtilities):
         """
         ScrapingUtilities.__init__(self, browser, self.address, teams_sel.Summary)
 
-    @staticmethod
-    def _write_table_headers(node):
-        """
-
-        :return:
-        :rtype: pd.DataFrame
-        """
-        elems = node.query_selector_all("thead > tr > th")
-        headers = [e.text_content() for e in elems]
-        headers.extend(["Player ID", "Position(s)"])
-        dataframe = pd.DataFrame(columns=headers)
-        return dataframe
-
-    @staticmethod
-    def _write_table_rows(dataframe, node):
-        """
-
-        :param dataframe:
-        :type dataframe: pd.DataFrame
-        :param node:
-        :type node: playwright.sync_api._generated.ElementHandle
-        :return:
-        :rtype: pd.DataFrame
-        """
-        elems = node.query_selector_all("tbody > tr[role='row']")
-        regex = re.compile(r"/statss\.aspx\?playerid=(\d+)&position=(.*)")
-        for i, elem in enumerate(elems):
-            row = [e.text_content() for e in elem.query_selector_all("td")]
-            try:
-                href = elem.query_selector("td.frozen > a").get_attribute("href")
-                pid, pos = regex.search(href).groups()
-                row.extend([int(pid), pos])
-            except AttributeError:
-                row.extend([np.NaN, ""])
-            dataframe.loc[i] = row
-        foot = node.query_selector("tfoot > tr[role='row']")
-        footer_row = [e.text_content() for e in foot.query_selector_all("td")]
-        footer_row.extend([np.NaN, ""])
-        dataframe.loc["Total"] = footer_row
-        return dataframe
-
-    def _get_dchart_group(self, pos_nums):
+    def _scrape_dchart(self, pos_nums):
         """
 
         :param pos_nums:
@@ -107,8 +110,8 @@ class Summary(ScrapingUtilities):
         :return:
         :rtype: tuple[dict[str, pd.DataFrame]]
         """
-        position_players = self._get_dchart_group(range(2, 11))
-        pitchers = self._get_dchart_group(range(0, 2))
+        position_players = self._scrape_dchart(range(2, 11))
+        pitchers = self._scrape_dchart(range(0, 2))
         return position_players, pitchers
 
     def export(self):
@@ -117,20 +120,56 @@ class Summary(ScrapingUtilities):
         :return:
         :rtype: dict[str, pd.DataFrame]
         """
-        self._close_ad()
         data = {}
 
         groups = self.page.query_selector_all(".team-stats-table")
         stats = ("Batting Stat Leaders", "Pitching Stat Leaders")
         for group, stat in zip(groups, stats):
             data.setdefault(stat)
-            dataframe = self._write_table_headers(group)
-            dataframe = self._write_table_rows(dataframe, group)
+            dataframe = _scrape_table_headers(group)
+            dataframe = _scrape_table_rows(dataframe, group)
             data[stat] = dataframe
 
         data.setdefault("Depth Chart")
         pplayer_dchart, pitcher_dchart = self._write_depth_charts()
         data.update(pplayer_dchart)
         data.update(pitcher_dchart)
+
+        return data
+
+
+class Stats(ScrapingUtilities):
+    """
+    Scrapes the `Stats`_ tab of the FanGraphs **Teams** pages.
+
+    .. _Stats: https://fangraphs.com/teams/angels/stats
+    """
+
+    address = "https://fangraphs.com/teams/angels/stats"
+
+    def __init__(self, browser):
+        """
+        :param browser: A Playwright ``Browser`` object
+        :type browser: playwright.sync_api._generated.Browser
+        """
+        ScrapingUtilities.__init__(self, browser, self.address, teams_sel.Stats)
+
+    def export(self):
+        """
+
+        :return:
+        :rtype: dict[str, pd.DataFrame]
+        """
+        data = {}
+
+        groups = self.page.query_selector_all(".team-stats-table")
+        stats = [e.text_content() for e in self.page.query_selector_all(
+            "h2.team-header"
+        )]
+        for group, stat in zip(groups, stats):
+            data.setdefault(stat)
+            dataframe = _scrape_table_headers(group)
+            dataframe = _scrape_table_rows(dataframe, group)
+            data[stat] = dataframe
 
         return data
