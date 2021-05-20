@@ -11,6 +11,7 @@ Fangraphs
     :numbered:
     :maxdepth: 4
 
+    fangraphs.depth_charts
     fangraphs.leaders
     fangraphs.projections
     fangraphs.teams

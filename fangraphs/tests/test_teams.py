@@ -8,12 +8,12 @@ Unit tests for :py:mod:`fangraphs.teams`.
 from urllib.request import urlopen
 
 
-class TestDepthCharts:
+class TestTeams:
     """
-    :py:class:`fangraphs.teams.DepthCharts`.
+    :py:class:`fangraphs.teams.Teams`.
     """
 
-    address = "https://fangraphs.com/depthcharts.aspx"
+    address = "https://fangraphs.com/teams/"
 
     def test_address(self):
         res = urlopen(self.address)

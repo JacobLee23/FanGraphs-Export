@@ -8,24 +8,9 @@ CSS selectors for the classes in :py:mod:`fangraphs.teams`.
 """
 
 
-class DepthCharts:
+class Teams:
     """
-    CSS selectors for :py:class:`fangraphs.teams.DepthCharts`.
-    """
-    __selections_type_1 = {
-        "view_type": "#tsPosition"
-    }
-    waitfor = ""
-    export_data = ""
-
-    def __init__(self, page):
-        for key, val in self.__selections_type_1.items():
-            self.__setattr__(key, selectors.SelectionsType1(page, val))
-
-
-class Team:
-    """
-    CSS selectors for :py:class:`fangraphs.teams.Team`.
+    CSS selectors for :py:class:`fangraphs.teams.Teams`.
     """
     __selector = "#menu-team > .menu-team"
     __opt_sels = [
@@ -54,7 +39,7 @@ class Team:
         options = ["blue_jays", "orioles", "rays", "red_sox", "yankees"]
 
         def __init__(self):
-            for key, selector in Team.compile_selectors(self):
+            for key, selector in Teams.compile_selectors(self):
                 self.__setattr__(key, selector)
 
     class ALCentral:
@@ -66,7 +51,7 @@ class Team:
         options = ["indians", "royals", "tigers", "twins", "white_sox"]
 
         def __init__(self):
-            for key, selector in Team.compile_selectors(self):
+            for key, selector in Teams.compile_selectors(self):
                 self.__setattr__(key, selector)
 
     class ALWest:
@@ -78,7 +63,7 @@ class Team:
         options = ["angels", "astros", "athletics", "mariners", "rangers"]
 
         def __init__(self):
-            for key, selector in Team.compile_selectors(self):
+            for key, selector in Teams.compile_selectors(self):
                 self.__setattr__(key, selector)
 
     class NLEast:
@@ -90,7 +75,7 @@ class Team:
         options = ["braves", "marlins", "mets", "nationals", "phillies"]
 
         def __init__(self):
-            for key, selector in Team.compile_selectors(self):
+            for key, selector in Teams.compile_selectors(self):
                 self.__setattr__(key, selector)
 
     class NLCentral:
@@ -102,7 +87,7 @@ class Team:
         options = ["brewers", "cardinals", "cubs", "pirates", "reds"]
 
         def __init__(self):
-            for key, selector in Team.compile_selectors(self):
+            for key, selector in Teams.compile_selectors(self):
                 self.__setattr__(key, selector)
 
     class NLWest:
@@ -114,5 +99,5 @@ class Team:
         options = ["diamondbacks", "dodgers", "giants", "padres", "rockies"]
 
         def __init__(self):
-            for key, selector in Team.compile_selectors(self):
+            for key, selector in Teams.compile_selectors(self):
                 self.__setattr__(key, selector)
