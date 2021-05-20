@@ -89,7 +89,7 @@ class Summary(ScrapingUtilities):
         regex = re.compile(r"^//www.fangraphs.com/statss.aspx\?playerid=(.*)")
         for i in pos_nums:
             dataframe = pd.DataFrame(columns=("Name", "Stat", "Player ID"))
-            position = self.page.query_selector(f"g#pos{i}")
+            position = self.page.query_selector(f"#pos{i}")
             pos_name = position.query_selector(f"text#pos-label{i}").text_content()
             player_stats = zip(
                 position.query_selector_all("text.player-name"),
@@ -97,6 +97,8 @@ class Summary(ScrapingUtilities):
             )
             for j, (player, stat) in enumerate(player_stats):
                 name, value = player.text_content(), stat.text_content()
+                if not (name and value):
+                    continue
                 try:
                     href = player.query_selector("a").get_attribute("href")
                     pid = regex.search(href).group(1)
@@ -106,7 +108,7 @@ class Summary(ScrapingUtilities):
             data_dict.setdefault(pos_name, dataframe)
         return data_dict
 
-    def _write_depth_charts(self):
+    def _scrape_depth_charts(self):
         """
 
         :return:
@@ -132,8 +134,7 @@ class Summary(ScrapingUtilities):
             dataframe = _scrape_table_rows(dataframe, group)
             data[stat] = dataframe
 
-        data.setdefault("Depth Chart")
-        pplayer_dchart, pitcher_dchart = self._write_depth_charts()
+        pplayer_dchart, pitcher_dchart = self._scrape_depth_charts()
         data.update(pplayer_dchart)
         data.update(pitcher_dchart)
 
@@ -194,7 +195,7 @@ class Schedule(ScrapingUtilities):
         ScrapingUtilities.__init__(self, browser, self.address, teams_sel.Schedule)
 
     @staticmethod
-    def _get_table_headers(node):
+    def _get_headers(node):
         """
 
         :param node:
@@ -219,7 +220,7 @@ class Schedule(ScrapingUtilities):
             ".team-schedule-table tbody > tr"
         )
         header_elem = elems.pop(0)
-        headers = self._get_table_headers(header_elem)
+        headers = self._get_headers(header_elem)
 
         # Initialize objects
         dataframe = pd.DataFrame(columns=headers)
@@ -339,3 +340,138 @@ class PlayerUsage(ScrapingUtilities):
         dataframe = self._scrape_table_headers()
         dataframe = self._scrape_table_rows(dataframe)
         return dataframe
+
+
+class DepthChart(ScrapingUtilities):
+    """
+    Scrapes the `Depth Chart`_ tab of the FanGraphs **Teams** page.
+
+    .. _Depth Chart: https://fangraphs.com/teams/angels/depth-chart
+    """
+
+    address = "https://fangraphs.com/teams/angels/depth-chart"
+
+    def __init__(self, browser):
+        ScrapingUtilities.__init__(self, browser, self.address, teams_sel.DepthChart)
+
+    def _get_tables(self):
+        """
+
+        :return:
+        :rtype: tuple[list[str], list[str]]
+        """
+        batting = self.page.query_selector_all(".team-depth-chart-bat")
+        pitching = self.page.query_selector_all(".team-depth-chart-pit")
+        return batting, pitching
+
+    @staticmethod
+    def _get_table_headers(node):
+        """
+
+        :param node:
+        :type node: playwright.sync_api._generated.ElementHandle
+        :return:
+        :rtype: list[str]
+        """
+        headers = [e.text_content() for e in node.query_selector_all("th")]
+        headers.insert(1, "Player ID")
+        return headers
+
+    def _scrape_table(self, node):
+        """
+
+        :param node:
+        :type node: playwright.sync_api._generated.ElementHandle
+        :return:
+        :rtype: pd.DataFrame
+        """
+        elems = node.query_selector_all(".team-stats-table tbody > tr")
+
+        header_elem = elems.pop(0)
+        headers = self._get_table_headers(header_elem)
+
+        dataframe = pd.DataFrame(columns=headers)
+        regex = re.compile(r"^/statss.aspx\?playerid=(.*)")
+
+        for i, elem in enumerate(elems):
+            data = [e.text_content() for e in elem.query_selector_all("td")]
+
+            # Get player ID
+            a_elem = elem.query_selector(
+                "td.frozen > a"
+            )
+            pid = regex.search(a_elem.get_attribute("href")).group(1)
+            data.insert(1, pid)
+
+            # Update DataFrame
+            dataframe.loc[i] = data
+
+        return dataframe
+
+    def _scrape_dchart(self, pos_nums):
+        """
+
+        :param pos_nums:
+        :return:
+        :rtype: dict[str, pd.DataFrame]
+        """
+        data_dict = {}
+        regex = re.compile(r"^//www.fangraphs.com/statss.aspx\?playerid=(.*)")
+        for i in pos_nums:
+            print(i)
+            dataframe = pd.DataFrame(columns=("Name", "Stat", "Player ID"))
+            position = self.page.query_selector(f"#pos{i}")
+            pos_name = position.query_selector(f"text#pos-label{i}").text_content()
+            player_stats = zip(
+                position.query_selector_all("text.player-name"),
+                position.query_selector_all("text.player-stat")
+            )
+            for j, (player, stat) in enumerate(player_stats):
+                name, value = player.text_content(), stat.text_content()
+                if not (name and value):
+                    continue
+                try:
+                    href = player.query_selector("a").get_attribute("href")
+                    pid = regex.search(href).group(1)
+                except AttributeError:
+                    pid = np.NaN
+                dataframe.loc[j] = (name, value, pid)
+            data_dict.setdefault(pos_name, dataframe)
+        return data_dict
+
+    def _scrape_depth_charts(self):
+        """
+
+        :return:
+        :rtype: tuple[dict[str, pd.DataFrame]]
+        """
+        position_players = self._scrape_dchart(range(2, 11))
+        pitchers = self._scrape_dchart(range(0, 2))
+        return position_players, pitchers
+
+    def export(self):
+        """
+
+        :return:
+        :rtype: dict[str, pd.DataFrame]
+        """
+        data = {}
+
+        batting, pitching = self._get_tables()
+        for table in batting + pitching:
+            tname = table.query_selector(
+                ".team-depth-table-pos.team-color-primary"
+            ).text_content()
+            if tname == "ALL":
+                if table in batting:
+                    tname = "Batters: ALL"
+                elif table in pitching:
+                    tname = "Pitchers: ALL"
+            dataframe = self._scrape_table(table)
+            data.setdefault(tname, dataframe)
+
+        pplayer_dchart, pitcher_dchart = self._scrape_depth_charts()
+        data.update(pplayer_dchart)
+        data.update(pitcher_dchart)
+
+        return data

@@ -86,3 +86,21 @@ class PlayerUsage:
             self.__setattr__(key, selectors.DropdownsType3(page, val))
         for key, val in self.__selections_type_3.items():
             self.__setattr__(key, selectors.SelectionsType3(page, val))
+
+
+class DepthChart:
+    """
+    CSS selectors for :py:class:`fangraphs.teams.DepthChart`.
+    """
+
+    __dropdowns_type_4 = {
+        "team": "select.select-change-team",
+        "position_players": ".select-container:nth-child(1) > select.pos-stat",
+        "pitchers": ".select-container:nth-child(2) > select.pos-stat"
+    }
+    waitfor = ""
+    export_data = ""
+
+    def __init__(self, page):
+        for key, val in self.__dropdowns_type_4.items():
+            self.__setattr__(key, selectors.DropdownsType4(page, val))

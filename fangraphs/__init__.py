@@ -161,4 +161,4 @@ class ScrapingUtilities:
         """
         self.page.goto(self.address, timeout=0)
         if self.queries.waitfor:
-            self.page.wait_for_selector(".fg-data-grid")
+            self.page.wait_for_selector(self.queries.waitfor)

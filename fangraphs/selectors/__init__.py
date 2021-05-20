@@ -111,14 +111,13 @@ class SelectionsType2(__Selectors):
         """
 
         :return:
-        :rtype: str
+        :rtype: str or None
         """
-        option = ""
         for sel in self.selector:
             elem = self.page.query_selector(sel)
             if "active" in elem.get_attribute("class"):
                 option = elem.text_content()
-        return option
+                return option
 
     def configure(self, option: str):
         """
