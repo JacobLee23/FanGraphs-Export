@@ -13,7 +13,7 @@ class TestSummary:
     :py:class:`fangraphs.teams.Teams`.
     """
 
-    address = "https://fangraphs.com/teams/"
+    address = "https://fangraphs.com/teams/angels"
 
     def test_address(self):
         res = urlopen(self.address)
