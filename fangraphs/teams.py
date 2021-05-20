@@ -173,3 +173,77 @@ class Stats(ScrapingUtilities):
             data[stat] = dataframe
 
         return data
+
+
+class Schedule(ScrapingUtilities):
+    """
+    Scrapes the `Schedule`_ tab of the FanGraphs **Teams** pages.
+
+    .. _Schedule: https://fangraphs.com/tames/angels/schedule
+    """
+
+    address = "https://fangraphs.com/teams/angels/schedule"
+
+    def __init__(self, browser):
+        """
+        :param browser: A Playwright ``Browser`` object
+        :type browser: playwright.sync_api._generated.Browser
+        """
+        ScrapingUtilities.__init__(self, browser, self.address, teams_sel.Schedule)
+
+    def _scrape_table(self):
+        """
+
+        :return:
+        :rtype: pd.DataFrame
+        """
+        elems = self.page.query_selector_all(
+            ".team-schedule-table tbody > tr"
+        )
+
+        # Get header data
+        header_elem = elems.pop(0)
+        headers = [e.text_content() for e in header_elem.query_selector_all("th")]
+        headers[1] = "VS/AT"
+        headers.extend(
+            [f"{headers[-2]} Player ID", f"{headers[-1]} Player ID"]
+        )
+
+        # Initialize objects
+        dataframe = pd.DataFrame(columns=headers)
+        regex = re.compile(r"^//www.fangraphs.com/statss.aspx\?playerid=(.*)")
+
+        for i, row in enumerate(elems):
+            data = [e.text_content() for e in row.query_selector_all("td")]
+
+            # Rewrite date
+            dates = (
+                row.query_selector("span.date-full").text_content(),
+                row.query_selector("span.date-short").text_content()
+            )
+            data[0] = f"{dates[0]} ({dates[1]})"
+
+            # Add pitcher player IDs
+            hrefs = row.query_selector_all("td.alignL.hi > a")
+            pitcher_ids = [
+                regex.search(h.get_attribute("href")).group(1)
+                for h in hrefs
+            ]
+            if pitcher_ids:
+                data.extend(pitcher_ids)
+            else:
+                data.extend([np.NaN, np.NaN])
+
+            # Update DataFrame
+            dataframe.loc[i] = data
+
+        return dataframe
+
+    def export(self):
+        """
+
+        :return:
+        :rtype: pd.DataFrame
+        """
+        dataframe = self._scrape_table()
+        return dataframe

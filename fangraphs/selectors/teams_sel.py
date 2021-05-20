@@ -42,3 +42,20 @@ class Stats:
     def __init__(self, page):
         for key, val in self.__dropdowns_type_4.items():
             self.__setattr__(key, selectors.DropdownsType4(page, val))
+
+
+class Schedule:
+    """
+    CSS selectors for :py:class:`fangraphs.teams.Schedule`.
+    """
+
+    __dropdowns_type_4 = {
+        "team": "select.select-change-team",
+        "select_season": ".team-schedule-select-year > select"
+    }
+    waitfor = ""
+    export_data = ""
+
+    def __init__(self, page):
+        for key, val in self.__dropdowns_type_4.items():
+            self.__setattr__(key, selectors.DropdownsType4(page, val))
