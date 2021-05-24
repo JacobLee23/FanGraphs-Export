@@ -17,47 +17,137 @@ from fangraphs import ScrapingUtilities
 from fangraphs.selectors import teams_sel
 
 
-def _scrape_table_headers(node):
+def _get_table_headers(table, header_elem: str):
     """
+    Scrapes the table headers off of the stat leaders data table.
 
-    :param node:
-    :type node: playwright.sync_api._generated.ElementHandle
-    :return:
+    :param table: The data table element
+    :type table: playwright.sync_api._generated.ElementHandle
+    :param header_elem: A table headers CSS selector
+    :return: An empty DataFrame with columns set to the table headers
     :rtype: pd.DataFrame
     """
-    elems = node.query_selector_all("thead > tr > th")
-    headers = [e.text_content() for e in elems]
+    headers = [
+        e.text_content() for e in table.query_selector_all(
+            header_elem
+        )
+    ]
     headers.extend(["Player ID", "Position(s)"])
     dataframe = pd.DataFrame(columns=headers)
+
     return dataframe
 
 
-def _scrape_table_rows(dataframe, node):
+def _scrape_data_table(table, header_elem="thead > tr > th"):
     """
+    Scrapes each row of data off of the stat leaders data table.
 
-    :param dataframe:
-    :type dataframe: pd.DataFrame
-    :param node:
-    :type node: playwright.sync_api._generated.ElementHandle
-    :return:
+    :param table: The data table element
+    :type table: playwright.sync_api._generated.ElementHandle
+    :param header_elem: A table headers CSS selector
+    :return: A modified DataFrame containing the data in the stat leaders table
     :rtype: pd.DataFrame
     """
-    elems = node.query_selector_all("tbody > tr[role='row']")
-    regex = re.compile(r"/statss\.aspx\?playerid=(\d+)&position=(.*)")
-    for i, elem in enumerate(elems):
-        row = [e.text_content() for e in elem.query_selector_all("td")]
-        try:
-            href = elem.query_selector("td.frozen > a").get_attribute("href")
-            pid, pos = regex.search(href).groups()
-            row.extend([int(pid), pos])
-        except AttributeError:
-            row.extend([np.NaN, ""])
-        dataframe.loc[i] = row
-    foot = node.query_selector("tfoot > tr[role='row']")
+    dataframe = _get_table_headers(table, header_elem)
+
+    rows = table.query_selector_all("tbody > tr[role='row']")
+    href_regex = re.compile(r"/statss\.aspx\?playerid=(\d+)&position=(.*)")
+
+    for i, row in enumerate(rows):
+        data = [e.text_content() for e in row.query_selector_all("td")]
+
+        # Get player ID and position(s)
+        href = row.query_selector("td.frozen > a").get_attribute("href")
+        player_id, position = href_regex.search(href).groups()
+        data.extend([int(player_id), position])
+
+        # Update DataFrame
+        dataframe.loc[i] = data
+
+    # Get table totals
+    foot = table.query_selector("tfoot > tr[role='row']")
     footer_row = [e.text_content() for e in foot.query_selector_all("td")]
     footer_row.extend([np.NaN, ""])
+
+    # Update DataFrame
     dataframe.loc["Total"] = footer_row
+
     return dataframe
+
+
+def _scrape_positional_data(page, pos_num: int):
+    """
+    Scrapes the depth chart data for the specified position.
+
+    :param page: A Playwright ``Page`` object
+    :type page: playwright.sync_api._generated.Page
+    :param pos_num: The positional number
+    :return: The position name and the zipped player names and stats
+    :rtype: tuple[
+        str, list[tuple[playwright.sync_api._generated.ElementHandle]]
+    ]
+    """
+    position = page.query_selector(f"#pos{pos_num}")
+
+    position_name = position.query_selector(
+        f"text#pos-label{pos_num}"
+    ).text_content()
+    player_stats = zip(
+        position.query_selector_all("text.player-name"),
+        position.query_selector_all("text.player-stat")
+    )
+    return position_name, player_stats
+
+
+def _scrape_depth_chart(page, pos_nums):
+    """
+    Scrapes the positional depth chart data off of the depth chart diagrams.
+
+    **Position numbers**:
+
+    +---------------+---------------+---------------+---------------+
+    | ``0``: RP     | ``1``: SP     | ``2``: C      | ``3``: 1B     |
+    +---------------+---------------+---------------+---------------+
+    | ``4``: 2B     | ``5``: 3B     | ``6``: SS     | ``7``: LF     |
+    +---------------+---------------+---------------+---------------+
+    | ``8``: CF     | ``9``: RF     | ``10``: DH    |               |
+    +---------------+---------------+---------------+---------------+
+
+    :param page: A Playwright ``Page`` object
+    :type page: playwright.sync_api._generated.Page
+    :param pos_nums: A sequence of positional numbers to scrape
+    :return: A dictionary of positions and a DataFrame of positional depth chart data
+    :rtype: dict[str, pd.DataFrame]
+    """
+    data = {}
+    href_regex = re.compile(r"^//www.fangraphs.com/statss.aspx\?playerid=(.*)")
+
+    for i in pos_nums:
+        # Initialize DataFrame
+        dataframe = pd.DataFrame(columns=("Name", "Stat", "Player ID"))
+
+        # Get position name and corresponding players
+        position_name, player_stats = _scrape_positional_data(page, i)
+
+        for j, (player, stat) in enumerate(player_stats):
+            player_name, stat_value = player.text_content(), stat.text_content()
+
+            # Get player ID
+            if not (player_name and stat_value):
+                continue
+            try:
+                href = player.query_selector("a").get_attribute("href")
+                player_id = href_regex.search(href).group(1)
+            except AttributeError:
+                player_id = np.NaN
+
+            # Update DataFrame
+            dataframe.loc[j] = (player_name, stat_value, player_id)
+
+        # Update dictionary with position and DataFrame
+        data.setdefault(position_name, dataframe)
+
+    return data
 
 
 class Summary(ScrapingUtilities):
@@ -78,65 +168,27 @@ class Summary(ScrapingUtilities):
         """
         ScrapingUtilities.__init__(self, browser, self.address, teams_sel.Summary)
 
-    def _scrape_dchart(self, pos_nums):
-        """
-
-        :param pos_nums:
-        :return:
-        :rtype: dict[str, pd.DataFrame]
-        """
-        data_dict = {}
-        regex = re.compile(r"^//www.fangraphs.com/statss.aspx\?playerid=(.*)")
-        for i in pos_nums:
-            dataframe = pd.DataFrame(columns=("Name", "Stat", "Player ID"))
-            position = self.page.query_selector(f"#pos{i}")
-            pos_name = position.query_selector(f"text#pos-label{i}").text_content()
-            player_stats = zip(
-                position.query_selector_all("text.player-name"),
-                position.query_selector_all("text.player-stat")
-            )
-            for j, (player, stat) in enumerate(player_stats):
-                name, value = player.text_content(), stat.text_content()
-                if not (name and value):
-                    continue
-                try:
-                    href = player.query_selector("a").get_attribute("href")
-                    pid = regex.search(href).group(1)
-                except AttributeError:
-                    pid = np.NaN
-                dataframe.loc[j] = (name, value, pid)
-            data_dict.setdefault(pos_name, dataframe)
-        return data_dict
-
-    def _scrape_depth_charts(self):
-        """
-
-        :return:
-        :rtype: tuple[dict[str, pd.DataFrame]]
-        """
-        position_players = self._scrape_dchart(range(2, 11))
-        pitchers = self._scrape_dchart(range(0, 2))
-        return position_players, pitchers
-
     def export(self):
         """
+        Scrapes the data tables and depth chart diagram.
 
-        :return:
+        :return: A dictionary of tables names and a DataFrame of the table data
         :rtype: dict[str, pd.DataFrame]
         """
         data = {}
 
-        groups = self.page.query_selector_all(".team-stats-table")
-        stats = ("Batting Stat Leaders", "Pitching Stat Leaders")
-        for group, stat in zip(groups, stats):
-            data.setdefault(stat)
-            dataframe = _scrape_table_headers(group)
-            dataframe = _scrape_table_rows(dataframe, group)
-            data[stat] = dataframe
+        tables = self.page.query_selector_all(".team-stats-table")
+        tnames = [
+            e.text_content() for e in self.page.query_selector_all(
+                "h2.team-header"
+            )
+        ]
+        for table, tname in zip(tables, tnames):
+            dataframe = _scrape_data_table(table)
+            data.setdefault(tname, dataframe)
 
-        pplayer_dchart, pitcher_dchart = self._scrape_depth_charts()
-        data.update(pplayer_dchart)
-        data.update(pitcher_dchart)
+        data.update(_scrape_depth_chart(self.page, range(2, 11)))
+        data.update(_scrape_depth_chart(self.page, range(0, 2)))
 
         return data
 
@@ -159,21 +211,22 @@ class Stats(ScrapingUtilities):
 
     def export(self):
         """
+        Scrapes the data tables.
 
-        :return:
+        :return: A dictionary of the table names and a DataFrame of the table data
         :rtype: dict[str, pd.DataFrame]
         """
         data = {}
 
-        groups = self.page.query_selector_all(".team-stats-table")
-        stats = [e.text_content() for e in self.page.query_selector_all(
-            "h2.team-header"
-        )]
-        for group, stat in zip(groups, stats):
-            data.setdefault(stat)
-            dataframe = _scrape_table_headers(group)
-            dataframe = _scrape_table_rows(dataframe, group)
-            data[stat] = dataframe
+        tables = self.page.query_selector_all(".team-stats-table")
+        tnames = [
+            e.text_content() for e in self.page.query_selector_all(
+                "h2.team-header"
+            )
+        ]
+        for table, tname in zip(tables, tnames):
+            dataframe = _scrape_data_table(table)
+            data.setdefault(tname, dataframe)
 
         return data
 
@@ -195,41 +248,48 @@ class Schedule(ScrapingUtilities):
         ScrapingUtilities.__init__(self, browser, self.address, teams_sel.Schedule)
 
     @staticmethod
-    def _get_headers(node):
+    def get_table_headers(header_elem):
         """
+        Scrapes the table headers.
 
-        :param node:
-        :type node: playwright.sync_api._generated.ElementHandle
-        :return:
-        :rtype: list[str]
-        """
-        headers = [e.text_content() for e in node.query_selector_all("th")]
-        headers[1] = "vs/at"
-        headers.extend(
-            [f"{headers[-2]} Player ID", f"{headers[-1]} Player ID"]
-        )
-        return headers
-
-    def _scrape_table(self):
-        """
-
-        :return:
+        :param header_elem: The table header element
+        :type header_elem: playwright.sync_api._generated.ElementHandle
+        :return: An empty DataFrame with the columns set to the table headers
         :rtype: pd.DataFrame
         """
-        elems = self.page.query_selector_all(
+        headers = [
+            e.text_content() for e in header_elem.query_selector_all("th")
+        ]
+        headers[1] = "vs/at"
+        headers.extend([
+            f"{headers[-2]} Player ID",
+            f"{headers[-1]} Player ID"
+        ])
+
+        dataframe = pd.DataFrame(columns=headers)
+
+        return dataframe
+
+    def _scrape_data_table(self):
+        """
+        Scrapes the data table
+
+        :return: A DataFrame of the table data
+        :rtype: pd.DataFrame
+        """
+        rows = self.page.query_selector_all(
             ".team-schedule-table tbody > tr"
         )
-        header_elem = elems.pop(0)
-        headers = self._get_headers(header_elem)
+        header_elem = rows.pop(0)
 
-        # Initialize objects
-        dataframe = pd.DataFrame(columns=headers)
-        regex = re.compile(r"^//www.fangraphs.com/statss.aspx\?playerid=(.*)")
+        dataframe = self.get_table_headers(header_elem)
 
-        for i, row in enumerate(elems):
+        href_regex = re.compile(r"^//www.fangraphs.com/statss.aspx\?playerid=(.*)")
+
+        for i, row in enumerate(rows):
             data = [e.text_content() for e in row.query_selector_all("td")]
 
-            # Rewrite date
+            # Edit dates
             dates = (
                 row.query_selector("span.date-full").text_content(),
                 row.query_selector("span.date-short").text_content()
@@ -245,17 +305,12 @@ class Schedule(ScrapingUtilities):
                 if pitch and "probable" in pitch_elem.get_attribute("class"):
                     data[data.index(pitch)] = f"{pitch}*"
 
-            # Add pitcher player IDs
+            # Get pitcher player IDs
             pitcher_ids = []
             for elem in pitchers:
                 try:
-                    pitcher_ids.append(
-                        regex.search(
-                            elem.query_selector(
-                                "a"
-                            ).get_attribute("href")
-                        ).group(1)
-                    )
+                    href = elem.query_selector("a").get_attribute("href")
+                    pitcher_ids.append(href_regex.search(href).group(1))
                 except AttributeError:
                     pitcher_ids.append(np.NaN)
             data.extend(pitcher_ids)
@@ -267,13 +322,14 @@ class Schedule(ScrapingUtilities):
 
     def export(self):
         """
+        Scrapes the data table.
 
         _Note: An asterisk (*) next to a pitcher's name denotes a probably start._
 
-        :return:
+        :return: A DataFrame of the table data
         :rtype: pd.DataFrame
         """
-        dataframe = self._scrape_table()
+        dataframe = self._scrape_data_table()
         return dataframe
 
 
@@ -293,7 +349,7 @@ class PlayerUsage(ScrapingUtilities):
         """
         ScrapingUtilities.__init__(self, browser, self.address, teams_sel.PlayerUsage)
 
-    def _scrape_table_headers(self):
+    def _get_table_headers(self):
         """
 
         :return:
@@ -305,26 +361,26 @@ class PlayerUsage(ScrapingUtilities):
         dataframe = pd.DataFrame(columns=headers)
         return dataframe
 
-    def _scrape_table_rows(self, dataframe):
+    def _scrape_data_tables(self):
         """
 
-        :param dataframe:
-        :type dataframe: pd.DataFrame
         :return:
         :rtype: pd.DataFrame
         """
-        elems = self.page.query_selector_all(".table-scroll tbody > tr")
-        regex = re.compile(r"^//www.fangraphs.com/statss.aspx\?playerid=(.*)")
+        dataframe = self._get_table_headers()
 
-        for i, elem in enumerate(elems):
-            data = [e.text_content() for e in elem.query_selector_all("td")]
+        rows = self.page.query_selector_all(".table-scroll tbody > tr")
+        href_regex = re.compile(r"^//www.fangraphs.com/statss.aspx\?playerid=(.*)")
+
+        for i, row in enumerate(rows):
+            data = [e.text_content() for e in row.query_selector_all("td")]
 
             # Get opposing pitcher player ID
-            a_elem = elem.query_selector(
+            href = row.query_selector(
                 "td[data-stat='Opp SP'] > a"
-            )
-            pid = regex.search(a_elem.get_attribute("href")).group(1)
-            data.insert(2, pid)
+            ).get_attribute("href")
+            player_id = href_regex.search(href).group(1)
+            data.insert(2, player_id)
 
             # Update DataFrame
             dataframe.loc[i] = data
@@ -333,12 +389,12 @@ class PlayerUsage(ScrapingUtilities):
 
     def export(self):
         """
+        Scrapes the data table.
 
-        :return:
+        :return: A DataFrame of the table data
         :rtype: pd.DataFrame
         """
-        dataframe = self._scrape_table_headers()
-        dataframe = self._scrape_table_rows(dataframe)
+        dataframe = self._scrape_data_tables()
         return dataframe
 
 
@@ -354,124 +410,76 @@ class DepthChart(ScrapingUtilities):
     def __init__(self, browser):
         ScrapingUtilities.__init__(self, browser, self.address, teams_sel.DepthChart)
 
-    def _get_tables(self):
-        """
-
-        :return:
-        :rtype: tuple[list[str], list[str]]
-        """
-        batting = self.page.query_selector_all(".team-depth-chart-bat")
-        pitching = self.page.query_selector_all(".team-depth-chart-pit")
-        return batting, pitching
-
     @staticmethod
-    def _get_table_headers(node):
+    def _get_table_headers(header_elem):
         """
+        Scrapes the table headers.
 
-        :param node:
-        :type node: playwright.sync_api._generated.ElementHandle
-        :return:
-        :rtype: list[str]
-        """
-        headers = [e.text_content() for e in node.query_selector_all("th")]
-        headers.insert(1, "Player ID")
-        return headers
-
-    def _scrape_table(self, node):
-        """
-
-        :param node:
-        :type node: playwright.sync_api._generated.ElementHandle
-        :return:
+        :param header_elem: The element corresponding to the data table headers
+        :type header_elem: playwright.sync_api._generated.ElementHandle
+        :return: An empty DataFrame containing the headers of the data table
         :rtype: pd.DataFrame
         """
-        elems = node.query_selector_all(".team-stats-table tbody > tr")
-
-        header_elem = elems.pop(0)
-        headers = self._get_table_headers(header_elem)
+        headers = [e.text_content() for e in header_elem.query_selector_all("th")]
+        headers.insert(1, "Player ID")
 
         dataframe = pd.DataFrame(columns=headers)
-        regex = re.compile(r"^/statss.aspx\?playerid=(.*)")
 
-        for i, elem in enumerate(elems):
-            data = [e.text_content() for e in elem.query_selector_all("td")]
+        return dataframe
+
+    def _scrape_data_table(self, table):
+        """
+        Scrapes the data tables.
+
+        :param table: The data table element
+        :type table: playwright.sync_api._generated.table
+        :return: A DataFrame containing all the data in the data table
+        :rtype: pd.DataFrame
+        """
+        rows = table.query_selector_all(".team-stats-table tbody > tr")
+
+        # Process table headers
+        header_elem = rows.pop(0)
+
+        dataframe = self._get_table_headers(header_elem)
+        href_regex = re.compile(r"^/statss.aspx\?playerid=(.*)")
+
+        for i, row in enumerate(rows):
+            data = [e.text_content() for e in row.query_selector_all("td")]
 
             # Get player ID
-            a_elem = elem.query_selector(
-                "td.frozen > a"
-            )
-            pid = regex.search(a_elem.get_attribute("href")).group(1)
-            data.insert(1, pid)
+            href = row.query_selector("td.frozen > a").get_attribute("href")
+            player_id = href_regex.search(href).group(1)
+            data.insert(1, player_id)
 
             # Update DataFrame
             dataframe.loc[i] = data
 
         return dataframe
 
-    def _scrape_dchart(self, pos_nums):
-        """
-
-        :param pos_nums:
-        :return:
-        :rtype: dict[str, pd.DataFrame]
-        """
-        data_dict = {}
-        regex = re.compile(r"^//www.fangraphs.com/statss.aspx\?playerid=(.*)")
-        for i in pos_nums:
-            print(i)
-            dataframe = pd.DataFrame(columns=("Name", "Stat", "Player ID"))
-            position = self.page.query_selector(f"#pos{i}")
-            pos_name = position.query_selector(f"text#pos-label{i}").text_content()
-            player_stats = zip(
-                position.query_selector_all("text.player-name"),
-                position.query_selector_all("text.player-stat")
-            )
-            for j, (player, stat) in enumerate(player_stats):
-                name, value = player.text_content(), stat.text_content()
-                if not (name and value):
-                    continue
-                try:
-                    href = player.query_selector("a").get_attribute("href")
-                    pid = regex.search(href).group(1)
-                except AttributeError:
-                    pid = np.NaN
-                dataframe.loc[j] = (name, value, pid)
-            data_dict.setdefault(pos_name, dataframe)
-        return data_dict
-
-    def _scrape_depth_charts(self):
-        """
-
-        :return:
-        :rtype: tuple[dict[str, pd.DataFrame]]
-        """
-        position_players = self._scrape_dchart(range(2, 11))
-        pitchers = self._scrape_dchart(range(0, 2))
-        return position_players, pitchers
-
     def export(self):
         """
+        Scrapes the data tables and depth chart diagram.
 
-        :return:
+        :return: A dictionary of table names and a DataFrame of the table data
         :rtype: dict[str, pd.DataFrame]
         """
         data = {}
 
-        batting, pitching = self._get_tables()
-        for table in batting + pitching:
+        batting = self.page.query_selector_all(".team-depth-chart-bat")
+        pitching = self.page.query_selector_all(".team-depth-chart-pit")
+        all_positions = batting + pitching
+
+        for table in all_positions:
             tname = table.query_selector(
                 ".team-depth-table-pos.team-color-primary"
             ).text_content()
             if tname == "ALL":
-                if table in batting:
-                    tname = "Batters: ALL"
-                elif table in pitching:
-                    tname = "Pitchers: ALL"
-            dataframe = self._scrape_table(table)
+                tname = "Batters: ALL" if table in batting else "Pitchers: ALL"
+            dataframe = self._scrape_data_table(table)
             data.setdefault(tname, dataframe)
 
-        pplayer_dchart, pitcher_dchart = self._scrape_depth_charts()
-        data.update(pplayer_dchart)
-        data.update(pitcher_dchart)
+        data.update(_scrape_depth_chart(self.page, range(2, 11)))
+        data.update(_scrape_depth_chart(self.page, range(0, 2)))
 
         return data

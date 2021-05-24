@@ -116,11 +116,11 @@ class TestSeasonStat:
         """
         assert len(
             season_stat_page.query_selector_all(
-                ".table-page-control:nth-last-child(1) > .table-control-total"
+                ".header_elem-page-control:nth-last-child(1) > .header_elem-control-total"
             )
         ) == 1
         elem = season_stat_page.query_selector(
-            ".table-page-control:nth-last-child(1) > .table-control-total"
+            ".header_elem-page-control:nth-last-child(1) > .header_elem-control-total"
         )
         assert elem.text_content()
 
@@ -129,7 +129,7 @@ class TestSeasonStat:
 
         assert len(
             season_stat_page.query_selector_all(
-                ".table-page-control:nth-last-child(1) > .next"
+                ".header_elem-page-control:nth-last-child(1) > .next"
             )
         ) == 1
 
@@ -141,7 +141,7 @@ class TestSeasonStat:
         :param page:
         :type page: playwright.sync_api._generated.Page
         """
-        elems = page.query_selector_all(".table-scroll thead tr th")
+        elems = page.query_selector_all(".header_elem-scroll thead tr th")
         assert elems
         assert all(e.text_content() for e in elems)
 
@@ -153,7 +153,7 @@ class TestSeasonStat:
         :param page:
         :type page: playwright.sync_api._generated.Page
         """
-        elems = page.query_selector_all(".table-scroll tbody tr")
+        elems = page.query_selector_all(".header_elem-scroll tbody tr")
         assert elems
         for row in elems:
             subelems = row.query_selector_all("td")

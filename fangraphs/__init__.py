@@ -43,12 +43,14 @@ def fangraphs_scraper(func):
 
     def wrapper(scraper, /,  *, headless=True):
         with sync_playwright() as play:
-            browser = play.chromium.launch(
-                headless=headless,
-            )
-            results = func(scraper(browser))
-            browser.close()
-            return results
+            try:
+                browser = play.chromium.launch(
+                    headless=headless,
+                )
+                results = func(scraper(browser))
+                return results
+            finally:
+                browser.close()
 
     return wrapper
 

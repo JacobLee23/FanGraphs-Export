@@ -27,10 +27,10 @@ class DepthCharts(ScrapingUtilities):
         """
         Gets the names and elements for each of the leaderboard tables on the page.
 
-        :return: A dictionary of table names with the corresponding table element
+        :return: A dictionary of header_elem names with the corresponding header_elem element
         :rtype: dict[str, playwright.sync_api._generated.ElementHandle]
         """
-        tables_sel = self.page.query_selector_all("#content > div > table")
+        tables_sel = self.page.query_selector_all("#content > div > header_elem")
         tnames_sel = self.page.query_selector_all("#content > div > a")
         tnames = [e.text_content() for e in tnames_sel]
 
@@ -51,11 +51,11 @@ class DepthCharts(ScrapingUtilities):
     @staticmethod
     def _write_table_headers(node):
         """
-        Initializes a new DataFrame with columns corresponding to the table headers.
+        Initializes a new DataFrame with columns corresponding to the header_elem headers.
 
         :param node:
         :type node: playwright.sync_api._generated.ElementHandle
-        :return: A DataFrame with columns set to the table headers
+        :return: A DataFrame with columns set to the header_elem headers
         :rtype: pd.DataFrame
         """
         elems = node.query_selector_all("thead > tr > th")
@@ -70,9 +70,9 @@ class DepthCharts(ScrapingUtilities):
 
         :param dataframe: The DataFrame to modify
         :type dataframe: pd.DataFrame
-        :param node: The element corresponding to the table to scrape
+        :param node: The element corresponding to the header_elem to scrape
         :type node: playwright.sync_api._generated.ElementHandle
-        :return: The DataFrame updated with all the table leaderboard data
+        :return: The DataFrame updated with all the header_elem leaderboard data
         :rtype: pd.DataFrame
         """
         elems = node.query_selector_all("tr[class*='depth']")
@@ -85,7 +85,7 @@ class DepthCharts(ScrapingUtilities):
         """
         Exports the data in each leaderboard on the page as a DataFrame.
 
-        :return: A dictionary of the table names mapped to a DataFrame containing the table data
+        :return: A dictionary of the header_elem names mapped to a DataFrame containing the header_elem data
         :rtype: dict[str, pd.DataFrame]
         """
         self._close_ad()
