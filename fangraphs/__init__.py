@@ -43,12 +43,14 @@ def fangraphs_scraper(func):
 
     def wrapper(scraper, /,  *, headless=True):
         with sync_playwright() as play:
-            browser = play.chromium.launch(
-                headless=headless,
-            )
-            results = func(scraper(browser))
-            browser.close()
-            return results
+            try:
+                browser = play.chromium.launch(
+                    headless=headless,
+                )
+                results = func(scraper(browser))
+                return results
+            finally:
+                browser.close()
 
     return wrapper
 
@@ -161,4 +163,4 @@ class ScrapingUtilities:
         """
         self.page.goto(self.address, timeout=0)
         if self.queries.waitfor:
-            self.page.wait_for_selector(".fg-data-grid")
+            self.page.wait_for_selector(self.queries.waitfor)

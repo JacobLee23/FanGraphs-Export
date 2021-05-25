@@ -26,36 +26,38 @@ Each webpages which can be scraped has its own web scraper class.
 The module where the class belongs depends on the group the webpage is in.
 The class depends on the webpage itself.
 
-+---------------------------+-------------------------------+
-| FanGraphs webpage group   | ``fangraphs`` module          |
-+===========================+===============================+
-| Leaders                   | ``fangraphs.leaders``         |
-+---------------------------+-------------------------------+
-| Projections               | ``fangraphs.projections``     |
-+---------------------------+-------------------------------+
-| Teams                     | ``fangraphs.teams``           |
-+---------------------------+-------------------------------+
++---------------------------+-----------------------------------+
+| FanGraphs webpage group   | :py:mod:`fangraphs` Module        |
++===========================+===================================+
+| Leaders                   | :py:mod:`fangraphs.leaders`       |
++---------------------------+-----------------------------------+
+| Projections               | :py:mod:`fangraphs.projections`   |
++---------------------------+-----------------------------------+
+| Depth Charts              | :py:mod:`fangraphs.depth_charts`  |
++---------------------------+-----------------------------------+
+| Teams                     | :py:mod:`fangraphs.teams`         |
++---------------------------+-----------------------------------+
 
 Leaders
 ^^^^^^^
 
 FanGraphs webpages under the **Leaders** tab.
 
-+-------------------------------+---------------------------------------+
-| FanGraphs **Leaders** page    | ``fangraphs.leaders`` class           |
-+===============================+=======================================+
-| `60-Game Span Leaderboards`_  | ``fangraphs.leaders.GameSpan``        |
-+-------------------------------+---------------------------------------+
-| `KBO Leaders`_                | ``fangraphs.leaders.International``   |
-+-------------------------------+---------------------------------------+
-| `Major League Leaders`_       | ``fangraphs.leaders.MajorLeague``     |
-+-------------------------------+---------------------------------------+
-| `Season Stat Grid`_           | ``fangraphs.leaders.SeasonStat``      |
-+-------------------------------+---------------------------------------+
-| `Splits Leaderboards`_        | ``fangraphs.leaders.Splits``          |
-+-------------------------------+---------------------------------------+
-| `Combined WAR Leaderboards`_  | ``fangraphs.leaders.WAR``             |
-+-------------------------------+---------------------------------------+
++-------------------------------+-------------------------------------------+
+| FanGraphs **Leaders** page    | :py:mod:`fangraphs.leaders` class         |
++===============================+===========================================+
+| `60-Game Span Leaderboards`_  | :py:mod:`fangraphs.leaders.GameSpan`      |
++-------------------------------+-------------------------------------------+
+| `KBO Leaders`_                | :py:mod:`fangraphs.leaders.International` |
++-------------------------------+-------------------------------------------+
+| `Major League Leaders`_       | :py:mod:`fangraphs.leaders.MajorLeague`   |
++-------------------------------+-------------------------------------------+
+| `Season Stat Grid`_           | :py:mod:`fangraphs.leaders.SeasonStat`    |
++-------------------------------+-------------------------------------------+
+| `Splits Leaderboards`_        | :py:mod:`fangraphs.leaders.Splits`        |
++-------------------------------+-------------------------------------------+
+| `Combined WAR Leaderboards`_  | :py:mod:`fangraphs.leaders.WAR`           |
++-------------------------------+-------------------------------------------+
 
 .. _60-Game Span Leaderboards: https://fangraphs.com/leaders/special/game-span
 .. _KBO Leaders: https://fangraphs.com/leaders/international
@@ -70,11 +72,11 @@ Projections
 
 FanGraphs webpages under the **Projections** tab.
 
-+-----------------------------------+---------------------------------------+
-| FanGraphs **Projections** page    | ``fangraphs.projections`` class       |
-+===================================+=======================================+
-| `Projections Leaderboards`_       | ``fangraphs.projections.Projections`` |
-+-----------------------------------+---------------------------------------+
++-----------------------------------+-----------------------------------------------+
+| FanGraphs **Projections** page    | :py:mod:`fangraphs.projections` class         |
++===================================+===============================================+
+| `Projections Leaderboards`_       | :py:class:`fangraphs.projections.Projections` |
++-----------------------------------+-----------------------------------------------+
 
 Note: The **Projections Leaderboards** page includes all **Projections** pages under the following subcategories:
 
@@ -86,24 +88,51 @@ Note: The **Projections Leaderboards** page includes all **Projections** pages u
 .. _Projections Leaderboards: https://fangraphs.com/projections.aspx
 
 
-Teams
-^^^^^
+Depth Charts
+^^^^^^^^^^^^
 
-FanGraphs webpages under the **Teams** tab.
+FanGraphs depth chart pages under the **Teams** tab.
 
-+-------------------------------+-----------------------------------+
-| FanGraphs **Teams** page      | ``fangraphs.teams`` class         |
-+===============================+===================================+
-| `Team WAR Totals`_            | ``fangraphs.teams.DepthCharts``   |
-+-------------------------------+-----------------------------------+
-| `Team Depth Charts`_          | ``fangraphs.teams.DepthCharts``   |
-+-------------------------------+-----------------------------------+
-| `Positional Depth Charts`_    | ``fangraphs.teams.DepthCharts``   |
-+-------------------------------+-----------------------------------+
++-----------------------------------+-----------------------------------------------+
+| FanGraphs **Depth Charts** page   | :py:mod:`fangraphs.depth_charts` class        |
++===================================+===============================================+
+| `Team WAR Totals`_                | :py:mod:`fangraphs.depth_charts.DepthCharts`  |
++-----------------------------------+-----------------------------------------------+
+| `Team Depth Charts`_              | :py:mod:`fangraphs.depth_charts.DepthCharts`  |
++-----------------------------------+-----------------------------------------------+
+| `Positional Depth Charts`_        | :py:mod:`fangraphs.depth_charts.DepthCharts`  |
++-----------------------------------+-----------------------------------------------+
 
 .. _Team WAR Totals: https://www.fangraphs.com/depthcharts.aspx?position=Team
 .. _Team Depth Charts: https://www.fangraphs.com/depthcharts.aspx?position=ALL&teamid=1
 .. _Positional Depth Charts: https://www.fangraphs.com/depthcharts.aspx?position=C
+
+
+Teams
+^^^^^
+
+FanGraphs team pages under the **Teams** tab.
+
++---------------------------+-------------------------------------------+
+| FanGraphs **Teams** page  | :py:mod:`fangraphs.teams` class           |
++===========================+===========================================+
+| `Summary`_                | :py:class:`fangraphs.teams.Summary`       |
++---------------------------+-------------------------------------------+
+| `Stats`_                  | :py:class:`fangraphs.teams.Stats`         |
++---------------------------+-------------------------------------------+
+| `Schedule`_               | :py:class:`fangraphs.teams.Schedule`      |
++---------------------------+-------------------------------------------+
+| `Player Usage`_           | :py:class:`fangraphs.teams.PlayerUsage`   |
++---------------------------+-------------------------------------------+
+| `Depth Chart`_            | :py:class:`fangraphs.teams.DepthChart`    |
++---------------------------+-------------------------------------------+
+
+.. _Summary: https://fangraphs.com/teams/angels/
+.. _Stats: https://fangraphs.com/teams/angels/stats/
+.. _Schedule: https://fangraphs.com/teams/angels/schedule/
+.. _Player Usage: https://fangraphs.com/teams/angels/player-usage/
+.. _Depth Chart: https://fangraphs.com/teams/angels/depth-chart/
+
 
 Basic Usage
 -----------

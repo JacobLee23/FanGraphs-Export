@@ -1,118 +1,106 @@
 #! python3
 # fangraphs/selectors/dcharts_sel.py
 
-from fangraphs import selectors
-
 """
 CSS selectors for the classes in :py:mod:`fangraphs.teams`.
 """
 
+from fangraphs import selectors
 
-class DepthCharts:
+
+class Summary:
     """
-    CSS selectors for :py:class:`fangraphs.teams.DepthCharts`.
+    CSS selectors for :py:class:`fangraphs.teams.Summary`.
     """
-    __selections_type_1 = {
-        "view_type": "#tsPosition"
+
+    __dropdowns_type_4 = {
+        "team": "select.select-change-team",
+        "position_players": ".select-container:nth-child(1) > select.pos-stat",
+        "pitchers": ".select-container:nth-child(2) > select.pos-stat"
     }
     waitfor = ""
     export_data = ""
 
     def __init__(self, page):
-        for key, val in self.__selections_type_1.items():
-            self.__setattr__(key, selectors.SelectionsType1(page, val))
+        for key, val in self.__dropdowns_type_4.items():
+            self.__setattr__(key, selectors.DropdownsType4(page, val))
 
 
-class Team:
+class Stats:
     """
-    CSS selectors for :py:class:`fangraphs.teams.Team`.
+    CSS selectors for :py:class:`fangraphs.teams.Stats`.
     """
-    __selector = "#menu-team > .menu-team"
-    __opt_sels = [
-        f"ul > a:nth-child({i})" for i in range(1, 6)
-    ]
 
-    @classmethod
-    def compile_selectors(cls, obj):
-        """
-        Compiles the full CSS selector for each of the items in the ``object`` class attribute.
+    __dropdowns_type_4 = {
+        "team": "select.select-change-team",
+        "team_select": ".team-stats-select-team > select",
+        "select_season": ".team-stats-select-year > select"
+    }
+    waitfor = ""
+    export_data = ""
 
-        :param obj: An object
-        :return: The name and the full CSS selector for each attribute
-        :rtype: tuple[str, str]
-        """
-        for key, val in zip(obj.options, cls.__opt_sels):
-            selector = f"{cls.__selector} > {obj.selector} > {val}"
-            yield key, selector
+    def __init__(self, page):
+        for key, val in self.__dropdowns_type_4.items():
+            self.__setattr__(key, selectors.DropdownsType4(page, val))
 
-    class ALEast:
-        """
-        CSS selectors for AL East teams.
-        """
 
-        selector = ".menu-team-header:nth-child(1)"
-        options = ["blue_jays", "orioles", "rays", "red_sox", "yankees"]
+class Schedule:
+    """
+    CSS selectors for :py:class:`fangraphs.teams.Schedule`.
+    """
 
-        def __init__(self):
-            for key, selector in Team.compile_selectors(self):
-                self.__setattr__(key, selector)
+    __dropdowns_type_4 = {
+        "team": "select.select-change-team",
+        "select_season": ".team-schedule-select-year > select"
+    }
+    waitfor = ""
+    export_data = ""
 
-    class ALCentral:
-        """
-        CSS selectors for AL Central teams.
-        """
+    def __init__(self, page):
+        for key, val in self.__dropdowns_type_4.items():
+            self.__setattr__(key, selectors.DropdownsType4(page, val))
 
-        selector = ".menu-team-header:nth-child(2)"
-        options = ["indians", "royals", "tigers", "twins", "white_sox"]
 
-        def __init__(self):
-            for key, selector in Team.compile_selectors(self):
-                self.__setattr__(key, selector)
+class PlayerUsage:
+    """
+    CSS selectors for :py:class:`fangraphs.teams.PlayerUsage`.
+    """
 
-    class ALWest:
-        """
-        CSS selectors for AL West teams.
-        """
+    __dropdowns_type_4 = {
+        "team": "select.select-change-team"
+    }
+    __dropdowns_type_3 = {
+        "season": "#root-team-lineup div:nth-child(3)"
+    }
+    __selections_type_3 = {
+        "mode": "#root-team-lineup div:nth-child(1)",
+        "handedness": "#root-team-lineup div:nth-child(2)"
+    }
+    waitfor = ""
+    export_data = ""
 
-        selector = ".menu-team-header:nth-child(3)"
-        options = ["angels", "astros", "athletics", "mariners", "rangers"]
+    def __init__(self, page):
+        for key, val in self.__dropdowns_type_4.items():
+            self.__setattr__(key, selectors.DropdownsType4(page, val))
+        for key, val in self.__dropdowns_type_3.items():
+            self.__setattr__(key, selectors.DropdownsType3(page, val))
+        for key, val in self.__selections_type_3.items():
+            self.__setattr__(key, selectors.SelectionsType3(page, val))
 
-        def __init__(self):
-            for key, selector in Team.compile_selectors(self):
-                self.__setattr__(key, selector)
 
-    class NLEast:
-        """
-        CSS selectors for NL East teams.
-        """
+class DepthChart:
+    """
+    CSS selectors for :py:class:`fangraphs.teams.DepthChart`.
+    """
 
-        selector = ".menu-team-header:nth-child(4)"
-        options = ["braves", "marlins", "mets", "nationals", "phillies"]
+    __dropdowns_type_4 = {
+        "team": "select.select-change-team",
+        "position_players": ".select-container:nth-child(1) > select.pos-stat",
+        "pitchers": ".select-container:nth-child(2) > select.pos-stat"
+    }
+    waitfor = ""
+    export_data = ""
 
-        def __init__(self):
-            for key, selector in Team.compile_selectors(self):
-                self.__setattr__(key, selector)
-
-    class NLCentral:
-        """
-        CSS selectors for NL Central teams.
-        """
-
-        selector = ".menu-team-header:nth-child(5)"
-        options = ["brewers", "cardinals", "cubs", "pirates", "reds"]
-
-        def __init__(self):
-            for key, selector in Team.compile_selectors(self):
-                self.__setattr__(key, selector)
-
-    class NLWest:
-        """
-        CSS selectors for NL West teams.
-        """
-
-        selector = ".menu-team-header:nth-child(6)"
-        options = ["diamondbacks", "dodgers", "giants", "padres", "rockies"]
-
-        def __init__(self):
-            for key, selector in Team.compile_selectors(self):
-                self.__setattr__(key, selector)
+    def __init__(self, page):
+        for key, val in self.__dropdowns_type_4.items():
+            self.__setattr__(key, selectors.DropdownsType4(page, val))
