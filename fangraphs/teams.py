@@ -4,8 +4,8 @@
 """
 Scrapers for the webpages under the FanGraphs **Teams** tab.
 
-_Note: The default team is the Los Angeles Angels of Anaheim.
-Thus, the base URL always navigates to the stats concerning the Angels._
+Note: The default team is the Los Angeles Angels of Anaheim.
+Thus, the base URL always navigates to the stats concerning the Angels.
 """
 
 import re
@@ -40,12 +40,12 @@ def _get_table_headers(table, header_elem: str):
 
 def _scrape_data_table(table, header_elem="thead > tr > th"):
     """
-    Scrapes each row of data off of the stat leaders data table.
+    Scrapes the data table.
 
     :param table: The data table element
     :type table: playwright.sync_api._generated.ElementHandle
     :param header_elem: A table headers CSS selector
-    :return: A modified DataFrame containing the data in the stat leaders table
+    :return: A DataFrame of the table data.
     :rtype: pd.DataFrame
     """
     dataframe = _get_table_headers(table, header_elem)
@@ -116,7 +116,7 @@ def _scrape_depth_chart(page, pos_nums):
     :param page: A Playwright ``Page`` object
     :type page: playwright.sync_api._generated.Page
     :param pos_nums: A sequence of positional numbers to scrape
-    :return: A dictionary of positions and a DataFrame of positional depth chart data
+    :return: A dictionary of positions to a DataFrame of positional depth chart data
     :rtype: dict[str, pd.DataFrame]
     """
     data = {}
@@ -172,7 +172,7 @@ class Summary(ScrapingUtilities):
         """
         Scrapes the data tables and depth chart diagram.
 
-        :return: A dictionary of tables names and a DataFrame of the table data
+        :return: A dictionary of tables names to a DataFrame of the table data
         :rtype: dict[str, pd.DataFrame]
         """
         data = {}
@@ -213,7 +213,7 @@ class Stats(ScrapingUtilities):
         """
         Scrapes the data tables.
 
-        :return: A dictionary of the table names and a DataFrame of the table data
+        :return: A dictionary of the table names to a DataFrame of the table data
         :rtype: dict[str, pd.DataFrame]
         """
         data = {}
@@ -272,7 +272,7 @@ class Schedule(ScrapingUtilities):
 
     def _scrape_data_table(self):
         """
-        Scrapes the data table
+        Scrapes the data table.
 
         :return: A DataFrame of the table data
         :rtype: pd.DataFrame
@@ -283,7 +283,6 @@ class Schedule(ScrapingUtilities):
         header_elem = rows.pop(0)
 
         dataframe = self.get_table_headers(header_elem)
-
         href_regex = re.compile(r"^//www.fangraphs.com/statss.aspx\?playerid=(.*)")
 
         for i, row in enumerate(rows):
@@ -351,8 +350,9 @@ class PlayerUsage(ScrapingUtilities):
 
     def _get_table_headers(self):
         """
+        Scrapes the table headers.
 
-        :return:
+        :return: An empty DataFrame with columns set to the table headers
         :rtype: pd.DataFrame
         """
         elems = self.page.query_selector_all(".table-scroll thead > tr > th")
@@ -363,8 +363,9 @@ class PlayerUsage(ScrapingUtilities):
 
     def _scrape_data_tables(self):
         """
+        Scrapes the data table.
 
-        :return:
+        :return: A DataFrame of the table data
         :rtype: pd.DataFrame
         """
         dataframe = self._get_table_headers()
