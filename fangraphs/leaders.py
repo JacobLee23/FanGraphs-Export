@@ -88,12 +88,12 @@ class SeasonStat(ScrapingUtilities):
 
     def _write_table_headers(self):
         """
-        Initializes a new DataFrame with columns corresponding to the header_elem headers.
+        Initializes a new DataFrame with columns corresponding to the table headers.
 
-        :return: A DataFrame with columns set to the header_elem headers
+        :return: A DataFrame with columns set to the table headers
         :rtype: pandas.DataFrame
         """
-        elems = self.page.query_selector_all(".header_elem-scroll thead tr th")
+        elems = self.page.query_selector_all(".table-scroll thead tr th")
         headers = [e.text_content() for e in elems]
         dataframe = pd.DataFrame(columns=headers[1:])
         return dataframe
@@ -104,30 +104,30 @@ class SeasonStat(ScrapingUtilities):
 
         :param dataframe: The DataFrame to modify
         :type dataframe: pandas.DataFrame
-        :return: The DataFrame updated with all the header_elem leaderboard data
+        :return: The DataFrame updated with all the table leaderboard data
         :rtype: pandas.DataFrame
         """
         total_pages = int(
             self.page.query_selector(
-                ".header_elem-page-control:nth-last-child(1) > .header_elem-control-total"
+                ".table-page-control:nth-last-child(1) > .table-control-total"
             ).text_content()
         )
         index = 0
         for page in range(total_pages):
-            row_elems = self.page.query_selector_all(".header_elem-scroll tbody tr")
+            row_elems = self.page.query_selector_all(".table-scroll tbody tr")
             for i, row in enumerate(row_elems):
                 elems = row.query_selector_all("td")
                 items = [e.text_content() for e in elems]
                 dataframe.loc[index+i] = items[1:]
             index += len(row_elems)
-            self.page.click(".header_elem-page-control:nth-last-child(1) > .next")
+            self.page.click(".table-page-control:nth-last-child(1) > .next")
         return dataframe
 
     def export(self):
         """
         Exports the data in the current leaderboard as a DataFrame.
 
-        :return: A DataFrame containing the header_elem data
+        :return: A DataFrame containing the table data
         :rtype: pandas.DataFrame
         """
         self._close_ad()

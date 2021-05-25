@@ -30,7 +30,7 @@ class GameSpan:
         "season2": ".controls-stats:nth-child(2) > div:nth-child(3) > .fg-selection-box__selection",
         "determine": ".controls-stats.stat-determined > div:nth-child(1) > .fg-selection-box__selection"
     }
-    waitfor = ".fg-data-grid.header_elem-type"
+    waitfor = ".fg-data-grid.table-type"
     export_data = ".data-export"
 
     def __init__(self, page):
@@ -66,7 +66,7 @@ class International:
     __checkboxes = {
         "split_seasons": ".controls-stats > label.fg-checkbox"
     }
-    waitfor = ".fg-data-grid.header_elem-type"
+    waitfor = ".fg-data-grid.table-type"
     export_data = ".data-export"
 
     def __init__(self, page):
