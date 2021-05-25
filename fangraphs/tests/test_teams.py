@@ -10,7 +10,7 @@ import re
 from playwright.sync_api import sync_playwright
 import pytest
 
-from fangraphs.tests import BasicTests
+from fangraphs.tests import BaseTests
 
 
 @pytest.fixture(scope="module")
@@ -154,7 +154,7 @@ def _test_scrape_positional_data(page, pos_num: int):
     return pos_name, player_stats
 
 
-class TestSummary(BasicTests):
+class TestSummary(BaseTests):
     """
     :py:class:`fangraphs.teams.Summary`.
     """
@@ -190,7 +190,7 @@ class TestSummary(BasicTests):
         _test_scrape_depth_chart(page, range(0, 2))
 
 
-class TestStats(BasicTests):
+class TestStats(BaseTests):
     """
     :py:class:`fangraphs.teams.Stats`.
     """
@@ -221,7 +221,7 @@ class TestStats(BasicTests):
             _test_scrape_data_table(table)
 
 
-class TestSchedule(BasicTests):
+class TestSchedule(BaseTests):
     """
     :py:class:`fangraphs.teams.Schedule`.
     """
@@ -309,7 +309,7 @@ class TestSchedule(BasicTests):
         self._test_scrape_table(page)
 
 
-class TestPlayerUsage(BasicTests):
+class TestPlayerUsage(BaseTests):
     """
     :py:class:`fangraphs.teams.PlayerUsage`.
     """
@@ -371,7 +371,7 @@ class TestPlayerUsage(BasicTests):
         self._test_scrape_table_rows(page)
 
 
-class TestDepthChart(BasicTests):
+class TestDepthChart(BaseTests):
     """
     :py:class:`fangraphs.teams.DepthChart`.
     """
@@ -410,11 +410,14 @@ class TestDepthChart(BasicTests):
             data = [e.text_content() for e in row.query_selector_all("td")]
             assert data, row.inner_html()
 
-            assert len(
-                row.query_selector_all("td.frozen > a")
-            ) == 1, row.inner_html()
-            href = row.query_selector("td.frozen > a").get_attribute("href")
-            assert href_regex.search(href), href
+            try:
+                assert len(
+                    row.query_selector_all("td.frozen > a")
+                ) == 1, row.inner_html()
+                href = row.query_selector("td.frozen > a").get_attribute("href")
+                assert href_regex.search(href), href
+            except AssertionError:
+                assert data[0] == "Total", row.inner_html()
 
     @pytest.mark.parametrize(
         "page", ["depthchart_page"], indirect=True
@@ -426,9 +429,9 @@ class TestDepthChart(BasicTests):
         :param page:
         :type page: playwright.sync_api._generated.Page
         """
-        batting = page.query_selector_all(".team-depth-chart-bat")
+        batting = page.query_selector_all(".team-depth-table-bat")
         assert batting
-        pitching = page.query_selector_all(".team-depth-chart-pit")
+        pitching = page.query_selector_all(".team-depth-table-pit")
         assert pitching
 
         for table in batting + pitching:

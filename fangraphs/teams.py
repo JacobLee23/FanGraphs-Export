@@ -448,10 +448,14 @@ class DepthChart(ScrapingUtilities):
         for i, row in enumerate(rows):
             data = [e.text_content() for e in row.query_selector_all("td")]
 
-            # Get player ID
-            href = row.query_selector("td.frozen > a").get_attribute("href")
-            player_id = href_regex.search(href).group(1)
-            data.insert(1, player_id)
+            try:
+                # Get player ID
+                href = row.query_selector("td.frozen > a").get_attribute("href")
+                player_id = href_regex.search(href).group(1)
+                data.insert(1, player_id)
+            except AttributeError:
+                player_id = np.NaN
+                data.insert(1, player_id)
 
             # Update DataFrame
             dataframe.loc[i] = data
@@ -467,8 +471,8 @@ class DepthChart(ScrapingUtilities):
         """
         data = {}
 
-        batting = self.page.query_selector_all(".team-depth-chart-bat")
-        pitching = self.page.query_selector_all(".team-depth-chart-pit")
+        batting = self.page.query_selector_all(".team-depth-table-bat")
+        pitching = self.page.query_selector_all(".team-depth-table-pit")
         all_positions = batting + pitching
 
         for table in all_positions:

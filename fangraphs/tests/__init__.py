@@ -6,10 +6,8 @@ from urllib.request import urlopen
 from playwright.sync_api import sync_playwright
 import pytest
 
-pytest.mark.skip()
 
-
-class BasicTests:
+class BaseTests:
 
     address = ""
 
@@ -24,7 +22,10 @@ def page(request):
         try:
             browser = play.chromium.launch()
             webpage = browser.new_page()
-            webpage.goto(request.getfixturevalue(request.param))
+            webpage.goto(
+                request.getfixturevalue(request.param),
+                timeout=0.0
+            )
             yield webpage
         finally:
             browser.close()

@@ -5,130 +5,98 @@
 Unit tests for :py:mod:`fangraphs.leaders`.
 """
 
-from urllib.request import urlopen
-
 from playwright.sync_api import sync_playwright
 import pytest
 
-from fangraphs import leaders
-from fangraphs.selectors import leaders_sel
+from fangraphs.tests import BaseTests
 
 
-@pytest.fixture(scope="class")
+@pytest.fixture(scope="module")
+def page(request):
+    """
+
+    :return: A Playwright ``Page`` objects
+    :rtype: playwright.sync_api._generated.Page
+    """
+    with sync_playwright() as play:
+        try:
+            browser = play.chromium.launch()
+            webpage = browser.new_page()
+            webpage.goto(
+                request.getfixturevalue(request.param),
+                timeout=0.0
+            )
+            yield webpage
+        finally:
+            browser.close()
+
+
+@pytest.fixture(scope="module")
 def season_stat_page():
-    """
-    Pytest fixture which yields a Playwright ``Page`` object, for testing.
-
-    :return: Yields a Playwright ``Page`` object
-    :rtype: playwright.sync_api._generated.Page
-    """
-    with sync_playwright() as play:
-        browser = play.chromium.launch()
-        page = browser.new_page()
-        page.goto(leaders.SeasonStat.address, timeout=0)
-        page.wait_for_selector(leaders_sel.SeasonStat.waitfor)
-        yield page
-        browser.close()
+    return TestSeasonStat.address
 
 
-@pytest.fixture(scope="class")
+@pytest.fixture(scope="module")
 def splits_page():
-    """
-    Pytest fixture which yields a Playwright ``Page`` object, for testing.
-
-    :return: Yields a Playwright ``Page`` object
-    :rtype: playwright.sync_api._generated.Page
-    """
-    with sync_playwright() as play:
-        browser = play.chromium.launch()
-        page = browser.new_page()
-        page.goto(leaders.Splits.address, timeout=0)
-        page.wait_for_selector(leaders_sel.Splits.waitfor)
-        yield page
-        browser.close()
+    return TestSplits.address
 
 
-class TestGameSpan:
+class TestGameSpan(BaseTests):
     """
     :py:class:`fangraphs.leaders.GameSpan`
     """
 
     address = "https://www.fangraphs.com/leaders/special/60-game-span"
 
-    def test_address(self):
-        """
-        :py:meth:`fangraphs.leaders.GameSpan.address`
-        """
-        res = urlopen(self.address)
-        assert res.getcode() == 200
 
-
-class TestInternational:
+class TestInternational(BaseTests):
     """
     :py:class:`fangraphs.leaders.International`
     """
 
     address = "https://www.fangraphs.com/leaders/international"
 
-    def test_address(self):
-        """
-        :py:meth:`fangraphs.leaders.International.address`
-        """
-        res = urlopen(self.address)
-        assert res.getcode() == 200
 
-
-class TestMajorLeague:
+class TestMajorLeague(BaseTests):
     """
     :py:class:`fangraphs.leaders.MajorLeague`
     """
 
     address = "https://fangraphs.com/leaders.aspx"
 
-    def test_address(self):
-        """
-        :py:meth:`fangraphs.leaders.MajorLeague.address`
-        """
-        res = urlopen(self.address)
-        assert res.getcode() == 200
 
-
-class TestSeasonStat:
+class TestSeasonStat(BaseTests):
     """
     :py:class:`fangraphs.leaders.SeasonStat`
     """
 
     address = "https://fangraphs.com/leaders/season-stat-grid"
 
-    def test_address(self):
-        """
-        :py:meth:`fangraphs.leaders.SeasonStat.address`
-        """
-        res = urlopen(self.address)
-        assert res.getcode() == 200
-
-    def test_export(self, season_stat_page):
+    @pytest.mark.parametrize(
+        "page", ["season_stat_page"], indirect=True
+    )
+    def test_export(self, page):
         """
         :py:meth:`fangraphs.leaders.SeasonStat.export`
 
-        :param season_stat_page:
-        :type season_stat_page: playwright.sync_api._generated.Page
+        :param page:
+        :type page: playwright.sync_api._generated.Page
         """
         assert len(
-            season_stat_page.query_selector_all(
+            page.query_selector_all(
                 ".table-page-control:nth-last-child(1) > .table-control-total"
             )
         ) == 1
-        elem = season_stat_page.query_selector(
+        elem = page.query_selector(
             ".table-page-control:nth-last-child(1) > .table-control-total"
         )
         assert elem.text_content()
 
-        self._test_write_table_headers(season_stat_page)
-        self._test_write_table_rows(season_stat_page)
+        self._test_write_table_headers(page)
+        self._test_write_table_rows(page)
 
         assert len(
-            season_stat_page.query_selector_all(
+            page.query_selector_all(
                 ".table-page-control:nth-last-child(1) > .next"
             )
         ) == 1
@@ -161,85 +129,83 @@ class TestSeasonStat:
             assert all(e.text_content() for e in elems)
 
 
-class TestSplits:
+class TestSplits(BaseTests):
     """
     :py:class:`fangraphs.leaders.Splits`
     """
 
     address = "https://fangraphs.com/leaders/splits-leaderboards"
 
-    def test_address(self):
-        """
-        :py:attr:`fangraphs.leaders.Splits.address`
-        """
-        res = urlopen(self.address)
-        assert res.getcode() == 200
-
-    def test_update(self, splits_page):
+    @pytest.mark.parametrize(
+        "page", ["splits_page"], indirect=True
+    )
+    def test_update(self, page):
         """
         :py:meth:`fangraphs.leaders.Splits.update`
 
-        :param splits_page:
-        :type splits_page: playwright.sync_api._generated.Page
+        :param page:
+        :type page: playwright.sync_api._generated.Page
         """
-        splits_page.click(
+        page.click(
             "#stack-buttons .fgButton.small:nth-last-child(1)"
         )
         assert len(
-            splits_page.query_selector_all(
+            page.query_selector_all(
                 "#button-update"
             )
         ) == 1
 
-    def test_list_filter_groups(self, splits_page):
+    @pytest.mark.parametrize(
+        "page", ["splits_page"], indirect=True
+    )
+    def test_list_filter_groups(self, page):
         """
         :py:meth:`fangraphs.leaders.Splits.list_filter_groups`
 
-        :param splits_page:
-        :type splits_page: playwright.sync_api._generated.Page
+        :param page:
+        :type page: playwright.sync_api._generated.Page
         """
-        elems = splits_page.query_selector_all(
+        elems = page.query_selector_all(
             ".fgBin.splits-bin-controller div"
         )
         assert elems
         assert all(e.text_content() for e in elems)
 
-    def test_set_filter_group(self, splits_page):
+    @pytest.mark.parametrize(
+        "page", ["splits_page"], indirect=True
+    )
+    def test_set_filter_group(self, page):
         """
         :py:meth:`fangraphs.leaders.Splits.set_filter_group`
 
-        :param splits_page:
-        :type splits_page: playwright.sync_api._generated.Page
+        :param page:
+        :type page: playwright.sync_api._generated.Page
         """
-        elems = splits_page.query_selector_all(
+        elems = page.query_selector_all(
             ".fgBin.splits-bin-controller div"
         )
         assert elems
 
-    def test_reset_filters(self, splits_page):
+    @pytest.mark.parametrize(
+        "page", ["splits_page"], indirect=True
+    )
+    def test_reset_filters(self, page):
         """
         :py:meth:`fangraphs.leaders.Splits.reset_filters`
 
-        :param splits_page:
-        :type splits_page: playwright.sync_api._generated.Page
+        :param page:
+        :type page: playwright.sync_api._generated.Page
         """
         assert len(
-            splits_page.query_selector_all(
+            page.query_selector_all(
                 "#stack-buttons .fgButton.small:nth-last-child(1)"
             )
         ) == 1
 
 
-class TestWAR:
+class TestWAR(BaseTests):
     """
     :py:class:`fangraphs.leaders.WAR`
     """
 
     address = "https://fangraphs.com/warleaders.aspx"
-
-    def test_address(self):
-        """
-        :py:attr:`fangraphs.leaders.WAR.address`
-        """
-        res = urlopen(self.address)
-        assert res.getcode() == 200
