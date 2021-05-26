@@ -41,7 +41,7 @@ def __adapt(decorator):
 @__adapt
 def fangraphs_scraper(func):
 
-    def wrapper(scraper, /,  *, headless=True):
+    def wrapper(scraper, *, headless=True):
         with sync_playwright() as play:
             try:
                 browser = play.chromium.launch(
