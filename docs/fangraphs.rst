@@ -14,6 +14,7 @@ Fangraphs
     fangraphs.depth_charts
     fangraphs.leaders
     fangraphs.projections
+    fangraphs.scores
     fangraphs.teams
     fangraphs.exceptions
     fangraphs.selectors
