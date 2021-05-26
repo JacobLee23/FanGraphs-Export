@@ -498,20 +498,14 @@ class Switches(__Selectors):
             self.page.click(self.selector)
 
 
-class CalendarsType1(__Selectors):
-    """
-
-    """
-
-
-class CalendarsType2(__Selectors):
+class Calendars(__Selectors):
     """
 
     """
 
     def __init__(self, page, btn_selector: str, calendar: str, selector: str):
         """
-        :param page:
+        :param page: A Playwright ``Page`` object
         :type page: playwright.sync_api._generated.Page
         :param btn_selector:
         :param calendar:

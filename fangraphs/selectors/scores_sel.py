@@ -15,7 +15,7 @@ class Live:
     __dropdowns_type_1 = {
         "season": ("#LiveBoard1_rcbSeason_Input", "#LiveBoard1_rcbSeason_DropDown")
     }
-    __calendars_type_2 = {
+    __calendars = {
         "date": (
             "#LiveBoard1_rdpDate_popupButton",
             "#LiveBoard1_rdpDate_calendar",
@@ -26,5 +26,5 @@ class Live:
     def __init__(self, page):
         for key, val in self.__dropdowns_type_1.items():
             self.__setattr__(key, selectors.DropdownsType1(page, *val))
-        for key, val in self.__calendars_type_2.items():
-            self.__setattr__(key, selectors.CalendarsType2(page, *val))
+        for key, val in self.__calendars.items():
+            self.__setattr__(key, selectors.Calendars(page, *val))
