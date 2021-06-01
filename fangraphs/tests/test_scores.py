@@ -54,7 +54,10 @@ def _test_scrape_game(game):
     a_text = [e.text_content() for e in a_elems]
     assert set(a_text) == {"Box Score", "Win Probability", "Play Log"}
 
-    hyperlinks = [f"https://fangraphs.com/{e.get_attribute('href')}" for e in a_elems]
+    hyperlinks = [
+        f"https://fangraphs.com/{e.get_attribute('href').replace(' ', '%20')}"
+        for e in a_elems
+    ]
     for link in hyperlinks:
         assert urlopen(link).getcode() == 200, link
 
@@ -86,8 +89,20 @@ def _test_scrape_preview(preview):
     :type preview: playwright.sync_api._generated.ElementHandle
     :rtype: None
     """
+    assert len(
+        preview.query_selector_all("b > a")
+    ) == 2, preview.inner_html()
+    away_team, home_team = [
+        e.text_content() for e in preview.query_selector_all("b > a")
+    ]
+    assert all((away_team, home_team))
+
     time_regex = re.compile(r"\d{1,2}:\d{1,2} ET")
-    assert time_regex.search(preview.text_content())
+    time_dt = datetime.datetime.strptime(
+        time_regex.search(preview.text_content()).group(),
+        "%H:%M ET"
+    )
+    assert time_dt
 
     assert len(
         preview.query_selector_all(
