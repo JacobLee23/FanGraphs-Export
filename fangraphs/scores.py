@@ -16,10 +16,11 @@ from fangraphs.selectors import scores_sel
 
 def _scrape_game(game):
     """
+    Scrapes the matchup data for active games.
 
-    :param game:
+    :param game: The matchup element
     :type game: playwright.sync_api._generated.ElementHandle
-    :return:
+    :return: The matchup name and a DataFrame of the matchup data
     :rtype: tuple[str, pd.DataFrame]
     """
     def get_hyperlink(elem):
@@ -67,10 +68,11 @@ def _scrape_game(game):
 
 def _scrape_preview(preview):
     """
+    Scrapes the matchup data for game previews
 
-    :param preview:
+    :param preview: The matchup element
     :type preview: playwright.sync_api._generated.ElementHandle
-    :return:
+    :return: The matchup name and a DataFrame of the matchup data
     :rtype: tuple[str, pd.DataFrame]
     """
     away_team, home_team = [
@@ -145,31 +147,32 @@ class Live(ScrapingUtilities):
 
     def export(self):
         """
+        Scrapes the matchup data for each matchup scheduled for the current date.
+
+        The **Game Flow** and **Leverage Index** graph data are not scraped.
+        For that data, use :py:class:`fangraphs.scores.WinProbability`.
+
+        _Note: A '*' following the matchup name denotes a game preview._
 
         :return:
-        :rtype: dict[str, [dict[str, pd.DataFrame]]]
+        :rtype: dict[str, pd.DataFrame]
         """
         matches = self.page.query_selector_all(
             "#LiveBoard1_LiveBoard1_litGamesPanel > table > tbody > tr > td[style*='border-bottom:1px dotted black;']"
         )
 
-        games, previews = {}, {}
+        data = {}
         for match in matches:
             if (
                     len(match.query_selector_all("xpath=./div")) == 2
                     and len(match.query_selector_all("xpath=./a")) == 3
             ):
                 matchup, dataframe = _scrape_game(match)
-                games.setdefault(matchup, dataframe)
+                data.setdefault(matchup, dataframe)
             elif (
                     len(match.query_selector_all("xpath=./b")) == 2
                     and len(match.query_selector_all("xpath=./center")) == 1
             ):
                 matchup, dataframe = _scrape_preview(match)
-                previews.setdefault(matchup, dataframe)
-
-        data = {
-            "Games": games,
-            "Previews": previews
-        }
+                data.setdefault(f"{matchup}*", dataframe)
         return data
