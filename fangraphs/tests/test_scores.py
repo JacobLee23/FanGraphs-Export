@@ -40,13 +40,17 @@ def live_page():
     return TestLive.address
 
 
+@pytest.fixture(scope="module")
+def liveleaderboards_page():
+    return TestLiveLeaderboards.address
+
+
 def _test_scrape_game(game):
     """
     :py:func:`fangraphs.scores._scrape_game`
 
     :param game:
     :type game: playwright.sync_api._generated.ElementHandle
-    :rtype: None
     """
     a_elems = game.query_selector_all("xpath=./a")
     assert len(a_elems) == 3, game.inner_html()
@@ -87,7 +91,6 @@ def _test_scrape_preview(preview):
 
     :param preview:
     :type preview: playwright.sync_api._generated.ElementHandle
-    :rtype: None
     """
     assert len(
         preview.query_selector_all("b > a")
@@ -175,3 +178,69 @@ class TestLive(BaseTests):
                     (len(match.query_selector_all("xpath=./b")),
                      len(match.query_selector_all("xpath=./center")))
                 )
+
+
+class TestLiveLeaderboards(BaseTests):
+    """
+    :py:class:`fangraphs.scores.LiveLeaderboards`
+    """
+    address = "https://fangraphs.com/scores/live-leaderboards"
+
+    @staticmethod
+    def _test_scrape_table_headers(table):
+        """
+        :py:meth:`fangraphs.scores.LiveLeaderboards._scrape_table_headers`
+
+        :param table: The table element
+        :type table: playwright.sync_api._generated.ElementHandle
+        """
+        header_elems = table.query_selector_all("thead > tr > th")[1:]
+        assert len(header_elems) == 16, table.inner_html()
+
+        headers = [e.text_content() for e in header_elems]
+        assert all(headers), headers
+
+    @staticmethod
+    def _test_scrape_table_rows(table):
+        """
+        :py:meth:`fangraphs.scores.LiveLeaderboards._scrape_table_rows`
+
+        :param table: The table element
+        :type table: playwright.sync_api._generated.ElementHandle
+        """
+        rows = table.query_selector_all("tbody > tr")
+        assert rows, table.inner_html()
+
+        href_regex = re.compile(r"//www.fangraphs.com/statss.aspx\?playerid=(.*)")
+        opp_regex = re.compile(r"(@)?(.*)(\d+-\d+ \((F|Top|Bottom) \d+\))")
+
+        for i, row in enumerate(rows):
+            elems = row.query_selector_all("td")[1:]
+            assert elems, row.inner_html()
+
+            data = [e.text_content() for e in elems]
+            assert data, row.inner_html()
+
+            href = elems[0].query_selector("a").get_attribute("href")
+            assert href_regex.search(href), href
+
+            assert opp_regex.search(data[2]), data[2]
+
+    @pytest.mark.parametrize(
+        "page", ["liveleaderboards_page"], indirect=True
+    )
+    def test_export(self, page):
+        """
+        :py:meth:`fangraphs.scores.LiveLeaderboards.export`
+
+        :param page: A Playwright ``Page`` object
+        :type page: playwright.sync_api._generated.Page
+        """
+        assert len(
+            page.query_selector_all(
+                ".table-fixed > table"
+            )
+        ) == 1
+        table = page.query_selector(".table-fixed > table")
+        self._test_scrape_table_headers(table)
+        self._test_scrape_table_rows(table)

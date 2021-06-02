@@ -176,3 +176,80 @@ class Live(ScrapingUtilities):
                 matchup, dataframe = _scrape_preview(match)
                 data.setdefault(f"{matchup}*", dataframe)
         return data
+
+
+class LiveLeaderboards(ScrapingUtilities):
+    """
+    Scraper for the FanGraphs `Live Daily Leaderboards`_ page.
+
+    .. _Live Daily Leaderboards: https://fangraphs.com/scores/live-leaderboards
+    """
+    address = "https://fangraphs.com/scores/live-leaderboards"
+
+    def __init__(self, browser):
+        ScrapingUtilities.__init__(self, browser, self.address, scores_sel.LiveLeaderboards)
+
+    @staticmethod
+    def _scrape_table_headers(table):
+        """
+
+        :param table:
+        :type table: playwright.sync_api._generated.ElementHandle
+        :return:
+        :rtype: list[str]
+        """
+        header_elems = table.query_selector_all("thead > tr > th")[1:]
+        headers = [e.text_content() for e in header_elems]
+        headers.insert(3, "Score")
+        headers.insert(2, "Home/Away")
+        headers.insert(1, "Player ID")
+
+        return headers
+
+    @staticmethod
+    def _scrape_table_rows(table):
+        """
+
+        :param table:
+        :type table: playwright.sync_api._generated.ElementHandle
+        :return:
+        :rtype: list[str]
+        """
+        rows = table.query_selector_all("tbody > tr")
+
+        href_regex = re.compile(r"//www.fangraphs.com/statss.aspx\?playerid=(.*)")
+        opp_regex = re.compile(r"(@)?(.*)(\d+-\d+ \((F|Top|Bottom) \d+\))")
+
+        for i, row in enumerate(rows):
+            elems = row.query_selector_all("td")[1:]
+
+            data = [e.text_content() for e in elems]
+
+            href = elems[0].query_selector("a").get_attribute("href")
+            player_id = href_regex.search(href).group(1)
+
+            home_away, opp, score, _ = opp_regex.search(data[2]).groups()
+            home_away = "Away" if home_away is not None else "Home"
+            data[2] = opp
+
+            data.insert(3, score)
+            data.insert(2, home_away)
+            data.insert(1, player_id)
+
+            yield data
+
+    def export(self):
+        """
+
+        :return:
+        :rtype: pd.DataFrame
+        """
+        table = self.page.query_selector(".table-fixed > table")
+        headers = self._scrape_table_headers(table)
+        rows = self._scrape_table_rows(table)
+
+        dataframe = pd.DataFrame(columns=headers)
+        for i, row in enumerate(rows):
+            dataframe.loc()[i] = row
+
+        return dataframe
