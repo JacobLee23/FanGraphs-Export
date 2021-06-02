@@ -176,3 +176,15 @@ class Live(ScrapingUtilities):
                 matchup, dataframe = _scrape_preview(match)
                 data.setdefault(f"{matchup}*", dataframe)
         return data
+
+
+class LiveLeaderboards(ScrapingUtilities):
+    """
+    Scraper for the FanGraphs `Live Daily Leaderboards`_ page.
+
+    .. _Live Daily Leaderboards: https://fangraphs.com/scores/live-leaderboards
+    """
+    address = "https://fangraphs.com/scores/live-leaderboards"
+
+    def __init__(self, browser):
+        ScrapingUtilities.__init__(self, browser, self.address, scores_sel.LiveLeaderboards)
