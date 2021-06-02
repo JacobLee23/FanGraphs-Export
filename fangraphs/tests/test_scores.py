@@ -194,8 +194,8 @@ class TestLiveLeaderboards(BaseTests):
         :param table: The table element
         :type table: playwright.sync_api._generated.ElementHandle
         """
-        header_elems = table.query_selector_all("thead > tr > th")
-        assert len(header_elems) == 17, table.inner_html()
+        header_elems = table.query_selector_all("thead > tr > th")[1:]
+        assert len(header_elems) == 16, table.inner_html()
 
         headers = [e.text_content() for e in header_elems]
         assert all(headers), headers
@@ -212,20 +212,19 @@ class TestLiveLeaderboards(BaseTests):
         assert rows, table.inner_html()
 
         href_regex = re.compile(r"//www.fangraphs.com/statss.aspx\?playerid=(.*)")
-        score_regex = re.compile(r"(\d+)-(\d+) (F)?")
+        opp_regex = re.compile(r"(@)?(.*)(\d+-\d+ \((F|Top|Bottom) \d+\))")
 
         for i, row in enumerate(rows):
-            items = row.query_selector_all("td")
-            assert items, row.inner_html()
+            elems = row.query_selector_all("td")[1:]
+            assert elems, row.inner_html()
 
-            data = [e.text_content() for e in items]
+            data = [e.text_content() for e in elems]
             assert data, row.inner_html()
 
-            href = items[1].query_selector("a").get_attribute("href")
+            href = elems[0].query_selector("a").get_attribute("href")
             assert href_regex.search(href), href
 
-            score = items[3].query_selector("div.game-desc > div.game-info").text_content()
-            assert score_regex.search(score), score
+            assert opp_regex.search(data[2]), data[2]
 
     @pytest.mark.parametrize(
         "page", ["liveleaderboards_page"], indirect=True
