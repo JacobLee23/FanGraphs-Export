@@ -29,7 +29,7 @@ class LiveLeaderboards:
         "stat_type": ".stattypes"
     }
 
-    waitfor = ""
+    waitfor = ".fg-data-grid.undefined"
     export_data = ""
 
     def __init__(self, page):
