@@ -45,6 +45,11 @@ def liveleaderboards_page():
     return TestLiveLeaderboards.address
 
 
+@pytest.fixture(scope="module")
+def scoreboard_page():
+    return TestScoreboard.address
+
+
 def _test_scrape_game(game):
     """
     :py:func:`fangraphs.scores._scrape_game`
@@ -153,12 +158,16 @@ class TestLive(BaseTests):
         """
         assert len(
             page.query_selector_all(
-                "#LiveBoard1_LiveBoard1_litGamesPanel > table > tbody"
+                "#LiveBoard1_LiveBoard1_litGamesPanel > table:nth-last-child(1) > tbody"
             )
         ) == 1
-        matches = page.query_selector_all(
-            "#LiveBoard1_LiveBoard1_litGamesPanel > table > tbody > tr > td[style*='border-bottom:1px dotted black;']"
+        table_body = page.query_selector(
+            "#LiveBoard1_LiveBoard1_litGamesPanel > table:nth-last-child(1) > tbody"
         )
+        matches = table_body.query_selector_all(
+            "td[style*='border-bottom:1px dotted black;']"
+        )
+        assert matches
 
         for match in matches:
             if (
@@ -244,3 +253,40 @@ class TestLiveLeaderboards(BaseTests):
         table = page.query_selector(".table-fixed > table")
         self._test_scrape_table_headers(table)
         self._test_scrape_table_rows(table)
+
+
+class TestScoreboard(BaseTests):
+    """
+    :py:class:`fangraphs.scores.Scoreboard`
+    """
+    address = "https://fangraphs.com/scoreboard.aspx"
+
+    @pytest.mark.parametrize(
+        "page", ["scoreboard_page"], indirect=True
+    )
+    def test_export(self, page):
+        """
+        :py:meth:`fangraphs.scores.Scoreboard.export`
+
+        :param page: A Playwright ``Page`` objects
+        :type page: playwright.sync_api._generated.Page
+        """
+        assert len(
+            page.query_selector_all(
+                "#content > table > tbody > tr > td > table:nth-last-child(1) > tbody"
+            )
+        ) == 1
+        table_body = page.query_selector(
+            "#content > table > tbody > tr > td > table:nth-last-child(1) > tbody"
+        )
+        matches = table_body.query_selector_all(
+            "td[style*='border-bottom:1px dotted black;']"
+        )
+        assert matches
+
+        for match in matches:
+            assert (
+                    len(match.query_selector_all("xpath=./div")) == 2
+                    and len(match.query_selector_all("xpath=./a")) == 3
+            ), match.inner_html()
+            _test_scrape_game(match)
