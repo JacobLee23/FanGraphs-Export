@@ -290,3 +290,10 @@ class TestScoreboard(BaseTests):
                     and len(match.query_selector_all("xpath=./a")) == 3
             ), match.inner_html()
             _test_scrape_game(match)
+
+
+class TestGameGraphs(BaseTests):
+    """
+    :py:class:`fangraphs.scores.GameGraphs`
+    """
+    address = "https://fangraphs.com/wins.aspx"

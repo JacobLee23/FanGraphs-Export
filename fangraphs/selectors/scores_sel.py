@@ -61,3 +61,14 @@ class Scoreboard:
     def __init__(self, page):
         for key, val in self.__calendars.items():
             self.__setattr__(key, selectors.Calendars(page, *val))
+
+
+class GameGraphs:
+    """
+    CSS selectors for :py:class:`fangraphs.scores.GameGraphs`
+    """
+    waitfor = ""
+    export_data = ""
+
+    def __init__(self, page):
+        pass

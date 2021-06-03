@@ -313,3 +313,11 @@ class Scoreboard(ScrapingUtilities):
 
         games_dataframe = _scrape_game_data(matches)
         return games_dataframe
+
+
+class GameGraphs(ScrapingUtilities):
+    """
+    Scraper for the FanGraphs `Game Graphs`_ tab of the game pages.
+
+    .. _Game Graphs: https://fangraphs.com/wins.aspx
+    """
