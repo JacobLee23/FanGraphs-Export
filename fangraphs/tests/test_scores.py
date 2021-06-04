@@ -50,6 +50,89 @@ def scoreboard_page():
     return TestScoreboard.address
 
 
+@pytest.fixture(scope="module")
+def gamegraphs_page():
+    return TestGameGraphs.address
+
+
+def _test_scrape_sotg(page):
+    """
+    :py:func:`fangraphs.scores._scrape_sotg`
+
+    :param page: A Playwright ``Page`` object
+    :type page: playwright.sync_api._generated.Page
+    """
+    sotg_regex = re.compile(r"(.*) \((.*) / (.*)\)")
+
+    assert len(
+        page.query_selector_all(
+            "#WinsGame1_ThreeStars1_ajaxPanel > #pan1"
+        )
+    ) == 1
+    sotg_table = page.query_selector(
+        "#WinsGame1_ThreeStars1_ajaxPanel > #pan1"
+    )
+
+    assert len(
+        sotg_table.query_selector_all(
+            "tr > td:nth-child(1)"
+        )
+    ) == 4, sotg_table.inner_html()
+    sotgs = sotg_table.query_selector_all("tr > td:nth-child(1)")[1:]
+
+    stars_of_the_game = [e.text_content().strip() for e in sotgs]
+    assert all(stars_of_the_game)
+
+    assert all(
+        sotg_regex.search(s) is not None for s in stars_of_the_game if s != "No Votes Yet"
+    )
+
+
+def _test_scrape_headers(table):
+    """
+    :py:func:`fangraphs.scores._scrape_headers`
+
+    :param table:
+    :type table: playwright.sync_api._generated.ElementHandle
+    """
+    elems = table.query_selector_all("thead > tr > th")
+    if elems[0].text_content() == "Pitcher":
+        assert len(elems) == 9, table.inner_html()
+    elif elems[0].text_content() == "Batter":
+        assert len(elems) == 10, table.inner_html()
+    else:
+        pytest.fail(table.inner_html())
+
+    headers = [e.text_content() for e in elems]
+    assert all(headers), headers
+
+
+def _test_scrape_table(table):
+    """
+    :py:func:`fangraphs.scores._scrape_table`
+
+    :param table:
+    :type table: playwright.sync_api._generated.ElementHandle
+    """
+    _test_scrape_headers(table)
+
+    href_regex = re.compile(r"statss.aspx\?playerid=(.*)&position=.*")
+
+    rows = table.query_selector_all("tbody > tr")[:-1]
+    assert rows, table.inner_html()
+
+    for row in rows:
+        elems = row.query_selector_all("td")
+        items = [e.text_content() for e in elems]
+        assert all(items)
+
+        href = elems[0].query_selector("a").get_attribute("href")
+        assert href_regex.search(href), href
+
+    total = table.query_selector("tbody > tr:nth-last-child(1)")
+    assert total.query_selector("td:nth-child(1)").text_content() == "Total"
+
+
 def _test_scrape_game(game):
     """
     :py:func:`fangraphs.scores._scrape_game`
@@ -221,7 +304,7 @@ class TestLiveLeaderboards(BaseTests):
         assert rows, table.inner_html()
 
         href_regex = re.compile(r"//www.fangraphs.com/statss.aspx\?playerid=(.*)")
-        opp_regex = re.compile(r"(@)?(.*)(\d+-\d+ \((F|Top|Bottom) \d+\))")
+        opp_regex = re.compile(r"(@)?(.*)(\d+-\d+ \((F|Top \d+|Bot \d+)\))")
 
         for i, row in enumerate(rows):
             elems = row.query_selector_all("td")[1:]
@@ -290,3 +373,30 @@ class TestScoreboard(BaseTests):
                     and len(match.query_selector_all("xpath=./a")) == 3
             ), match.inner_html()
             _test_scrape_game(match)
+
+
+class TestGameGraphs(BaseTests):
+    """
+    :py:class:`fangraphs.scores.GameGraphs`
+    """
+    address = "https://fangraphs.com/wins.aspx"
+
+    @pytest.mark.parametrize(
+        "page", ["gamegraphs_page"], indirect=True
+    )
+    def test_export(self, page):
+        """
+        :py:meth:`fangraphs.scores.GameGraphs.export`
+
+        :param page: A Playwright ``Page`` object
+        :type page: playwright.sync_api._generated.Page
+        """
+        _test_scrape_sotg(page)
+
+        tables = page.query_selector_all(
+            "div.RadGrid.RadGrid_FanGraphs > table.rgMasterTable"
+        )
+        assert len(tables) == 4
+
+        for table in tables:
+            _test_scrape_table(table)

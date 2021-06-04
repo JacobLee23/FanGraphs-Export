@@ -14,14 +14,87 @@ from fangraphs import ScrapingUtilities
 from fangraphs.selectors import scores_sel
 
 
-def __refine_matchup_names(old: list[str]):
+def _scrape_sotg(page):
+    """
+
+    :param page: A Playwright ``Page`` object
+    :type page: playwright.sync_api._generated.Page
+    :return: 
+    :rtype: pd.DataFrame
+    """
+    sotg_regex = re.compile(r"(.*) \((.*) / (.*)\)")
+
+    sotg_table = page.query_selector(
+        "#WinsGame1_ThreeStars1_ajaxPanel > #pan1"
+    )
+    sotgs = sotg_table.query_selector_all("tr > td:nth-child(1)")[1:]
+    stars_of_the_game = [e.text_content().strip() for e in sotgs]
+
+    dataframe = pd.DataFrame(columns=[1, 2, 3])
+    for i, player in enumerate(reversed(stars_of_the_game), 1):
+        data = [None, None, None]
+        match = sotg_regex.search(player)
+        if match is not None:
+            data = match.groups()
+
+        dataframe.loc[i] = data
+
+    return dataframe
+
+
+def _scrape_table_headers(table):
+    """
+
+    :param table:
+    :type table: playwright.sync_api._generated.ElementHandle
+    :return:
+    :rtype: pd.DataFrame
+    """
+    elems = table.query_selector_all("thead > tr > th")
+    headers = [e.text_content() for e in elems]
+    headers.insert(1, "Player ID")
+
+    dataframe = pd.DataFrame(columns=headers[1:])
+    return dataframe
+
+
+def _scrape_table(table):
+    """
+
+    :param table:
+    :type table: playwright.sync_api._generated.ElementHandle
+    :return:
+    :rtype: pd.DataFrame
+    """
+    dataframe = _scrape_table_headers(table)
+
+    href_regex = re.compile(r"statss.aspx\?playerid=(.*)&position=.*")
+    rows = table.query_selector_all("tbody > tr")[:-1]
+
+    for i, row in enumerate(rows):
+        elems = row.query_selector_all("td")
+        items = [e.text_content() for e in elems]
+
+        href = elems[0].query_selector("a").get_attribute("href")
+        player_id = href_regex.search(href).group(1)
+
+        items.insert(1, player_id)
+
+        dataframe.loc[items[0]] = items[1:]
+
+    return dataframe
+
+
+def __refine_matchup_names(old):
     """
 
     :param old:
+    :type old: list[str]
     :return:
     :rtype: list[str]
     """
-    counts = dict(zip(s := set(old), [0] * len(s)))
+
+    counts = dict(zip(set(old), [0] * len(old)))
     new = []
 
     for matchup in old:
@@ -250,7 +323,7 @@ class LiveLeaderboards(ScrapingUtilities):
         rows = table.query_selector_all("tbody > tr")
 
         href_regex = re.compile(r"//www.fangraphs.com/statss.aspx\?playerid=(.*)")
-        opp_regex = re.compile(r"(@)?(.*)(\d+-\d+ \((F|Top|Bottom) \d+\))")
+        opp_regex = re.compile(r"(@)?(.*)(\d+-\d+ \((F|Top \d+|Bot \d+)\))")
 
         for i, row in enumerate(rows):
             elems = row.query_selector_all("td")[1:]
@@ -313,3 +386,41 @@ class Scoreboard(ScrapingUtilities):
 
         games_dataframe = _scrape_game_data(matches)
         return games_dataframe
+
+
+class GameGraphs(ScrapingUtilities):
+    """
+    Scraper for the FanGraphs `Game Graphs`_ tab of the game pages.
+
+    .. _Game Graphs: https://fangraphs.com/wins.aspx
+    """
+    address = "https://fangraphs.com/wins.aspx"
+
+    def __init__(self, browser):
+        ScrapingUtilities.__init__(self, browser, self.address, scores_sel.GameGraphs)
+
+    def export(self):
+        """
+
+        :return: 
+        :rtype: dict[str, pd.DataFrame]
+        """
+        stars_of_the_game = _scrape_sotg(self.page)
+
+        table_names = (
+            "Away Pitching",
+            "Home Pitching",
+            "Away Batting",
+            "Home Batting"
+        )
+        table_data = []
+        tables = self.page.query_selector_all(
+            "div.RadGrid.RadGrid_FanGraphs > table.rgMasterTable"
+        )
+        for table in tables:
+            table_data.append(_scrape_table(table))
+        
+        data = dict(zip(table_names, table_data))
+        data.update({"Stars of the Game": stars_of_the_game})
+
+        return data
