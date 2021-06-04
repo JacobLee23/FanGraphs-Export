@@ -33,8 +33,10 @@ def _scrape_sotg(page):
     dataframe = pd.DataFrame(columns=[1, 2, 3])
     for i, player in enumerate(reversed(stars_of_the_game), 1):
         data = [None, None, None]
-        if match := sotg_regex.search(player) is not None:
+        match = sotg_regex.search(player)
+        if match is not None:
             data = match.groups()
+
         dataframe.loc[i] = data
 
     return dataframe
@@ -83,14 +85,16 @@ def _scrape_table(table):
     return dataframe
 
 
-def __refine_matchup_names(old: list[str]):
+def __refine_matchup_names(old):
     """
 
     :param old:
+    :type old: list[str]
     :return:
     :rtype: list[str]
     """
-    counts = dict(zip(s := set(old), [0] * len(s)))
+
+    counts = dict(zip(set(old), [0] * len(old)))
     new = []
 
     for matchup in old:
