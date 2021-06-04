@@ -114,6 +114,8 @@ def _test_scrape_table(table):
     :param table:
     :type table: playwright.sync_api._generated.ElementHandle
     """
+    _test_scrape_headers(table)
+
     href_regex = re.compile(r"statss.aspx\?playerid=(.*)&position=.*")
 
     rows = table.query_selector_all("tbody > tr")[:-1]
