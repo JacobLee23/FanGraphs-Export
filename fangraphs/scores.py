@@ -323,7 +323,7 @@ class LiveLeaderboards(ScrapingUtilities):
         rows = table.query_selector_all("tbody > tr")
 
         href_regex = re.compile(r"//www.fangraphs.com/statss.aspx\?playerid=(.*)")
-        opp_regex = re.compile(r"(@)?(.*)(\d+-\d+ \((F|Top|Bottom) \d+\))")
+        opp_regex = re.compile(r"(@)?(.*)(\d+-\d+ \((F|Top \d+|Bot \d+)\))")
 
         for i, row in enumerate(rows):
             elems = row.query_selector_all("td")[1:]
