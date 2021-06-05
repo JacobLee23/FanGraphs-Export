@@ -416,6 +416,7 @@ class TestPlayLog(BaseTests):
     @staticmethod
     def _test_scrape_headers(table):
         """
+        :py:meth:`fangraphs.scores.PlayLog._scrape_headers`
 
         :param table:
         :type table: playwright.sync_api._generated.ElementHandle
@@ -428,6 +429,7 @@ class TestPlayLog(BaseTests):
 
     def _test_scrape_table(self, table):
         """
+        :py:meth:`fangraphs.scores.PlayLog._scrape_table`
 
         :param table:
         :type table: playwright.sync_api._generated.ElementHandle
