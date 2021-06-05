@@ -12,6 +12,8 @@
 ![Milestone 4](https://img.shields.io/github/milestones/progress/JLpython-py/FanGraphs-Export/4)
 ![Milestone 5](https://img.shields.io/github/milestones/progress/JLpython-py/FanGraphs-Export/5)
 
+![GitHub Workflow Status: Python Package](https://img.shields.io/github/workflow/status/JLpython-py/FanGraphs-Export/Python%20package)
+
 ![Latest Release](https://img.shields.io/github/v/tag/JLpython-py/FanGraphs-Export)
 ![License: MIT](https://img.shields.io/github/license/JLpython-py/FanGraphs-Export)
 ![Read the Docs](https://img.shields.io/readthedocs/fangraphs-export)
