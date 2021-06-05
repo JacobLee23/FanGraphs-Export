@@ -55,6 +55,11 @@ def gamegraphs_page():
     return TestGameGraphs.address
 
 
+@pytest.fixture(scope="module")
+def playlog_page():
+    return TestPlayLog.address
+
+
 def _test_scrape_sotg(page):
     """
     :py:func:`fangraphs.scores._scrape_sotg`
@@ -116,7 +121,7 @@ def _test_scrape_table(table):
     """
     _test_scrape_headers(table)
 
-    href_regex = re.compile(r"statss.aspx\?playerid=(.*)&position=.*")
+    href_regex = re.compile(r"statss\.aspx\?playerid=(.*)&position=.*")
 
     rows = table.query_selector_all("tbody > tr")[:-1]
     assert rows, table.inner_html()
@@ -303,7 +308,7 @@ class TestLiveLeaderboards(BaseTests):
         rows = table.query_selector_all("tbody > tr")
         assert rows, table.inner_html()
 
-        href_regex = re.compile(r"//www.fangraphs.com/statss.aspx\?playerid=(.*)")
+        href_regex = re.compile(r"//www\.fangraphs\.com/statss\.aspx\?playerid=(.*)")
         opp_regex = re.compile(r"(@)?(.*)(\d+-\d+ \((F|Top \d+|Bot \d+)\))")
 
         for i, row in enumerate(rows):
@@ -400,3 +405,80 @@ class TestGameGraphs(BaseTests):
 
         for table in tables:
             _test_scrape_table(table)
+
+
+class TestPlayLog(BaseTests):
+    """
+    :py:class:`fangraphs.scores.PlayLog`
+    """
+    address = "https://fangraphs.com/plays.aspx"
+
+    @staticmethod
+    def _test_scrape_headers(table):
+        """
+        :py:meth:`fangraphs.scores.PlayLog._scrape_headers`
+
+        :param table:
+        :type table: playwright.sync_api._generated.ElementHandle
+        """
+        elems = table.query_selector_all("thead > tr > th")
+        assert elems
+
+        headers = [e.text_content() for e in elems]
+        assert headers
+
+    def _test_scrape_table(self, table):
+        """
+        :py:meth:`fangraphs.scores.PlayLog._scrape_table`
+
+        :param table:
+        :type table: playwright.sync_api._generated.ElementHandle
+        """
+        self._test_scrape_headers(table)
+
+        rows = table.query_selector_all("tbody > tr")
+        assert rows
+
+        inning_regex = re.compile(r"([▲▼]) (\d+)")
+        href_regex = re.compile(r"//www\.fangraphs\.com/statss\.aspx\?playerid=(.*)")
+
+        for row in rows:
+            elems = row.query_selector_all("td")
+            assert len(elems) == 13, row.inner_html()
+
+            items = [e.text_content() for e in elems]
+
+            assert inning_regex.search(items[1]), items[1]
+            assert inning_regex.search(items[1]).group(1).encode() in (
+                b'\xe2\x96\xb2', b'\xe2\x96\xbc'
+            ), items[1]
+
+            assert elems[2].query_selector("a") is not None, elems[2].inner_html()
+            assert elems[3].query_selector("a") is not None, elems[3].inner_html()
+
+            hrefs = [
+                e.query_selector("a").get_attribute("href") for e in elems[2:4]
+            ]
+            assert all(href_regex.search(h) is not None for h in hrefs), hrefs
+
+            assert elems[7].query_selector(
+                ".play-desc-text"
+            ) is not None, elems[7].inner_html()
+
+    @pytest.mark.parametrize(
+        "page", ["playlog_page"], indirect=True
+    )
+    def test_export(self, page):
+        """
+        :py:meth:`fangraphs.scores.PlayLog.export`
+
+        :param page: A Playwright ``Page`` object
+        :type page: playwright.sync_api._generated.Page
+        """
+        assert len(
+            page.query_selector_all(
+                ".table-scroll > table"
+            )
+        ) == 1
+        table = page.query_selector(".table-scroll > table")
+        self._test_scrape_table(table)

@@ -424,3 +424,94 @@ class GameGraphs(ScrapingUtilities):
         data.update({"Stars of the Game": stars_of_the_game})
 
         return data
+
+
+class PlayLog(ScrapingUtilities):
+    """
+    Scraper for the FanGraphs `Play Log`_ tab of the game pages.
+
+    .. _Play Log: https://fangraphs.com/plays.aspx
+    """
+    address = "https://fangraphs.com/plays.aspx"
+
+    def __init__(self, browser):
+        ScrapingUtilities.__init__(self, browser, self.address, scores_sel.PlayLog)
+
+    @staticmethod
+    def _scrape_headers(table):
+        """
+
+        :param table:
+        :type table: playwright.sync_api._generated.ElementHandle
+        :return:
+        :rtype: pd.DataFrame
+        """
+        elems = table.query_selector_all("thead > tr > th")
+        headers = [e.text_content() for e in elems]
+        headers.insert(8, "Pitch Sequence")
+        headers.insert(4, "Pitcher Player ID")
+        headers.insert(3, "Batter Player ID")
+        headers.insert(2, "Top/Bot")
+        headers.insert(2, "Inning")
+
+        dataframe = pd.DataFrame(columns=headers[1:])
+        return dataframe
+
+    def _scrape_table(self, table):
+        """
+
+        :param table:
+        :type table: playwright.sync_api._generated.ElementHandle
+        :return:
+        """
+        dataframe = self._scrape_headers(table)
+
+        rows = table.query_selector_all("tbody > tr")
+
+        inning_regex = re.compile(r"([▲▼]) (\d+)")
+        href_regex = re.compile(r"//www\.fangraphs\.com/statss\.aspx\?playerid=(.*)")
+
+        for row in rows:
+            elems = row.query_selector_all("td")
+            items = [e.text_content() for e in elems]
+
+            top_bot, inning = inning_regex.search(items[1]).groups()
+            if top_bot.encode() == b'\xe2\x96\xb2':
+                inn_half = "Top"
+            elif top_bot.encode() == b'\xe2\x96\xbc':
+                inn_half = "Bot"
+            else:
+                continue
+
+            batter_id, pitcher_id = [
+                href_regex.search(
+                    e.query_selector("a").get_attribute("href")
+                ).group(1) for e in elems[2:4]
+            ]
+
+            items[7] = elems[7].query_selector(
+                ".play-desc-text"
+            ).text_content()
+            pitch_seq = elems[7].query_selector(
+                ".play-desc-pitch-seq"
+            )
+            pitch_sequence = pitch_seq.text_content() if pitch_seq is not None else None
+
+            items.insert(8, pitch_sequence)
+            items.insert(4, pitcher_id)
+            items.insert(3, batter_id)
+            items.insert(2, inn_half)
+            items.insert(2, inning)
+
+            dataframe.loc[int(items[0])] = items[1:]
+
+        return dataframe
+
+    def export(self):
+        """
+
+        :return: pd.DataFrame
+        """
+        table = self.page.query_selector(".table-scroll > table")
+        dataframe = self._scrape_table(table)
+        return dataframe

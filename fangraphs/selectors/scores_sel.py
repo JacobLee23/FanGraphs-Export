@@ -88,3 +88,31 @@ class GameGraphs:
             self.__setattr__(key, selectors.DropdownsType1(page, *val))
         # for key, val in self.__calendars.items():
         #    self.__setattr__(key, selectors.Calendars(page, *val))
+
+
+class PlayLog:
+    """
+    CSS selectors for :py:class:`fangraphs.scores.PlayLog`
+    """
+    __dropdowns_type_1 = {
+        "season": (
+            "#PlayGame1_rcbSeason",
+            "#PlayGame1_rcbSeason_DropDown"
+        ),
+        "team": (
+            "#PlayGame1_cbTeams",
+            "#PlayGame1_cbTeams_DropDown"
+        )
+    }
+    __calendars = {
+        "date": ()
+    }
+
+    waitfor = ".fg-data-grid"
+    export_data = ""
+
+    def __init__(self, page):
+        for key, val in self.__dropdowns_type_1.items():
+            self.__setattr__(key, selectors.DropdownsType1(page, *val))
+        # for key, val in self.__calendars.items():
+        #     self.__setattr__(key, selectors.Calendars(page, *val))
