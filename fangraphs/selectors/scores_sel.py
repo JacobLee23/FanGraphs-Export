@@ -116,3 +116,31 @@ class PlayLog:
             self.__setattr__(key, selectors.DropdownsType1(page, *val))
         # for key, val in self.__calendars.items():
         #     self.__setattr__(key, selectors.Calendars(page, *val))
+
+
+class BoxScore:
+    """
+    CSS selectors for :py:class:`fangraphs.scores.BoxScore`
+    """
+    __dropdowns_type_1 = {
+        "season": (
+            "#WinsBox1_rcbSeason",
+            "#WinsBox1_rcbSeason_DropDown"
+        ),
+        "team": (
+            "#WinsBox1_cbTeams",
+            "#WinsBox1_cbTeams_DropDown"
+        )
+    }
+    __calendars = {
+        "date": ()
+    }
+
+    waitfor = ""
+    export_data = ""
+
+    def __init__(self, page):
+        for key, val in self.__dropdowns_type_1.items():
+            self.__setattr__(key, selectors.DropdownsType1(page, *val))
+        # for key, val in self.__calendars.items():
+        #     self.__setattr__(key, selectors.Calendars(page, *val))
