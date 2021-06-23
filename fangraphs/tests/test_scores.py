@@ -60,6 +60,11 @@ def playlog_page():
     return TestPlayLog.address
 
 
+@pytest.fixture(scope="module")
+def boxscore_page():
+    return TestBoxScore.address
+
+
 def _test_scrape_sotg(page):
     """
     :py:func:`fangraphs.scores._scrape_sotg`
@@ -482,3 +487,102 @@ class TestPlayLog(BaseTests):
         ) == 1
         table = page.query_selector(".table-scroll > table")
         self._test_scrape_table(table)
+
+
+class TestBoxScore(BaseTests):
+    """
+    :py:class:`fangraphs.scores.BoxScore`
+    """
+    address = "https://www.fangraphs.com/boxscore.aspx"
+
+    @staticmethod
+    def _test_scrape_table(table):
+        """
+
+        :parma table:
+        :type table: playwright.sync_api._generated.ElementHandle
+        :return:
+        """
+        assert (header_elems := table.query_selector_all(
+            "thead > tr > th.rgHeader"
+        ))
+        assert all(e.text_content() for e in header_elems)
+
+        rows = table.query_selector_all(
+            "tbody > tr"
+        )
+        assert rows
+
+        href_regex = re.compile(r"playerid=(.*)&position=(.*)")
+
+        for row in rows:
+            elems = row.query_selector_all("td")
+
+            assert all(e.text_content() for e in elems)
+
+            if elems[0].text_content() != "Total":
+                assert len(
+                    e := elems[0].query_selector_all("a")
+                ) == 1
+                assert (href := e[0].get_attribute("href")) is not None
+                assert href_regex.search(href) is not None, href
+
+    @staticmethod
+    def _test_scrape_playbyplay_table(pbp_table):
+        """
+        :py:meth:`fangraphs.scores.BoxScore._scrape_playbyplay_table`
+
+        :param pbp_table:
+        :type pbp_table: playwright.sync_api._generated.ElementHandle
+        """
+        assert pbp_table.get_attribute("id") == "WinsBox1_dgPlay"
+
+        assert (header_elems := pbp_table.query_selector_all(
+            "thead > tr > th"
+        ))
+        assert all(e.text_content() for e in header_elems)
+
+        rows = pbp_table.query_selector_all("tbody > tr")
+        assert rows
+
+        href_regex = re.compile(r"playerid=(.*)")
+
+        for row in rows:
+            elems = row.query_selector_all("td")[:-2]
+            assert len(elems) == 12, row.inner_html()
+
+            assert all(e.text_content() for e in elems)
+
+            assert elems[0].query_selector("a") is not None, elems[0].inner_html()
+            assert elems[1].query_selector("a") is not None, elems[1].inner_html()
+
+            hrefs = [
+                e.query_selector("a").get_attribute("href") for e in elems[0:2]
+            ]
+            assert all(href_regex.search(h) is not None for h in hrefs), hrefs
+
+            if len(e := elems[6].query_selector_all("a")) == 1:
+                assert e[0].get_attribute("tooltip") is not None
+            else:
+                assert elems[6].text_content() == elems[6].inner_html()
+
+    @pytest.mark.parametrize(
+        "page", ["boxscore_page"], indirect=True
+    )
+    def test_export(self, page):
+        """
+        :py:meth:`fangraphs.scores.BoxScore.export`
+
+        :type page: playwright.sync_api._generated.Page
+        :param page:
+        """
+        assert len(
+            tables := page.query_selector_all(
+                "div.RadGrid.RadGrid_FanGraphs"
+            )
+        ) == 41
+
+        self._test_scrape_playbyplay_table(tables.pop(4))
+
+        for table in tables:
+            self._test_scrape_table(table)
