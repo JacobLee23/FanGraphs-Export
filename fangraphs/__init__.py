@@ -6,11 +6,16 @@ Subpackage for scraping the FanGraphs **Leaders** pages.
 """
 
 import os
+import re
 
 import pandas as pd
 from playwright.sync_api import sync_playwright
 
 import fangraphs.exceptions
+
+
+PID_REGEX = re.compile(r"playerid=(.*)")
+PID_POS_REGEX = re.compile(r"playerid=(.*)&position=(.*)")
 
 
 class __DecoratorAdapter:

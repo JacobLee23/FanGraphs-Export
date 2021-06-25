@@ -12,11 +12,8 @@ import numpy as np
 import pandas as pd
 
 from fangraphs import ScrapingUtilities
+from fangraphs import PID_REGEX, PID_POS_REGEX
 from fangraphs.selectors import scores_sel
-
-
-PID_REGEX = re.compile(r"playerid=(.*)")
-PID_POS_REGEX = re.compile(r"playerid=(.*)&position=(.*)")
 
 
 def _scrape_sotg(page):
@@ -73,7 +70,6 @@ def _scrape_table(table):
     """
     dataframe = _scrape_table_headers(table)
 
-    href_regex = re.compile(r"statss.aspx\?playerid=(.*)&position=.*")
     rows = table.query_selector_all("tbody > tr")[:-1]
 
     for i, row in enumerate(rows):
@@ -81,7 +77,7 @@ def _scrape_table(table):
         items = [e.text_content() for e in elems]
 
         href = elems[0].query_selector("a").get_attribute("href")
-        player_id = href_regex.search(href).group(1)
+        player_id = PID_POS_REGEX.search(href).group(1)
 
         items.insert(1, player_id)
 
@@ -327,7 +323,6 @@ class LiveLeaderboards(ScrapingUtilities):
         """
         rows = table.query_selector_all("tbody > tr")
 
-        href_regex = re.compile(r"//www.fangraphs.com/statss.aspx\?playerid=(.*)")
         opp_regex = re.compile(r"(@)?(.*)(\d+-\d+ \((F|Top \d+|Bot \d+)\))")
 
         for i, row in enumerate(rows):
@@ -336,7 +331,7 @@ class LiveLeaderboards(ScrapingUtilities):
             data = [e.text_content() for e in elems]
 
             href = elems[0].query_selector("a").get_attribute("href")
-            player_id = href_regex.search(href).group(1)
+            player_id = PID_REGEX.search(href).group(1)
 
             home_away, opp, score, _ = opp_regex.search(data[2]).groups()
             home_away = "Away" if home_away is not None else "Home"
@@ -474,7 +469,6 @@ class PlayLog(ScrapingUtilities):
         rows = table.query_selector_all("tbody > tr")
 
         inning_regex = re.compile(r"([▲▼]) (\d+)")
-        href_regex = re.compile(r"//www\.fangraphs\.com/statss\.aspx\?playerid=(.*)")
 
         for row in rows:
             elems = row.query_selector_all("td")
@@ -489,7 +483,7 @@ class PlayLog(ScrapingUtilities):
                 continue
 
             batter_id, pitcher_id = [
-                href_regex.search(
+                PID_REGEX.search(
                     e.query_selector("a").get_attribute("href")
                 ).group(1) for e in elems[2:4]
             ]
