@@ -8,10 +8,15 @@ Scrapers for the webpages under the FanGraphs **Scores** tab.
 import datetime
 import re
 
+import numpy as np
 import pandas as pd
 
 from fangraphs import ScrapingUtilities
 from fangraphs.selectors import scores_sel
+
+
+PID_REGEX = re.compile(r"playerid=(.*)")
+PID_POS_REGEX = re.compile(r"playerid=(.*)&position=(.*)")
 
 
 def _scrape_sotg(page):
@@ -515,3 +520,118 @@ class PlayLog(ScrapingUtilities):
         table = self.page.query_selector(".table-scroll > table")
         dataframe = self._scrape_table(table)
         return dataframe
+
+
+class BoxScore(ScrapingUtilities):
+    """
+    Scrapes the FanGraphs `Box Score`_ pages.
+
+    .. _Box Score: https://fangraphs.com/boxscore.aspx
+    """
+    address = "https://fangraphs.com/boxscore.aspx"
+
+    def __init__(self, browser):
+        """
+        :type browser: playwright.sync_api._generated.Browser
+        """
+        ScrapingUtilities.__init__(self, browser, self.address, scores_sel.BoxScore)
+
+    @staticmethod
+    def _scrape_playbyplay_table(table):
+        """
+
+        :param table:
+        :type table: playwright.sync_api._generated.ElementHandle
+        :return:
+        :rtype: pd.DataFrame
+        """
+        header_elems = table.query_selector_all("thead > tr > th")
+        headers = [e.text_content() for e in header_elems][:-2]
+        (headers[7:7], headers[2:2], headers[1:1]) = (
+            ["Pitch Sequence"], ["Player Player ID"], ["Pitcher Player ID"]
+        )
+        dataframe = pd.DataFrame(columns=headers)
+
+        row_elems = table.query_selector_all("tbody > tr")
+        for i, row in enumerate(row_elems):
+            elems = row.query_selector_all("td")[:-2]
+            items = [e.text_content() for e in elems]
+
+            pitcher_pid, player_pid = tuple(
+                PID_POS_REGEX.search(
+                    e.query_selector("a").get_attribute("href")
+                ).group(1) for e in elems[:2]
+            )
+            pitch_sequence = e.get_attribute("tooltip") if (
+                e := elems[6].query_selector("a")
+            ) else ""
+
+            (items[7:7], items[2:2], items[1:1]) = (
+                [pitch_sequence], [player_pid], [pitcher_pid]
+            )
+            print(headers, items)
+            dataframe.loc[i] = items
+
+        return dataframe
+
+    @staticmethod
+    def _scrape_table(table):
+        """
+
+        :param table:
+        :type table: playwright.sync_api._generated.ElementHandle
+        :return:
+        :rtype: pd.DataFrame
+        """
+        header_elems = table.query_selector_all("thead > tr > th.rgHeader")
+        headers = [e.text_content() for e in header_elems]
+        headers[1:1] = ["Player ID", "Position", "Position(s) Played", "Decision"]
+        dataframe = pd.DataFrame(columns=headers)
+
+        row_elems = table.query_selector_all("tbody > tr")
+        for i, row in enumerate(row_elems):
+            elems = row.query_selector_all("td")
+            items = [e.text_content() for e in elems]
+
+            if elems[0].text_content() != "Total":
+                pid, position = PID_POS_REGEX.search(
+                    (e := elems[0].query_selector("a")).get_attribute("href")
+                ).groups()
+                info, items[0] = items[0].strip(e.text_content()), e.text_content()
+                items[1:1] = [
+                    pid, position, info.strip("-").strip(), np.nan
+                ] if info.startswith("- ") else [
+                    pid, position, np.nan, info.strip("()")
+                ]
+            else:
+                items[1:1] = [np.nan, np.nan, np.nan, np.nan]
+            dataframe.loc[i] = items
+
+        return dataframe
+
+    def export(self):
+        """
+
+        :return:
+        :rtype: dict[str, pd.DataFrame]
+        """
+        tables = self.page.query_selector_all("div.RadGrid.RadGrid_FanGraphs")
+
+        playbyplay_table = tables.pop(4)
+        table_names = zip(
+            ("Box Score", "Dashboard", "Standard", "Advanced", "Batted Ball",
+             "More Batted Ball", "Win Probability", "Pitch Type",
+             "Pitch Value", "Plate Discipline"),
+            [tables[i:(i+4)] for i in range(0, len(tables), 4)]
+        )
+
+        data = dict()
+        data["Line Score"] = pd.DataFrame()
+        data["Play By Play"] = self._scrape_playbyplay_table(playbyplay_table)
+        for tname, tbls in table_names:
+            for spec, table in zip(
+                    ("Batting A", "Batting H", "Pitching A", "Pitching H"), tbls
+            ):
+                data[f"{tname}: {spec}"] = self._scrape_table(table)
+
+        return data
