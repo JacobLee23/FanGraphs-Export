@@ -531,6 +531,29 @@ class BoxScore(ScrapingUtilities):
         ScrapingUtilities.__init__(self, browser, self.address, scores_sel.BoxScore)
 
     @staticmethod
+    def _scrape_linescore_table(table):
+        """
+
+        :param table:
+        :return:
+        :rtype: pd.DataFrame
+        """
+        header_elems = table.query_selector_all(
+            "thead > tr.linescore-header > th"
+        )
+        headers = [e.text_content() for e in header_elems][1:]
+        headers.insert(0, "Team")
+        dataframe = pd.DataFrame(columns=headers)
+
+        row_elems = table.query_selector_all("tbody > tr.team")
+        for team, row in zip(("Away", "Home"), row_elems):
+            elems = row.query_selector_all("td")
+            items = [e.text_content() for e in elems]
+            dataframe.loc[team] = items
+
+        return dataframe
+
+    @staticmethod
     def _scrape_playbyplay_table(table):
         """
 
@@ -609,6 +632,10 @@ class BoxScore(ScrapingUtilities):
         :return:
         :rtype: dict[str, pd.DataFrame]
         """
+        line_score_table = self.page.query_selector(
+            "div.scoreboard-wrapper > table.linescore"
+        )
+
         tables = self.page.query_selector_all("div.RadGrid.RadGrid_FanGraphs")
 
         playbyplay_table = tables.pop(4)
@@ -620,7 +647,7 @@ class BoxScore(ScrapingUtilities):
         )
 
         data = dict()
-        data["Line Score"] = pd.DataFrame()
+        data["Line Score"] = self._scrape_linescore_table(line_score_table)
         data["Play By Play"] = self._scrape_playbyplay_table(playbyplay_table)
         for tname, tbls in table_names:
             for spec, table in zip(
