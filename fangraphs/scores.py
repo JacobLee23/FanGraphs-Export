@@ -5,11 +5,12 @@
 Scrapers for the webpages under the FanGraphs **Scores** tab.
 """
 
+import collections
 import datetime
 import re
 
-import numpy as np
 import pandas as pd
+from playwright.sync_api import sync_playwright
 
 from fangraphs import ScrapingUtilities
 from fangraphs import PID_REGEX, PID_POS_REGEX
@@ -528,16 +529,62 @@ class BoxScore(ScrapingUtilities):
         """
         :type browser: playwright.sync_api._generated.Browser
         """
-        ScrapingUtilities.__init__(self, browser, self.address, scores_sel.BoxScore)
+        # ScrapingUtilities.__init__(self, browser, self.address, scores_sel.BoxScore)
+        self.__play = sync_playwright().start()
+        self.__browser = self.__play.chromium.launch()
+        self.page = self.__browser.new_page()
+        self.page.goto(self.address, timeout=0)
 
-    @staticmethod
-    def _scrape_linescore_table(table):
+        self._tables = None
+
+        self.line_score = None
+        self.play_by_play = None
+        self.data_tables = None
+
+    def __del__(self):
+        self.__browser.close()
+        self.__play.stop()
+
+    @property
+    def _tables(self):
         """
 
-        :param table:
+        :return:
+        :rtype: list[playwright.sync_api._generated.ElementHandle]
+        """
+        return self.__tables
+
+    @_tables.setter
+    def _tables(self, value) -> None:
+        """
+
+        """
+        if value is not None:
+            return
+        self.__tables = self.page.query_selector_all(
+            "div.RadGrid.RadGrid_FanGraphs"
+        )
+
+    @property
+    def line_score(self):
+        """
+
         :return:
         :rtype: pd.DataFrame
         """
+        return self._line_score
+
+    @line_score.setter
+    def line_score(self, value) -> None:
+        """
+
+        """
+        if value is not None:
+            return
+
+        table = self.page.query_selector(
+            "div.scoreboard-wrapper > table.linescore"
+        )
         header_elems = table.query_selector_all(
             "thead > tr.linescore-header > th"
         )
@@ -551,45 +598,63 @@ class BoxScore(ScrapingUtilities):
             items = [e.text_content() for e in elems]
             dataframe.loc[team] = items
 
-        return dataframe
+        self._line_score = dataframe
 
-    @staticmethod
-    def _scrape_playbyplay_table(table):
+    @property
+    def play_by_play(self):
         """
 
-        :param table:
-        :type table: playwright.sync_api._generated.ElementHandle
         :return:
         :rtype: pd.DataFrame
         """
-        header_elems = table.query_selector_all("thead > tr > th")
-        headers = [e.text_content() for e in header_elems][:-2]
-        (headers[7:7], headers[2:2], headers[1:1]) = (
-            ["Pitch Sequence"], ["Player Player ID"], ["Pitcher Player ID"]
+        return self._play_by_play
+
+    @play_by_play.setter
+    def play_by_play(self, value) -> None:
+        """
+
+        :param value:
+        """
+        if value is not None:
+            return
+
+        pbp_table = self._tables[4]
+        header_elems = pbp_table.query_selector_all("thead > tr > th")
+        row_elems = pbp_table.query_selector_all("tbody > tr")
+
+        dataframe = pd.DataFrame(
+            data=[
+                [e.text_content() for e in r.query_selector_all("td")]
+                for r in row_elems
+            ],
+            columns=[e.text_content() for e in header_elems]
         )
-        dataframe = pd.DataFrame(columns=headers)
+        dataframe.drop(columns=dataframe.columns[-2:])
 
-        row_elems = table.query_selector_all("tbody > tr")
-        for i, row in enumerate(row_elems):
-            elems = row.query_selector_all("td")[:-2]
-            items = [e.text_content() for e in elems]
+        def pitch_sequence() -> list[list[str]]:
+            items = []
+            for row in row_elems:
+                elem = row.query_selector("td:nth-child(7) a")
+                if elem is not None:
+                    pitches = elem.get_attribute("tooltip").split(",")
+                else:
+                    pitches = []
+                items.append(pitches)
+            return items
 
-            pitcher_pid, player_pid = tuple(
-                PID_POS_REGEX.search(
-                    e.query_selector("a").get_attribute("href")
-                ).group(1) for e in elems[:2]
-            )
-            pitch_sequence = e.get_attribute("tooltip") if (
-                e := elems[6].query_selector("a")
-            ) else ""
+        dataframe["Pitch Sequence"] = pitch_sequence()
+        dataframe["Player ID (Pitcher)"] = [
+            PID_POS_REGEX.search(
+                r.query_selector("td:nth-child(1) a").get_attribute("href")
+            ).group(1) for r in row_elems
+        ]
+        dataframe["Player ID (PLayer)"] = [
+            PID_POS_REGEX.search(
+                r.query_selector("td:nth-child(2) a").get_attribute("href")
+            ).group(1) for r in row_elems
+        ]
 
-            (items[7:7], items[2:2], items[1:1]) = (
-                [pitch_sequence], [player_pid], [pitcher_pid]
-            )
-            print(headers, items)
-            dataframe.loc[i] = items
-
-        return dataframe
+        self._play_by_play = dataframe
 
     @staticmethod
     def _scrape_table(table):
@@ -601,58 +666,73 @@ class BoxScore(ScrapingUtilities):
         :rtype: pd.DataFrame
         """
         header_elems = table.query_selector_all("thead > tr > th.rgHeader")
-        headers = [e.text_content() for e in header_elems]
-        headers[1:1] = ["Player ID", "Position", "Position(s) Played", "Decision"]
-        dataframe = pd.DataFrame(columns=headers)
-
         row_elems = table.query_selector_all("tbody > tr")
-        for i, row in enumerate(row_elems):
-            elems = row.query_selector_all("td")
-            items = [e.text_content() for e in elems]
+        dataframe = pd.DataFrame(
+            data=[
+                [e.text_content() for e in r.query_selector_all("td")]
+                for r in row_elems
+            ],
+            columns=[e.text_content() for e in header_elems]
+        )
 
-            if elems[0].text_content() != "Total":
-                pid, position = PID_POS_REGEX.search(
-                    (e := elems[0].query_selector("a")).get_attribute("href")
-                ).groups()
-                info, items[0] = items[0].strip(e.text_content()), e.text_content()
-                items[1:1] = [
-                    pid, position, info.strip("-").strip(), np.nan
-                ] if info.startswith("- ") else [
-                    pid, position, np.nan, info.strip("()")
-                ]
-            else:
-                items[1:1] = [np.nan, np.nan, np.nan, np.nan]
-            dataframe.loc[i] = items
+        def playerids_positions() -> [list[str], list[str]]:
+            player_ids, positions, = [], []
+            for row in row_elems:
+                elem = row.query_selector("td:nth-child(1)")
+                if elem.text_content() != "Total":
+                    pid, position = PID_POS_REGEX.search(
+                        elem.query_selector("a").get_attribute("href")
+                    ).groups()
+                else:
+                    pid, position = "", ""
+                player_ids.append(pid)
+                positions.append(position)
+            return player_ids, positions
+
+        dataframe["Player ID"], dataframe["Position"] = playerids_positions()
 
         return dataframe
 
-    def export(self):
+    @property
+    def data_tables(self):
         """
 
         :return:
         :rtype: dict[str, pd.DataFrame]
         """
-        line_score_table = self.page.query_selector(
-            "div.scoreboard-wrapper > table.linescore"
+        return self._data_tables
+
+    @data_tables.setter
+    def data_tables(self, value):
+        if value is not None:
+            return
+
+        table_names = (
+            "box_score", "dashboard", "standard", "advanced", "batted_ball",
+            "more_batted_ball", "win_probability", "pitch_type",
+            "pitch_value", "plate_discipline"
+        )
+        stat_groups = (
+            "batting_away", "batting_home", "pitching_away", "pitching_home"
+        )
+        DataTables = collections.namedtuple("DataTables", table_names)
+        StatGroups = collections.namedtuple("StatGroups", stat_groups)
+
+        data = {a: {b: None for b in stat_groups} for a in table_names}
+
+        tables = self._tables[:4] + self._tables[5:]
+        table_groups = [
+            tables[i:(i+4)] for i in range(0, len(tables), 4)
+        ]
+        for dtables, tname in zip(table_groups, table_names):
+            for table, tstat in zip(dtables, stat_groups):
+                data[tname][tstat] = self._scrape_table(table)
+            self.__setattr__(tname, StatGroups(**data[tname]))
+
+        data_tables = DataTables(
+            **{a: StatGroups(
+                **{b: data[a][b] for b in stat_groups}
+            ) for a in table_names}
         )
 
-        tables = self.page.query_selector_all("div.RadGrid.RadGrid_FanGraphs")
-
-        playbyplay_table = tables.pop(4)
-        table_names = zip(
-            ("Box Score", "Dashboard", "Standard", "Advanced", "Batted Ball",
-             "More Batted Ball", "Win Probability", "Pitch Type",
-             "Pitch Value", "Plate Discipline"),
-            [tables[i:(i+4)] for i in range(0, len(tables), 4)]
-        )
-
-        data = dict()
-        data["Line Score"] = self._scrape_linescore_table(line_score_table)
-        data["Play By Play"] = self._scrape_playbyplay_table(playbyplay_table)
-        for tname, tbls in table_names:
-            for spec, table in zip(
-                    ("Batting A", "Batting H", "Pitching A", "Pitching H"), tbls
-            ):
-                data[f"{tname}: {spec}"] = self._scrape_table(table)
-
-        return data
+        self._data_tables = data_tables
