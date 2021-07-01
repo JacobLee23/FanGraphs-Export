@@ -12,29 +12,23 @@ class Live:
     """
     CSS selectors for :py:class:`fangraphs.scores.Live`
     """
-    waitfor = ""
-    export_data = ""
 
     def __init__(self, page):
         self.page = page
 
 
-class LiveLeaderboards:
+class LiveLeaderboards(selectors.Selectors):
     """
     CSS selectors for :py:class:`fangraphs.scores.LiveLeaderboards`
     """
-    __selections_type_4 = {
-        "player_type": ".playertypes",
-        "positions": ".positions",
-        "stat_type": ".stattypes"
+    __selections = {
+        "player_type": {"css_selector": ".playertypes"},
+        "positions": {"css_selector": ".positions"},
+        "stat_type": {"css_selector": ".stattypes"}
     }
 
-    waitfor = ".fg-data-grid.undefined"
-    export_data = ""
-
     def __init__(self, page):
-        for key, val in self.__selections_type_4.items():
-            self.__setattr__(key, selectors.SelectionsType4(page, val))
+        super().__init__(page)
 
 
 class Scoreboard:

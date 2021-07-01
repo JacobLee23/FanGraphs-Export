@@ -8,20 +8,23 @@ CSS selectors for the classes in :py:mod:`fangraphs.leaders`.
 """
 
 
-class GameSpan:
+class GameSpan(selectors.Selectors):
     """
     CSS selectors for :py:class:`fangraphs.leaders.GameSpan`.
     """
-    selections_type_2 = {
-        "stat": [
-            ".controls-stats > .fgButton:nth-child(1)",
-            ".controls-stats > .fgButton:nth-child(2)"
-        ],
-        "view_type": [
-            ".controls-board-view > .fgButton:nth-child(1)",
-            ".controls-board-view > .fgButton:nth-child(2)",
-            ".controls-board-view > .fgButton:nth-child(3)"
-        ]
+    _selections = {
+        "stat": {
+            "css_selectors": [
+                f".controls-stats > .fgButton:nth-child({n})"
+                for n in range(1, 3)
+            ]
+        },
+        "table_type": {
+            "css_selectors": [
+                f".controls-board-view > .fgButton:nth-child({n})"
+                for n in range(1, 4)
+            ]
+        }
     }
     dropdowns_type_2 = {
         "minimum": ".controls-stats:nth-child(1) > div:nth-child(3) > .fg-selection-box__selection",
@@ -30,29 +33,30 @@ class GameSpan:
         "season2": ".controls-stats:nth-child(2) > div:nth-child(3) > .fg-selection-box__selection",
         "determine": ".controls-stats.stat-determined > div:nth-child(1) > .fg-selection-box__selection"
     }
-    waitfor = ".fg-data-grid.table-type"
-    export_data = ".data-export"
 
     def __init__(self, page):
-        for key, val in self.selections_type_2.items():
-            self.__setattr__(key, selectors.SelectionsType2(page, val))
+        super().__init__(page)
         for key, val in self.dropdowns_type_2.items():
             self.__setattr__(key, selectors.DropdownsType2(page, val))
 
 
-class International:
+class International(selectors.Selectors):
     """
     CSS selectors for :py:class:`fangraphs.leaders.International`.
     """
     selections_type_2 = {
-        "stat": [
-            ".controls-stats > .fgButton:nth-child(1)",
-            ".controls-stats > .fgButton:nth-child(2)"
-        ],
-        "view_type": [
-            ".controls-board-view > .fgButton:nth-child(1)",
-            ".controls-board-view > .fgButton:nth-child(2)"
-        ]
+        "stat": {
+            "css_selectors": [
+                f".controls-stats > .fgButton:nth-child({n})"
+                for n in range(1, 3)
+            ]
+        },
+        "view_type": {
+            "css_selectors": [
+                f".controls-board-view > .fgButton:nth-child({n})"
+                for n in range(1, 3)
+            ]
+        }
     }
     dropdowns_type_2 = {
         "position": ".controls-stats:nth-child(1) > div:nth-child(3) > .fg-selection-box__selection",
@@ -70,23 +74,22 @@ class International:
     export_data = ".data-export"
 
     def __init__(self, page):
-        for key, val in self.selections_type_2.items():
-            self.__setattr__(key, selectors.SelectionsType2(page, val))
+        super().__init__(page)
         for key, val in self.dropdowns_type_2.items():
             self.__setattr__(key, selectors.DropdownsType2(page, val))
         for key, val in self.__checkboxes.items():
             self.__setattr__(key, selectors.Checkboxes(page, val))
 
 
-class MajorLeague:
+class MajorLeague(selectors.Selectors):
     """
     CSS selectors for :py:class:`fangraphs.leaders.MajorLeague`.
     """
-    selections_type_1 = {
-        "group": "#LeaderBoard1_tsGroup",
-        "stat": "#LeaderBoard1_tsStats",
-        "position": "#LeaderBoard1_tsPosition",
-        "view_type": "#LeaderBoard1_tsType"
+    _selections = {
+        "group": {"css_selector": "#LeaderBoard1_tsGroup"},
+        "stat": {"css_selector": "#LeaderBoard1_tsStats"},
+        "position": {"css_selector": "#LeaderBoard1_tsPosition"},
+        "table_type": {"css_selector": "#LeaderBoard1_tsType"}
     }
     dropdowns_type_1 = {
         "league": ('#LeaderBoard1_rcbAge1_Input', '#LeaderBoard1_rcbAge1_DropDown'),
@@ -112,32 +115,32 @@ class MajorLeague:
         "age1": "#LeaderBoard1_cmdAge",
         "age2": "#LeaderBoard1_cmdAge"
     }
-    waitfor = ""
-    export_data = "#LeaderBoard1_cmdCSV"
 
     def __init__(self, page):
-        for key, val in self.selections_type_1.items():
-            self.__setattr__(key, selectors.SelectionsType1(page, val))
+        super().__init__(page)
         for key, val in self.dropdowns_type_1.items():
             self.__setattr__(key, selectors.DropdownsType1(page, *val))
         for key, val in self.checkboxes.items():
             self.__setattr__(key, selectors.Checkboxes(page, val))
 
 
-class SeasonStat:
+class SeasonStat(selectors.Selectors):
     """
     CSS selectors for :py:class:`fangraphs.leaders.SeasonStat`.
     """
-    selections_type_2 = {
-        "stat": [
-            "div[class*='fgButton button-green']:nth-child(1)",
-            "div[class*='fgButton button-green']:nth-child(2)"
-        ],
-        "view_type": [
-            "div[class*='fgButton button-green']:nth-child(4)",
-            "div[class*='fgButton button-green']:nth-child(5)",
-            "div[class*='fgButton button-green']:nth-child(6)"
-        ]
+    _selections = {
+        "stat": {
+            "css_selectors": [
+                f"div[class*='fgButton button-green']:nth-child({n})"
+                for n in range(1, 3)
+            ]
+        },
+        "table_type": {
+            "css_selectors": [
+                f"div[class*='fgButton button-green']:nth-child({n})"
+                for n in range(4, 7)
+            ]
+        }
     }
     dropdowns_type_3 = {
         "start_season": ".row-season > div:nth-child(2)",
@@ -152,36 +155,36 @@ class SeasonStat:
         "plate_discipline": ".season-grid-controls-dropdown-row-stats > div:nth-child(8)",
         "value": ".season-grid-controls-dropdown-row-stats > div:nth-child(9)"
     }
-    waitfor = ".fg-data-grid.undefined"
-    export_data = ""
 
     def __init__(self, page):
-        for key, val in self.selections_type_2.items():
-            self.__setattr__(key, selectors.SelectionsType2(page, val))
+        super().__init__(page)
         for key, val in self.dropdowns_type_3.items():
             self.__setattr__(key, selectors.DropdownsType3(page, val))
 
 
-class Splits:
+class Splits(selectors.Selectors):
     """
     CSS selectors for :py:class:`fangraphs.leaders.Splits`.
     """
-    selections_type_2 = {
-        "group": [
-            ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(1)",
-            ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(2)",
-            ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(3)",
-            ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(4)"
-        ],
-        "stat": [
-            ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(6)",
-            ".fgBin.row-button > div[class*='button-green fgButton']:nth-child(7)"
-        ],
-        "view_type": [
-            "#root-buttons-stats > div:nth-child(1)",
-            "#root-buttons-stats > div:nth-child(2)",
-            "#root-buttons-stats > div:nth-child(3)"
-        ]
+    _selections = {
+        "group": {
+            "css_selectors": [
+                f".fgBin.row-button > div[class*='button-green fgButton']:nth-child({n})"
+                for n in range(1, 5)
+            ]
+        },
+        "stat": {
+            "css_selectors": [
+                f".fgBin.row-button > div[class*='button-green fgButton']:nth-child({n})"
+                for n in range(6, 8)
+            ]
+        },
+        "table_type": {
+            "css_selectors": [
+                f"#root-button-stats > div:nth-child({n})"
+                for n in range(1, 4)
+            ]
+        }
     }
     dropdowns_type_3 = {
         "time_filter": "#root-menu-time-filter > .fg-dropdown.splits.multi-choice",
@@ -204,12 +207,9 @@ class Splits:
         "split_teams": "#stack-buttons > div:nth-child(2)",
         "auto_pt": "#stack-buttons > div:nth-child(3)"
     }
-    waitfor = ".fg-data-grid.undefined"
-    export_data = ".data-export"
 
     def __init__(self, page):
-        for key, val in self.selections_type_2.items():
-            self.__setattr__(key, selectors.SelectionsType2(page, val))
+        super().__init__(page)
         for key, val in self.dropdowns_type_3.items():
             self.__setattr__(key, selectors.DropdownsType3(page, val))
         for key, val in self.switches.items():
@@ -288,7 +288,7 @@ class QuickSplits:
                 self.__setattr__(key, selector)
 
 
-class WAR:
+class WAR(selectors.Selectors):
     """
     CSS selectors for :py:class:`fangraphs.leaders.WAR`.
     """
@@ -297,9 +297,8 @@ class WAR:
         "team": ("#WARBoard1_rcbTeam_Input", "#WARBoard1_rcbTeam_DropDown"),
         "view_type": ("#WARBoard1_rcbType_Input", "#WARBoard1_rcbType_DropDown")
     }
-    waitfor = ".rgMasterTable"
-    export_data = "#WARBoard1_cmdCSV"
 
     def __init__(self, page):
+        super().__init__(page)
         for key, val in self.dropdowns_type_1.items():
             self.__setattr__(key, selectors.DropdownsType1(page, *val))
