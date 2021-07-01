@@ -1,16 +1,16 @@
-#! python3
-# fangraphs/selectors/leaders_sel.py
-
-from fangraphs import selectors
+#! usr/bin/env python
+# fangraphs/selectors/_leaders.py
 
 """
 CSS selectors for the classes in :py:mod:`fangraphs.leaders`.
 """
 
+from . import widgets
 
-class GameSpan(selectors.Selectors):
+
+class GameSpan(widgets.Selectors):
     """
-    CSS selectors for :py:class:`fangraphs.leaders.GameSpan`.
+    Widget handling for :py:class:`fangraphs.leaders.GameSpan`.
     """
     _selections = {
         "stat": {
@@ -48,9 +48,9 @@ class GameSpan(selectors.Selectors):
         super().__init__(page)
 
 
-class International(selectors.Selectors):
+class International(widgets.Selectors):
     """
-    CSS selectors for :py:class:`fangraphs.leaders.International`.
+    Widget handling for :py:class:`fangraphs.leaders.International`.
     """
     _selections = {
         "stat": {
@@ -96,12 +96,12 @@ class International(selectors.Selectors):
     def __init__(self, page):
         super().__init__(page)
         for key, val in self.__checkboxes.items():
-            self.__setattr__(key, selectors.Checkboxes(page, val))
+            self.__setattr__(key, widgets.Checkboxes(page, val))
 
 
-class MajorLeague(selectors.Selectors):
+class MajorLeague(widgets.Selectors):
     """
-    CSS selectors for :py:class:`fangraphs.leaders.MajorLeague`.
+    Widget handling for :py:class:`fangraphs.leaders.MajorLeague`.
     """
     _selections = {
         "group": {"root_selector": "#LeaderBoard1_tsGroup"},
@@ -162,12 +162,12 @@ class MajorLeague(selectors.Selectors):
     def __init__(self, page):
         super().__init__(page)
         for key, val in self.checkboxes.items():
-            self.__setattr__(key, selectors.Checkboxes(page, val))
+            self.__setattr__(key, widgets.Checkboxes(page, val))
 
 
-class SeasonStat(selectors.Selectors):
+class SeasonStat(widgets.Selectors):
     """
-    CSS selectors for :py:class:`fangraphs.leaders.SeasonStat`.
+    Widget handling for :py:class:`fangraphs.leaders.SeasonStat`.
     """
     _selections = {
         "stat": {
@@ -199,13 +199,11 @@ class SeasonStat(selectors.Selectors):
 
     def __init__(self, page):
         super().__init__(page)
-        for key, val in self.dropdowns_type_3.items():
-            self.__setattr__(key, selectors.DropdownsType3(page, val))
 
 
-class Splits(selectors.Selectors):
+class Splits(widgets.Selectors):
     """
-    CSS selectors for :py:class:`fangraphs.leaders.Splits`.
+    Widget handling for :py:class:`fangraphs.leaders.Splits`.
     """
     _selections = {
         "group": {
@@ -282,7 +280,7 @@ class Splits(selectors.Selectors):
     def __init__(self, page):
         super().__init__(page)
         for key, val in self.switches.items():
-            self.__setattr__(key, selectors.Switches(page, val))
+            self.__setattr__(key, widgets.Switches(page, val))
 
 
 class QuickSplits:
@@ -357,9 +355,9 @@ class QuickSplits:
                 self.__setattr__(key, selector)
 
 
-class WAR(selectors.Selectors):
+class WAR(widgets.Selectors):
     """
-    CSS selectors for :py:class:`fangraphs.leaders.WAR`.
+    Widget handling for :py:class:`fangraphs.leaders.WAR`.
     """
     _dropdowns = {
         "season": {

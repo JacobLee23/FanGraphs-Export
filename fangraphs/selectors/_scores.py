@@ -1,25 +1,25 @@
-#! python3
-# fangraphs/selectors/leaders_sel.py
+#! usr/bin/env python
+# fangraphs/selectors/_scores.py
 
 """
 CSS selectors for the classes in :py:mod:`fangraphs.leaders`.
 """
 
-from fangraphs import selectors
+from . import widgets
 
 
-class Live(selectors.Selectors):
+class Live(widgets.Selectors):
     """
-    CSS selectors for :py:class:`fangraphs.scores.Live`
+    Widget handling for :py:class:`fangraphs.scores.Live`
     """
 
     def __init__(self, page):
         super().__init__(page)
 
 
-class LiveLeaderboards(selectors.Selectors):
+class LiveLeaderboards(widgets.Selectors):
     """
-    CSS selectors for :py:class:`fangraphs.scores.LiveLeaderboards`
+    Widget handling for :py:class:`fangraphs.scores.LiveLeaderboards`
     """
     __selections = {
         "player_type": {"root_selector": ".playertypes"},
@@ -31,9 +31,9 @@ class LiveLeaderboards(selectors.Selectors):
         super().__init__(page)
 
 
-class Scoreboard(selectors.Selectors):
+class Scoreboard(widgets.Selectors):
     """
-    CSS selectors for :py:class:`fangraphs.scores.Scoreboard`
+    Widget handling for :py:class:`fangraphs.scores.Scoreboard`
     """
     _dropdowns = {
         "season": {
@@ -46,9 +46,9 @@ class Scoreboard(selectors.Selectors):
         super().__init__(page)
 
 
-class GameGraphs(selectors.Selectors):
+class GameGraphs(widgets.Selectors):
     """
-    CSS selectors for :py:class:`fangraphs.scores.GameGraphs`
+    Widget handling for :py:class:`fangraphs.scores.GameGraphs`
     """
     _dropdowns = {
         "season": {
@@ -65,9 +65,9 @@ class GameGraphs(selectors.Selectors):
         super().__init__(page)
 
 
-class PlayLog(selectors.Selectors):
+class PlayLog(widgets.Selectors):
     """
-    CSS selectors for :py:class:`fangraphs.scores.PlayLog`
+    Widget handling for :py:class:`fangraphs.scores.PlayLog`
     """
     _dropdowns = {
         "season": {
@@ -84,9 +84,9 @@ class PlayLog(selectors.Selectors):
         super().__init__(page)
 
 
-class BoxScore(selectors.Selectors):
+class BoxScore(widgets.Selectors):
     """
-    CSS selectors for :py:class:`fangraphs.scores.BoxScore`
+    Widget handling for :py:class:`fangraphs.scores.BoxScore`
     """
     _dropdowns = {
         "season": {

@@ -1,16 +1,16 @@
-#! python3
-# fangraphs/selectors/proj_sel.py
+#! usr/bin/env python
+# fangraphs/selectors/_projections.py
 
 """
 CSS selectors for the classes in :py:mod:`fangraphs.projections`.
 """
 
-from fangraphs import selectors
+from . import widgets
 
 
-class Projections(selectors.Selectors):
+class Projections(widgets.Selectors):
     """
-    CSS selectors for :py:class:`fangraphs.projections.Projections`.
+    Widget handling for :py:class:`fangraphs.projections.Projections`.
     """
     _selections = {
         "stat": {"root_selector": "#ProjectionBoard1_tsStats"},

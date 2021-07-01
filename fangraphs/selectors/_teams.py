@@ -1,16 +1,16 @@
-#! python3
-# fangraphs/selectors/dcharts_sel.py
+#! usr/bin/env python
+# fangraphs/selectors/_teams.py
 
 """
 CSS selectors for the classes in :py:mod:`fangraphs.teams`.
 """
 
-from fangraphs import selectors
+from . import widgets
 
 
-class Summary(selectors.Selectors):
+class Summary(widgets.Selectors):
     """
-    CSS selectors for :py:class:`fangraphs.teams.Summary`.
+    Widget handling for :py:class:`fangraphs.teams.Summary`.
     """
     _dropdowns = {
         "team": {
@@ -34,9 +34,9 @@ class Summary(selectors.Selectors):
         super().__init__(page)
 
 
-class Stats(selectors.Selectors):
+class Stats(widgets.Selectors):
     """
-    CSS selectors for :py:class:`fangraphs.teams.Stats`.
+    Widget handling for :py:class:`fangraphs.teams.Stats`.
     """
     _dropdowns = {
         "team": {
@@ -54,9 +54,9 @@ class Stats(selectors.Selectors):
         super().__init__(page)
 
 
-class Schedule(selectors.Selectors):
+class Schedule(widgets.Selectors):
     """
-    CSS selectors for :py:class:`fangraphs.teams.Schedule`.
+    Widget handling for :py:class:`fangraphs.teams.Schedule`.
     """
     _dropdowns = {
         "team": {
@@ -71,9 +71,9 @@ class Schedule(selectors.Selectors):
         super().__init__(page)
 
 
-class PlayerUsage(selectors.Selectors):
+class PlayerUsage(widgets.Selectors):
     """
-    CSS selectors for :py:class:`fangraphs.teams.PlayerUsage`.
+    Widget handling for :py:class:`fangraphs.teams.PlayerUsage`.
     """
     _selections = {
         "mode": {
@@ -96,9 +96,9 @@ class PlayerUsage(selectors.Selectors):
         super().__init__(page)
 
 
-class DepthChart(selectors.Selectors):
+class DepthChart(widgets.Selectors):
     """
-    CSS selectors for :py:class:`fangraphs.teams.DepthChart`.
+    Widget handling for :py:class:`fangraphs.teams.DepthChart`.
     """
     _dropdowns = {
         "team": {

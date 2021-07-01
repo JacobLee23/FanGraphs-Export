@@ -1,5 +1,5 @@
-#! python3
-# fangraphs/selectors/dcharts_sel.py
+#! usr/bin/env python
+# fangraphs/selectors/_depth_charts.py
 
 """
 CSS selectors for the classes in :py:mod:`fangraphs.depth_charts`.
@@ -7,12 +7,12 @@ CSS selectors for the classes in :py:mod:`fangraphs.depth_charts`.
 
 from typing import *
 
-from fangraphs import selectors
+from . import widgets
 
 
-class DepthCharts(selectors.Selectors):
+class DepthCharts(widgets.Selectors):
     """
-    CSS selectors for :py:class:`fangraphs.teams.DepthCharts`.
+    Widget handling for :py:class:`fangraphs.teams.DepthCharts`.
     """
     _selections = {
         "table_type": {"root_selector": "#tsPosition"}
