@@ -268,15 +268,13 @@ class Splits(widgets.Selectors):
             "root_selector": ".fgBin:nth-child(3) > .fg-dropdown.splits.multi-choice:nth-child(2)"
         }
     }
-    switches = {
-        "split_teams": "#stack-buttons > div:nth-child(2)",
-        "auto_pt": "#stack-buttons > div:nth-child(3)"
+    _switches = {
+        "split_teams": {"root_selector": "#stack-buttons > div:nth-child(2)"},
+        "auto_pt": {"root_selector": "#stack-buttons > div:nth-child(3)"}
     }
 
     def __init__(self, page):
         super().__init__(page)
-        for key, val in self.switches.items():
-            self.__setattr__(key, widgets.Switches(page, val))
 
 
 class QuickSplits:

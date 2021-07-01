@@ -29,6 +29,9 @@ class Selectors:
         if (d := self.__dict__.get("_checkboxes")) is not None and isinstance(d, dict):
             for attr, kwargs in d.items():
                 self.__setattr__(attr, Checkbox(self.page, self.soup, **kwargs))
+        if (d := self.__dict__.get("_switches")) is not None and isinstance(d, dict):
+            for attr, kwargs in d.items():
+                self.__setattr__(attr, Switch(self.page, self.soup, **kwargs))
 
 
 class __Selectors:
@@ -380,44 +383,63 @@ class Checkbox:
             self.page.click(self.root_selector)
 
 
-class Switches(__Selectors):
+class Switch:
+    """
 
-    def __init__(self, page, selector: str):
+    """
+    def __init__(self, page, soup: bs4.BeautifulSoup, /, *,
+                 root_selector: str):
         """
-        :param page:
         :type page: playwright.sync_api._generated.Page
-        :param selector:
+        :param soup:
+        :param root_selector:
         """
-        super().__init__()
         self.page = page
-        self.selector = selector
+        self.soup = soup
 
-    def list_options(self):
+        self.root_selector = root_selector
+
+        self.options = ()
+        self.current = None
+
+    @property
+    def options(self) -> tuple:
         """
 
-        :return: list[bool]
         """
-        return [True, False]
+        return self._options
 
-    def current_option(self):
+    @options.setter
+    def options(self, value) -> None:
         """
 
-        :return:
-        :rtype: bool
         """
-        option = "isActive" in self.page.query_selector(
-            self.selector
-        ).get_attribute("class")
-        return option
+        options = (True, False)
+        self._options = options
 
-    def configure(self, option: bool):
+    @property
+    def current(self) -> bool:
+        """
+
+        """
+        return self._current
+
+    @current.setter
+    def current(self, value) -> None:
+        """
+
+        """
+        root_elem = self.soup.select_one(self.root_selector)
+        option = "isActive" in root_elem.attrs.get("class")
+        self._current = option
+
+    def configure(self, option: bool) -> None:
         """
 
         :param option:
-        :rtype: None
         """
-        if option is not self.current_option():
-            self.page.click(self.selector)
+        if option is not self.current:
+            self.page.click(self.root_selector)
 
 
 class Calendars(__Selectors):
