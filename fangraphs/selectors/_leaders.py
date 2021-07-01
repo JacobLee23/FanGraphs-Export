@@ -89,14 +89,12 @@ class International(widgets.Selectors):
             "root_selector": ".controls-stats:nth-child(3) > div:nth-child(2) > .fg-selection-box__selection"
         }
     }
-    __checkboxes = {
-        "split_seasons": ".controls-stats > label.fg-checkbox"
+    _checkboxes = {
+        "split_season": {"root_selector": ".controls-stats > label.fg-checkbox"}
     }
 
     def __init__(self, page):
         super().__init__(page)
-        for key, val in self.__checkboxes.items():
-            self.__setattr__(key, widgets.Checkboxes(page, val))
 
 
 class MajorLeague(widgets.Selectors):
@@ -151,18 +149,16 @@ class MajorLeague(widgets.Selectors):
             "button_selector": "#LeaderBoard1_cmdAge"
         }
     }
-    checkboxes = {
-        "split_teams": "#LeaderBoard1_cbTeams",
-        "active_roster": "#LeaderBoard1_cbActive",
-        "hof": "#LeaderBoard1_cbHOF",
-        "split_seasons": "#LeaderBoard1_cbSeason",
-        "rookies": "#LeaderBoard1_cbRookie"
+    _checkboxes = {
+        "split_teams": {"root_selector": "LeaderBoard1_cbTeams"},
+        "active_roster": {"root_selector": "#LeaderBoard1_cbActive"},
+        "hof": {"root_selector": "#LeaderBoard1_cbHOF"},
+        "split_season": {"root_selector": "#LeaderBoard1_cbSeason"},
+        "rookies": {"root_selector": "#LeaderBoard1_cbRookie"}
     }
 
     def __init__(self, page):
         super().__init__(page)
-        for key, val in self.checkboxes.items():
-            self.__setattr__(key, widgets.Checkboxes(page, val))
 
 
 class SeasonStat(widgets.Selectors):
