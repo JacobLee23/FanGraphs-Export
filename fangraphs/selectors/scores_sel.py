@@ -8,13 +8,13 @@ CSS selectors for the classes in :py:mod:`fangraphs.leaders`.
 from fangraphs import selectors
 
 
-class Live:
+class Live(selectors.Selectors):
     """
     CSS selectors for :py:class:`fangraphs.scores.Live`
     """
 
     def __init__(self, page):
-        self.page = page
+        super().__init__(page)
 
 
 class LiveLeaderboards(selectors.Selectors):
@@ -22,119 +22,82 @@ class LiveLeaderboards(selectors.Selectors):
     CSS selectors for :py:class:`fangraphs.scores.LiveLeaderboards`
     """
     __selections = {
-        "player_type": {"css_selector": ".playertypes"},
-        "positions": {"css_selector": ".positions"},
-        "stat_type": {"css_selector": ".stattypes"}
+        "player_type": {"root_selector": ".playertypes"},
+        "positions": {"root_selector": ".positions"},
+        "stat_type": {"root_selector": ".stattypes"}
     }
 
     def __init__(self, page):
         super().__init__(page)
 
 
-class Scoreboard:
+class Scoreboard(selectors.Selectors):
     """
     CSS selectors for :py:class:`fangraphs.scores.Scoreboard`
     """
-    __calendars = {
-        "date": (
-            "#LiveBoard1_rdpDate_popupButton",
-            "#LiveBoard1_rdpDate_calendar",
-            "#LiveBoard1_rdpDate_dateInput_wrapper"
-        )
+    _dropdowns = {
+        "season": {
+            "root_selector": "#LiveBoard1_rcbSeason",
+            "dropdown_selector": "#LiveBoard1_rcbSeason_DropDown"
+        }
     }
-    __dropdowns_type_1 = {
-        "season": (
-            "#LiveBoard1_rcbSeason",
-            "#LiveBoard1_rcbSeason_DropDown"
-        )
-    }
-
-    waitfor = ""
-    export_data = ""
 
     def __init__(self, page):
-        for key, val in self.__calendars.items():
-            self.__setattr__(key, selectors.Calendars(page, *val))
+        super().__init__(page)
 
 
-class GameGraphs:
+class GameGraphs(selectors.Selectors):
     """
     CSS selectors for :py:class:`fangraphs.scores.GameGraphs`
     """
-    __dropdowns_type_1 = {
-        "season": (
-            "#WinsGame1_rcbSeason",
-            "#WinsGame1_rcbSeason_DropDown"
-        ),
-        "team": (
-            "#WinsGame1_cbTeams",
-            "#WinsGame1_cbTeams_DropDown"
-        )
+    _dropdowns = {
+        "season": {
+            "root_selector": "#WinsGame1_rcbSeason",
+            "dropdown_selector": "#WinsGame1_rcbSeason_DropDown"
+        },
+        "team": {
+            "root_selector": "#WinsGame1_cbTeams",
+            "dropdown_selector": "#WinsGame1_cbTeams_DropDown"
+        }
     }
-    __calendars = {
-        "date": ()
-    }
-    waitfor = ""
-    export_data = ""
 
     def __init__(self, page):
-        for key, val in self.__dropdowns_type_1.items():
-            self.__setattr__(key, selectors.DropdownsType1(page, *val))
-        # for key, val in self.__calendars.items():
-        #    self.__setattr__(key, selectors.Calendars(page, *val))
+        super().__init__(page)
 
 
-class PlayLog:
+class PlayLog(selectors.Selectors):
     """
     CSS selectors for :py:class:`fangraphs.scores.PlayLog`
     """
-    __dropdowns_type_1 = {
-        "season": (
-            "#PlayGame1_rcbSeason",
-            "#PlayGame1_rcbSeason_DropDown"
-        ),
-        "team": (
-            "#PlayGame1_cbTeams",
-            "#PlayGame1_cbTeams_DropDown"
-        )
+    _dropdowns = {
+        "season": {
+            "root_selector": "#PlayGame1_rcbSeason",
+            "dropdown_selector": "#PlayGame1_rcbSeason_DropDown"
+        },
+        "team": {
+            "root_selector": "#PlayGame1_cbTeams",
+            "dropdown_selector": "#PlayGame1_cbTeams_DropDown"
+        }
     }
-    __calendars = {
-        "date": ()
-    }
-
-    waitfor = ".fg-data-grid"
-    export_data = ""
 
     def __init__(self, page):
-        for key, val in self.__dropdowns_type_1.items():
-            self.__setattr__(key, selectors.DropdownsType1(page, *val))
-        # for key, val in self.__calendars.items():
-        #     self.__setattr__(key, selectors.Calendars(page, *val))
+        super().__init__(page)
 
 
-class BoxScore:
+class BoxScore(selectors.Selectors):
     """
     CSS selectors for :py:class:`fangraphs.scores.BoxScore`
     """
-    __dropdowns_type_1 = {
-        "season": (
-            "#WinsBox1_rcbSeason",
-            "#WinsBox1_rcbSeason_DropDown"
-        ),
-        "team": (
-            "#WinsBox1_cbTeams",
-            "#WinsBox1_cbTeams_DropDown"
-        )
+    _dropdowns = {
+        "season": {
+            "root_selector": "#WinsBox1_rcbSeason",
+            "dropdown_selector": "#WinsBox1_rcbSeason_DropDown"
+        },
+        "team": {
+            "root_selector": "#WinsBox1_cbTeams",
+            "dropdown_selector": "#WinsBox1_cbTeams_DropDown"
+        }
     }
-    __calendars = {
-        "date": ()
-    }
-
-    waitfor = ""
-    export_data = ""
 
     def __init__(self, page):
-        for key, val in self.__dropdowns_type_1.items():
-            self.__setattr__(key, selectors.DropdownsType1(page, *val))
-        # for key, val in self.__calendars.items():
-        #     self.__setattr__(key, selectors.Calendars(page, *val))
+        super().__init__(page)

@@ -17,10 +17,14 @@ class Selectors:
         """
         :type page: playwright.sync_api._generated.Page
         """
+        self.page = page
         self.soup = bs4.BeautifulSoup(page.content(), features="lxml")
         if (d := self.__dict__.get("_selections")) is not None and isinstance(d, dict):
             for attr, kwargs in d.items():
-                self.__setattr__(attr, Selection(self.soup, **kwargs))
+                self.__setattr__(attr, Selection(self.page, self.soup, **kwargs))
+        if (d := self.__dict__.get("_dropdowns")) is not None and isinstance(d, dict):
+            for attr, kwargs in d.items():
+                self.__setattr__(attr, Dropdown(self.page, self.soup, **kwargs))
 
 
 class __Selectors:
@@ -53,24 +57,27 @@ class Selection:
     )
 
     def __init__(
-            self, soup: bs4.BeautifulSoup, /, *,
-            css_selector: Optional[str] = None,
-            css_selectors: Optional[list[str]] = None,
+            self, page, soup: bs4.BeautifulSoup, /, *,
+            root_selector: Optional[str] = None,
+            root_selectors: Optional[list[str]] = None,
     ):
         """
+        :param page:
+        :type page: playwright.sync_api._generated.Page
         :param soup:
-        :param css_selector:
-        :param css_selectors:
+        :param root_selector:
+        :param root_selectors:
         """
-        if not any((css_selector, css_selectors)):
+        if not any((root_selector, root_selectors)):
             raise ValueError
-        if all((css_selector, css_selectors)):
+        if all((root_selector, root_selectors)):
             raise ValueError
 
+        self.page = page
         self.soup = soup
 
-        self.css_selector = css_selector
-        self.css_selectors = css_selectors
+        self.root_selector = root_selector
+        self.root_selectors = root_selectors
         self.desc_selector = ""
 
         self.options = ()
@@ -85,19 +92,25 @@ class Selection:
         """
 
         """
-        options = []
-        if self.css_selectors is not None:
+        options = ()
+
+        if self.root_selectors is not None:
+            # Get options from texts of listed elements
             options = [
                 e.text for e in [
-                    self.soup.select_one(s) for s in self.css_selectors
+                    self.soup.select_one(s) for s in self.root_selectors
                 ]
             ]
-        elif self.css_selector is not None:
-            root_elem = self.soup.select_one(self.css_selector)
+
+        elif self.root_selector is not None:
+            root_elem = self.soup.select_one(self.root_selector)
+            # Iterate through possible descendant elements
             for desc in self.descendants:
                 if elems := root_elem.select(desc):
+                    # Get options from texts of descendant elements
                     options = [e.text for e in elems]
                     self.desc_selector = desc
+
         self._options = tuple(options)
 
     @property
@@ -110,278 +123,197 @@ class Selection:
 
         """
         option = ""
-        if self.css_selectors is not None:
-            for path in self.css_selectors:
-                root_elem = self.soup.select_one(path)
-                if "active" in root_elem.attrs.get("class"):
-                    option = root_elem.text
+
+        if self.root_selectors is not None:
+            # Iterate through elements and select current option
+            for path in self.root_selectors:
+                elem = self.soup.select_one(path)
+                if "active" in elem.attrs.get("class"):
+                    option = elem.text
                     break
-        elif self.css_selector is not None:
-            root_elem = self.soup.select_one(self.css_selector)
+
+        elif self.root_selector is not None:
+            root_elem = self.soup.select_one(self.root_selector)
+
             if self.desc_selector == self.descendants[0]:
+                # Get current option from text of descendant element
                 option = e.text if (
                     e := root_elem.select_one(".rtsLink.rtsSelected")
                 ) else ""
             elif self.desc_selector == self.descendants[1]:
-                elems = self.soup.select(self.css_selector)
+                # Get current option from text of active option element
+                elems = root_elem.select(self.desc_selector)
                 for elem in elems:
                     if "active" in elem.attrs.get("class"):
                         option = elem.text
             elif self.desc_selector == self.descendants[2]:
+                # Get current option from text of descendant element
                 elem = root_elem.select_one(
                     "div.button-green.fgButton.active.isActive"
                 )
                 option = elem.text
+
         self._current = option
 
-    def configure(self, page, option: str) -> None:
+    def configure(self, option: str) -> None:
         """
 
-        :type page: playwright.sync_api._generated.Page
         :param option:
         """
+        # Get index of appropriate option, if applicable
         options = [o.lower() for o in self.options]
         try:
             index = options.index(option)
         except ValueError as err:
             raise fangraphs.exceptions.InvalidFilterOption(option) from err
 
-        if self.css_selectors is not None:
-            page.click(self.css_selectors[index])
-        elif self.css_selector is not None:
-            page.query_selector(
-                self.css_selector
-            ).query_selector_all(self.desc_selector)[index].click()
+        if self.root_selectors is not None:
+            # Click appropriate selection option
+            self.page.click(self.root_selectors[index])
+
+        elif self.root_selector is not None:
+            # Click appropriate selection option
+            root_elem = self.page.query_selector(self.root_selector)
+            opt_elem = root_elem.query_selector_all(self.desc_selector)[index]
+            opt_elem.click()
 
 
-class DropdownsType1(__Selectors):
+class Dropdown:
     """
-    Web scraper utility for a FanGraphs dropdown widget variation.
-    The dropdown option elements are separate from the dropdown menu element.
-    """
 
-    def __init__(self, page, selector: str, dd_options: str):
+    """
+    descendants = (
+        "ul > li", "a", "option"
+    )
+
+    def __init__(self, page, soup: bs4.BeautifulSoup, /, *,
+                 root_selector: str,
+                 dropdown_selector: str = None,
+                 button_selector: str = None
+                 ):
         """
-        :param page:
         :type page: playwright.sync_api._generated.Page
-        :param selector:
-        :param dd_options:
+        :param soup:
+        :param root_selector:
         """
-        super().__init__()
         self.page = page
-        self.selector = selector
-        self.dd_options = dd_options
-        self.__dd_root = self.page.query_selector(self.dd_options)
+        self.soup = soup
 
-    def list_options(self):
+        self.root_selector = root_selector
+        self.dropdown_selector = dropdown_selector
+        self.button_selector = button_selector
+        self.desc_selector = ""
+
+        self.options = ()
+        self.current = ""
+        self.currents = ()
+
+    @property
+    def options(self) -> tuple[str]:
         """
 
         :return:
-        :rtype: list[str]
         """
-        elems = self.page.query_selector(
-            self.dd_options
-        ).query_selector_all("ul > li")
-        options = [e.text_content() for e in elems]
-        return options
+        return self._options
 
-    def current_option(self):
+    @options.setter
+    def options(self, value) -> None:
+        """
+
+        """
+        options = ()
+
+        if self.dropdown_selector is not None:
+            # Get options from texts of descendant elements
+            root_elem = self.soup.select_one(self.dropdown_selector)
+            self.desc_selector = self.descendants[0]
+            options = [e.text for e in root_elem.select(self.desc_selector)]
+
+        else:
+            root_elem = self.soup.select_one(self.root_selector)
+            # Iterate through possible descendant elements
+            for desc in self.descendants:
+                if elems := root_elem.select(desc):
+                    # Get options from texts of descendant elements
+                    options = [e.text_content() for e in elems]
+                    self.desc_selector = desc
+
+        self._options = tuple(options)
+
+    @property
+    def current(self) -> str:
         """
 
         :return:
-        :rtype: str
         """
-        option = self.page.query_selector(
-            self.selector
-        ).get_attribute("value")
-        return option
+        return self._current
 
-    def configure(self, option: str):
+    @current.setter
+    def current(self, value) -> None:
+        """
+
+        """
+        option = ""
+        root_elem = self.soup.select_one(self.root_selector)
+
+        if self.desc_selector in (self.descendants[0], self.descendants[2]):
+            if self.dropdown_selector is not None:
+                # Get current option from element 'value' attribute
+                option = root_elem.attrs.get("value")
+            else:
+                # Get current options from element text (multi-select widget)
+                options = [
+                    e.text for e in root_elem.select("ul > li")
+                    if "highlight" in e.attrs.get("class")
+                ]
+                option = options[0]
+                self.currents = tuple(options)
+        elif self.desc_selector == self.descendants[1]:
+            # Get current option from text of descendant element
+            option = root_elem.select_one("span").text
+
+        elif self.desc_selector == self.descendants[3]:
+            # Evaluate JavaScript on element to get current option
+            option = self.page.eval_on_selector(
+                self.root_selector, "el => el.value"
+            )
+
+        self._current = option
+
+    def configure(self, option: str) -> None:
         """
 
         :param option:
-        :rtype: None
         """
-        options = [o.lower() for o in self.list_options()]
-        try:
-            index = options.index(option.lower())
-        except ValueError as err:
-            raise fangraphs.exceptions.InvalidFilterOption(option) from err
-        self.page.click(self.selector)
-        elem = self.page.query_selector(
-            self.selector
-        ).query_selector_all("ul > li")[index]
-        elem.click()
+        if self.desc_selector in self.descendants[:3]:
+            # Get index of appropriate option, if applicable
+            options = [o.lower() for o in self.options]
+            try:
+                index = options.index(option.lower())
+            except ValueError as err:
+                raise fangraphs.exceptions.InvalidFilterOption(option) from err
 
+            # Click dropdown menu to display options
+            self.page.click(self.root_selector)
 
-class DropdownsType2(__Selectors):
-    """
-    Web scraper utility for a FanGraphs dropdown widget variation.
-    The dropdown option elements are descedants of the dropdown menu element.
-    """
+            # Click appropriate dropdown option
+            root_elem = self.page.query_selector(self.root_selector)
+            opt_elem = root_elem.query_selector_all(self.desc_selector)[index]
+            opt_elem.click()
 
-    def __init__(self, page, selector: str):
-        """
-        :param page:
-        :type page: playwright.sync_api._generated.Page
-        :param selector:
-        """
-        super().__init__()
-        self.page = page
-        self.selector = selector
+            if self.button_selector is not None:
+                # Submit form with button, if necessary
+                self.page.click(self.button_selector)
 
-    def list_options(self):
-        """
+        elif self.desc_selector == self.descendants[3]:
+            # Iterate through options and find appropriate option
+            for opt in self.options:
+                if opt.lower() == option.lower():
+                    # Select corresponding option
+                    self.page.select_option(self.root_selector, label=opt)
+                    return
 
-        :return:
-        :rtype: list[str]
-        """
-        elems = self.page.query_selector(
-            self.selector
-        ).query_selector_all("a")
-        options = [e.text_content() for e in elems]
-        return options
-
-    def current_option(self):
-        """
-
-        :return:
-        :rtype: str
-        """
-        elem = self.page.query_selector(
-            self.selector
-        ).query_selector("span")
-        option = elem.text_content()
-        return option
-
-    def configure(self, option: str):
-        """
-
-        :param option:
-        :rtype: None
-        """
-        options = [o.lower() for o in self.list_options()]
-        try:
-            index = options.index(option.lower())
-        except ValueError as err:
-            raise fangraphs.exceptions.InvalidFilterOption(option) from err
-        self.page.click(self.selector)
-        elem = self.page.query_selector(
-            self.selector
-        ).query_selector_all("a")[index]
-        elem.click()
-
-
-class DropdownsType3(__Selectors):
-    """
-
-    """
-    def __init__(self, page, selector: str):
-        """
-        :param page:
-        :type page: playwright.sync_api._generated.Page
-        :param selector:
-        """
-        super().__init__()
-        self.page = page
-        self.selector = selector
-
-    def list_options(self):
-        """
-
-        :return:
-        :rtype: list[str]
-        """
-        elems = self.page.query_selector(
-            self.selector
-        ).query_selector_all("ul > li")
-        options = [e.text_content() for e in elems]
-        return options
-
-    def current_option(self, *, multiple=True):
-        """
-
-        :param multiple:
-        :return:
-        :rtype: str or list
-        """
-        elems = self.page.query_selector(
-            self.selector
-        ).query_selector_all("ul > li")
-        option = [
-            e.text_content() for e in elems
-            if "highlight" in e.get_attribute("class")
-        ]
-        if not multiple:
-            return option[0] if option else ""
-        return option
-
-    def configure(self, option: str):
-        """
-
-        :param option:
-        :rtype: None
-        """
-        options = [o.lower() for o in self.list_options()]
-        try:
-            index = options.index(option.lower())
-        except ValueError as err:
-            raise fangraphs.exceptions.InvalidFilterOption(option) from err
-        self.page.click(self.selector)
-        elem = self.page.query_selector(
-            self.selector
-        ).query_selector_all("ul > li")[index]
-        elem.click()
-
-
-class DropdownsType4(__Selectors):
-    """
-
-    """
-    def __init__(self, page, selector: str):
-        """
-        :param page:
-        :type page: playwright.sync_api._generated.Page
-        :param selector:
-        """
-        super().__init__()
-        self.page = page
-        self.selector = selector
-
-    def list_options(self):
-        """
-
-        :return:
-        :rtype: list[str]
-        """
-        elems = self.page.query_selector(
-            self.selector
-        ).query_selector_all("option")
-        options = [e.text_content() for e in elems]
-        return options
-
-    def current_option(self):
-        """
-
-        :return:
-        :rtype: str
-        """
-        option = self.page.eval_on_selector(
-            self.selector, "el => el.value"
-        )
-        return option
-
-    def configure(self, option: str):
-        """
-
-        :param option:
-        :rtype: None
-        """
-        for opt in self.list_options():
-            if opt.lower() == option.lower():
-                self.page.select_option(self.selector, label=opt)
-                return
-        raise fangraphs.exceptions.InvalidFilterOption(option)
+            raise fangraphs.exceptions.InvalidFilterOption(option)
 
 
 class Checkboxes(__Selectors):

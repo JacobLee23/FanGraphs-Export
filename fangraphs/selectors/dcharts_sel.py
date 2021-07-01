@@ -15,7 +15,7 @@ class DepthCharts(selectors.Selectors):
     CSS selectors for :py:class:`fangraphs.teams.DepthCharts`.
     """
     _selections = {
-        "table_type": {"css_selector": "#tsPosition"}
+        "table_type": {"root_selector": "#tsPosition"}
     }
 
     def __init__(self, page):
