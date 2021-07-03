@@ -1,4 +1,4 @@
-#! python3
+#! usr/bin/env python
 # fangraphs/scores.py
 
 """
@@ -8,7 +8,9 @@ Scrapers for the webpages under the FanGraphs **Scores** tab.
 import collections
 import datetime
 import re
+from typing import *
 
+import bs4
 import pandas as pd
 
 from fangraphs import FilterWidgets
@@ -537,11 +539,10 @@ class BoxScore(FilterWidgets):
         self.data_tables = None
 
     @property
-    def _tables(self):
+    def _tables(self) -> bs4.ResultSet:
         """
 
         :return:
-        :rtype: list[bs4.Tag]
         """
         return self.__tables
 
@@ -555,11 +556,10 @@ class BoxScore(FilterWidgets):
         self.__tables = self.soup.select("div.RadGrid.RadGrid_FanGraphs")
 
     @property
-    def line_score(self):
+    def line_score(self) -> pd.DataFrame:
         """
 
         :return:
-        :rtype: pd.DataFrame
         """
         return self._line_score
 
@@ -568,9 +568,6 @@ class BoxScore(FilterWidgets):
         """
 
         """
-        if value is not None:
-            return
-
         table = self.soup.select_one(
             "div.scoreboard-wrapper > table.linescore"
         )
@@ -590,11 +587,10 @@ class BoxScore(FilterWidgets):
         self._line_score = dataframe
 
     @property
-    def play_by_play(self):
+    def play_by_play(self) -> pd.DataFrame:
         """
 
         :return:
-        :rtype: pd.DataFrame
         """
         return self._play_by_play
 
@@ -602,11 +598,7 @@ class BoxScore(FilterWidgets):
     def play_by_play(self, value) -> None:
         """
 
-        :param value:
         """
-        if value is not None:
-            return
-
         pbp_table = self._tables[4]
         header_elems = pbp_table.select("thead > tr > th")
         row_elems = pbp_table.select("tbody > tr")
@@ -646,13 +638,11 @@ class BoxScore(FilterWidgets):
         self._play_by_play = dataframe
 
     @staticmethod
-    def _scrape_table(table):
+    def _scrape_table(table: bs4.Tag) -> pd.DataFrame:
         """
 
         :param table:
-        :type table: bs4.Tag
         :return:
-        :rtype: pd.DataFrame
         """
         header_elems = table.select("thead > tr > th.rgHeader")
         row_elems = table.select("tbody > tr")
@@ -683,18 +673,18 @@ class BoxScore(FilterWidgets):
         return dataframe
 
     @property
-    def data_tables(self):
+    def data_tables(self) -> NamedTuple[NamedTuple]:
         """
 
         :return:
-        :rtype: dict[str, pd.DataFrame]
         """
         return self._data_tables
 
     @data_tables.setter
-    def data_tables(self, value):
-        if value is not None:
-            return
+    def data_tables(self, value) -> None:
+        """
+
+        """
 
         table_names = (
             "box_score", "dashboard", "standard", "advanced", "batted_ball",

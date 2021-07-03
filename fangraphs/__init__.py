@@ -1,9 +1,10 @@
-#! python3
+#! usr/bin/env python
 # fangraphs/__init__.py
 
 """
-Subpackage for scraping the FanGraphs **Leaders** pages.
+
 """
+
 import collections
 import os
 import re
