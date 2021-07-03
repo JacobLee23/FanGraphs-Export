@@ -5,9 +5,9 @@
 
 """
 
-import collections
 import os
 import re
+from typing import *
 
 import bs4
 import pandas as pd
@@ -180,38 +180,161 @@ class FilterWidgets:
     """
     _widget_class = None
 
-    address = None
+    address: str = None
 
-    def __init__(self, **kwargs):
+    class TableData(NamedTuple):
+        dataframe: pd.DataFrame
+        row_elems: bs4.ResultSet
+        header_elems: bs4.ResultSet
+
+    class Widget(NamedTuple):
+        wname: str
+        wtype: type
+
+    def __init__(
+            self, *,
+            table_size: Optional[str] = None,
+            expand_menu: Optional[str] = None,
+            quick_configure: Optional[str] = None,
+            submit_form: Optional[str] = None,
+            **kwargs
+    ):
         if self._widget_class is None:
             raise NotImplementedError
         if self.address is None:
             raise NotImplementedError
 
-        with sync_playwright() as play:
-            browser = play.chromium.launch()
-            try:
-                page = browser.new_page()
-                page.goto(self.address, timeout=0)
-                self._widget_class(page).configure(**kwargs)
-                html = page.content()
-            finally:
-                browser.close()
+        self.__play = sync_playwright().start()
+        self.__browser = self.__play.chromium.launch()
+        self.page = self.__browser.new_page()
+        self.page.goto(self.address, timeout=0)
 
-        self.soup = bs4.BeautifulSoup(html, features="lxml")
+        self.filter_widgets = self._widget_class(self.page)
+        if expand_menu is not None:
+            self.page.click(expand_menu)
+        if table_size is not None:
+            self.set_table_size(table_size)
+        if quick_configure is not None:
+            self.page.click(quick_configure)
+        else:
+            self.filter_widgets.configure(**kwargs)
+        if submit_form is not None:
+            self.page.click(submit_form)
+
+        self.soup = None
+
+    def __del__(self):
+        self.__browser.close()
+        self.__play.stop()
+
+    @property
+    def soup(self) -> bs4.BeautifulSoup:
+        """
+
+        :return:
+        """
+        return self._soup
+
+    @soup.setter
+    def soup(self, value) -> None:
+        """
+
+        """
+        html = self.page.content()
+        self._soup = bs4.BeautifulSoup(html, features="lxml")
 
     @classmethod
     def widgets(cls) -> tuple:
+        """
+
+        :return:
+        """
         widgets = []
 
-        Widget = collections.namedtuple(
-            "Widget", field_names=["wname", "wtype"]
-        )
         for wname, wtype in WIDGET_TYPES.items():
             if (d := cls._widget_class.__dict__.get(wname)) is not None:
                 for name in d:
                     widgets.append(
-                        Widget(wname=name, wtype=wtype)
+                        cls.Widget(wname=name, wtype=wtype)
                     )
 
         return tuple(widgets)
+
+    def set_table_size(self, size: str) -> None:
+        """
+
+        :param size:
+        """
+        if "page_size_css" not in self._widget_class.__dict__:
+            raise NotImplementedError
+
+        root_elem = self.soup.select_one(self._widget_class.page_size_css)
+        dropdown_elem = root_elem.select_one("select")
+        options = [
+            e.text for e in dropdown_elem.select("option")
+        ]
+        if (size := size.title()) not in options:
+            raise fangraphs.exceptions.InvalidFilterOption(size)
+
+        self.page.query_selector(
+            self._widget_class.page_size_css
+        ).query_selector("select").select_option(size)
+
+    def scrape_table(
+            self, table: bs4.Tag, css_h: str = "thead > tr",
+            css_r: str = "tbody > tr"
+    ) -> TableData:
+        """
+
+        :param table
+        :param css_h:
+        :param css_r:
+        :return:
+        """
+        header_elems = table.select(css_h).select_one("th")
+        row_elems = table.select(css_r)
+
+        dataframe = pd.DataFrame(
+            data=[
+                [e.text for e in r.select("td")]
+                for r in row_elems
+            ],
+            columns=[e.text for e in header_elems]
+        )
+
+        table_data = self.TableData(dataframe, row_elems, header_elems)
+
+        return table_data
+
+    def _close_ad(self) -> None:
+        """
+
+        """
+        if self.page.query_selector_all(
+                "#ezmob-wrapper > div[style='display: none;']"
+        ):
+            return
+
+        elem = self.page.query_selector(".ezmob-footer-close")
+        if elem:
+            elem.click()
+
+    def export_data(self) -> pd.DataFrame:
+        """
+
+        :return:
+        """
+        if "export_data_css" not in self._widget_class.__dict__:
+            raise NotImplementedError
+
+        self._close_ad()
+
+        with self.page.expect_download() as down_info:
+            self.page.click(self._widget_class.export_data_css)
+
+        download = down_info.value
+        download_path = download.path()
+        dataframe = pd.read_csv(download_path)
+
+        os.remove(download_path)
+        return dataframe
