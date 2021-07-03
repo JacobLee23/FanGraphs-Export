@@ -29,5 +29,7 @@ class Projections(widgets.Selectors):
         }
     }
 
+    export_data_css = "#ProjectionBoard1_cmdCSV"
+
     def __init__(self, page):
         super().__init__(page)
