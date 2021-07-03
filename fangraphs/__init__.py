@@ -282,11 +282,14 @@ class FilterWidgets:
 
         :param menu_expansion:
         """
-        if "menu_expansion_css" not in self._widget_class.__dict__:
-            raise NotImplementedError
 
         menu_expansion = menu_expansion.title()
-        css = self._widget_class.menu_expansion_css.get(menu_expansion)
+
+        try:
+            css = self._widget_class.menu_expansion_css.get(menu_expansion)
+        except AttributeError as err:
+            raise NotImplementedError from err
+
         if css is None:
             raise fangraphs.exceptions.InvalidFilterOption(menu_expansion)
 
@@ -297,11 +300,11 @@ class FilterWidgets:
 
         :param table_size:
         """
-        if "table_size_css" not in self._widget_class.__dict__:
-            raise NotImplementedError
-
-        root_elem = self.page.query_selector(self._widget_class.table_size_css)
-        option_elems = root_elem.query_selector_all("option")
+        try:
+            root_elem = self.page.query_selector(self._widget_class.table_size_css)
+            option_elems = root_elem.query_selector_all("option")
+        except AttributeError as err:
+            raise NotImplementedError from err
 
         options = [
             e.text_content() for e in option_elems
@@ -355,13 +358,15 @@ class FilterWidgets:
 
         :return:
         """
-        if "export_data_css" not in self._widget_class.__dict__:
-            raise NotImplementedError
+        try:
+            css = self._widget_class.export_data_css
+        except AttributeError as err:
+            raise NotImplementedError from err
 
         self._close_ad()
 
         with self.page.expect_download() as down_info:
-            self.page.click(self._widget_class.export_data_css)
+            self.page.click(css)
 
         download = down_info.value
         download_path = download.path()
