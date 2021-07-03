@@ -4,14 +4,16 @@
 """
 Subpackage for scraping the FanGraphs **Leaders** pages.
 """
-
+import collections
 import os
 import re
 
+import bs4
 import pandas as pd
 from playwright.sync_api import sync_playwright
 
 import fangraphs.exceptions
+from fangraphs.selectors.widgets import WIDGET_TYPES
 
 
 PID_REGEX = re.compile(r"playerid=(.*)")
@@ -169,3 +171,46 @@ class ScrapingUtilities:
         self.page.goto(self.address, timeout=0)
         if self.queries.waitfor:
             self.page.wait_for_selector(self.queries.waitfor)
+
+
+class FilterWidgets:
+    """
+
+    """
+    _widget_class = None
+
+    address = None
+
+    def __init__(self, **kwargs):
+        if self._widget_class is None:
+            raise NotImplementedError
+        if self.address is None:
+            raise NotImplementedError
+
+        with sync_playwright() as play:
+            browser = play.chromium.launch()
+            try:
+                page = browser.new_page()
+                page.goto(self.address, timeout=0)
+                self._widget_class(page).configure(**kwargs)
+                html = page.content()
+            finally:
+                browser.close()
+
+        self.soup = bs4.BeautifulSoup(html, features="lxml")
+
+    @classmethod
+    def widgets(cls) -> tuple:
+        widgets = []
+
+        Widget = collections.namedtuple(
+            "Widget", field_names=["wname", "wtype"]
+        )
+        for wname, wtype in WIDGET_TYPES.items():
+            if (d := cls._widget_class.__dict__.get(wname)) is not None:
+                for name in d:
+                    widgets.append(
+                        Widget(wname=name, wtype=wtype)
+                    )
+
+        return tuple(widgets)
