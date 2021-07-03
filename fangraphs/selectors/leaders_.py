@@ -44,6 +44,8 @@ class GameSpan(widgets.Selectors):
         }
     }
 
+    export_data_css = ".data-export"
+
     def __init__(self, page):
         super().__init__(page)
 
@@ -93,6 +95,8 @@ class International(widgets.Selectors):
         "split_season": {"root_selector": ".controls-stats > label.fg-checkbox"}
     }
 
+    export_data_css = ".data-export"
+
     def __init__(self, page):
         super().__init__(page)
 
@@ -109,8 +113,8 @@ class MajorLeague(widgets.Selectors):
     }
     _dropdowns = {
         "league": {
-            "root_selector": "#LeaderBoard1_rcbAge1_Input",
-            "dropdown_selector": "#LeaderBoard1_rcbAge1_DropDown",
+            "root_selector": "#LeaderBoard1_rcbLeague_Input",
+            "dropdown_selector": "#LeaderBoard1_rcbLeague_DropDown",
         },
         "team": {
             "root_selector": "#LeaderBoard1_rcbTeam_Input",
@@ -118,11 +122,11 @@ class MajorLeague(widgets.Selectors):
         },
         "single_season": {
             "root_selector": "#LeaderBoard1_rcbSeason_Input",
-            "dropdown_selector": "#LeaderBoard1_rcbSeason_DropDow"
+            "dropdown_selector": "#LeaderBoard1_rcbSeason_DropDown"
         },
         "split": {
             "root_selector": "#LeaderBoard1_rcbMonth_Input",
-            "dropdown_selector": "#LeaderBoard1_rcbMonth_DropDow"
+            "dropdown_selector": "#LeaderBoard1_rcbMonth_DropDown"
         },
         "minimum": {
             "root_selector": "#LeaderBoard1_rcbMin_Input",
@@ -145,17 +149,19 @@ class MajorLeague(widgets.Selectors):
         },
         "age2": {
             "root_selector": "#LeaderBoard1_rcbAge2_Input",
-            "dropdown_selector": "#LeaderBoard1_rcbAge2_DropDow",
+            "dropdown_selector": "#LeaderBoard1_rcbAge2_DropDown",
             "button_selector": "#LeaderBoard1_cmdAge"
         }
     }
     _checkboxes = {
-        "split_teams": {"root_selector": "LeaderBoard1_cbTeams"},
+        "split_teams": {"root_selector": "#LeaderBoard1_cbTeams"},
         "active_roster": {"root_selector": "#LeaderBoard1_cbActive"},
         "hof": {"root_selector": "#LeaderBoard1_cbHOF"},
         "split_season": {"root_selector": "#LeaderBoard1_cbSeason"},
         "rookies": {"root_selector": "#LeaderBoard1_cbRookie"}
     }
+
+    export_data_css = "#LeaderBoard1_cmdCSV"
 
     def __init__(self, page):
         super().__init__(page)
@@ -179,19 +185,21 @@ class SeasonStat(widgets.Selectors):
             ]
         }
     }
-    dropdowns_type_3 = {
-        "start_season": ".row-season > div:nth-child(2)",
-        "end_season": ".row-season > div:nth-child(4)",
-        "popular": ".season-grid-controls-dropdown-row-stats > div:nth-child(1)",
-        "standard": ".season-grid-controls-dropdown-row-stats > div:nth-child(2)",
-        "advanced": ".season-grid-controls-dropdown-row-stats > div:nth-child(3)",
-        "statcast": ".season-grid-controls-dropdown-row-stats > div:nth-child(4)",
-        "batted_ball": ".season-grid-controls-dropdown-row-stats > div:nth-child(5)",
-        "win_probability": ".season-grid-controls-dropdown-row-stats > div:nth-child(6)",
-        "pitch_type": ".season-grid-controls-dropdown-row-stats > div:nth-child(7)",
-        "plate_discipline": ".season-grid-controls-dropdown-row-stats > div:nth-child(8)",
-        "value": ".season-grid-controls-dropdown-row-stats > div:nth-child(9)"
+    _dropdowns = {
+        "start_season": {"root_selector": ".row-season > div:nth-child(2)"},
+        "end_season": {"root_selector": ".row-season > div:nth-child(4)"},
+        "popular": {"root_selector": ".season-grid-controls-dropdown-row-stats > div:nth-child(1)"},
+        "standard": {"root_selector": ".season-grid-controls-dropdown-row-stats > div:nth-child(2)"},
+        "advanced": {"root_selector": ".season-grid-controls-dropdown-row-stats > div:nth-child(3)"},
+        "statcast": {"root_selector": ".season-grid-controls-dropdown-row-stats > div:nth-child(4)"},
+        "batted_ball": {"root_selector": ".season-grid-controls-dropdown-row-stats > div:nth-child(5)"},
+        "win_probability": {"root_selector": ".season-grid-controls-dropdown-row-stats > div:nth-child(6)"},
+        "pitch_type": {"root_selector": ".season-grid-controls-dropdown-row-stats > div:nth-child(7)"},
+        "plate_discipline": {"root_selector": ".season-grid-controls-dropdown-row-stats > div:nth-child(8)"},
+        "value": {"root_selector": ".season-grid-controls-dropdown-row-stats > div:nth-child(9)"}
     }
+
+    table_size_css = ".page-item-control > select"
 
     def __init__(self, page):
         super().__init__(page)
@@ -204,19 +212,19 @@ class Splits(widgets.Selectors):
     _selections = {
         "group": {
             "root_selectors": [
-                f".fgBin.row-button > div[class*='button-green fgButton']:nth-child({n})"
+                f".fgBin.row-button > div.button-green.fgButton:nth-child({n})"
                 for n in range(1, 5)
             ]
         },
         "stat": {
             "root_selectors": [
-                f".fgBin.row-button > div[class*='button-green fgButton']:nth-child({n})"
+                f".fgBin.row-button > div.button-green.fgButton:nth-child({n})"
                 for n in range(6, 8)
             ]
         },
         "table_type": {
             "root_selectors": [
-                f"#root-button-stats > div:nth-child({n})"
+                f"#root-buttons-stats > div.button-green.fgButton:nth-child({n})"
                 for n in range(1, 4)
             ]
         }
@@ -271,6 +279,17 @@ class Splits(widgets.Selectors):
     _switches = {
         "split_teams": {"root_selector": "#stack-buttons > div:nth-child(2)"},
         "auto_pt": {"root_selector": "#stack-buttons > div:nth-child(3)"}
+    }
+
+    reset_css = "#stack-buttons > div.fgButton:nth-last-child(1)"
+    update_css = "#button-update"
+
+    export_data_css = ".data-export"
+    menu_expansion_css = {
+        "Quick Splits": "div.fgBin.splits-bin-controller > div.fgButton:nth-child(1)",
+        "Splits": "div.fgBin.splits-bin-controller > div.fgButton:nth-child(2)",
+        "Filters": "div.fgBin.splits-bin-controller > div.fgButton:nth-child(3)",
+        "Show All": "div.fgBin.splits-bin-controller > div.fgButton:nth-child(4)"
     }
 
     def __init__(self, page):
@@ -386,6 +405,8 @@ class WAR(widgets.Selectors):
             "dropdown_selector": "#WARBoard1_rcbType_DropDown"
         }
     }
+
+    export_data_css = "#WARBoard1_cmdCSV"
 
     def __init__(self, page):
         super().__init__(page)

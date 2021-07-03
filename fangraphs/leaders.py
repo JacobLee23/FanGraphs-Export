@@ -5,8 +5,11 @@
 Scrapers for the webpages under the FanGaphs **Leaders** tab.
 """
 
+import datetime
+import re
 from typing import *
 
+import numpy as np
 import pandas as pd
 
 import fangraphs.exceptions
@@ -43,6 +46,13 @@ class GameSpan(FilterWidgets):
         :return:
         """
         dataframe = self.export_data()
+
+        def revise_dates(x, dt_format="%Y-%m-%dT%X"):
+            return datetime.datetime.strptime(x, dt_format)
+
+        dataframe["Start Date"] = dataframe["Start Date"].map(revise_dates)
+        dataframe["End Date"] = dataframe["End Date"].map(revise_dates)
+
         self._data = dataframe
 
 
@@ -78,6 +88,16 @@ class International(FilterWidgets):
         :return:
         """
         dataframe = self.export_data()
+
+        def revise_names(x):
+            regex = re.compile(r"^([A-Za-z\- ]+) ")
+            if (m := regex.search(x)) is not None:
+                return m.group(1)
+            else:
+                return x
+
+        dataframe["Name"] = dataframe["Name"].map(revise_names)
+
         self._data = dataframe
 
 
@@ -127,11 +147,11 @@ class SeasonStat(FilterWidgets):
     _widget_class = leaders_.SeasonStat
     address = "https://fangraphs.com/leaders/season-stat-grid"
 
-    def __init__(self, **kwargs):
+    def __init__(self, *, table_size: str = "Infinity", **kwargs):
         """
 
         """
-        FilterWidgets.__init__(self, table_size="Infinity", **kwargs)
+        FilterWidgets.__init__(self, table_size=table_size, **kwargs)
 
         self.data = None
 
@@ -152,10 +172,11 @@ class SeasonStat(FilterWidgets):
         table = self.soup.select_one(".table-scroll")
         table_data = self.scrape_table(table)
 
-        df = table_data.dataframe.copy()
-        df.drop(columns=df.columns[0])
+        dataframe = table_data.dataframe
+        dataframe.drop(columns=dataframe.columns[0], inplace=True)
+        dataframe.replace("", np.nan, inplace=True)
 
-        self._data = df
+        self._data = dataframe
 
 
 class Splits(FilterWidgets):
@@ -174,7 +195,7 @@ class Splits(FilterWidgets):
             self, *,
             batting_qs: Optional[str] = None,
             pitching_qs: Optional[str] = None,
-            filter_group: str = "Show All",
+            menu_expansion: str = "Show All",
             **kwargs
     ):
         """
@@ -191,50 +212,16 @@ class Splits(FilterWidgets):
         else:
             quick_configure = None
 
-        self.filter_groups = None
-        expand_menu = self._get_filter_group(filter_group)
-
         FilterWidgets.__init__(
             self,
-            expand_menu=expand_menu,
+            pre_clicks=(self._widget_class.reset_css,),
+            menu_expansion=menu_expansion,
             quick_configure=quick_configure,
-            submit_form="#button-update",
+            post_clicks=(self._widget_class.update_css,),
             **kwargs
         )
 
         self.data = None
-
-    @property
-    def filter_groups(self) -> list[str]:
-        """
-
-        :return:
-        """
-        return self._filter_groups
-
-    @filter_groups.setter
-    def filter_groups(self, value) -> None:
-        """
-
-        """
-        elems = self.soup.select(".fgBin.splits-bin-controller div")
-        options = [e.text for e in elems]
-        self._filter_groups = options
-
-    def _get_filter_group(self, group: str) -> str:
-        """
-
-        :param group:
-        :return:
-        """
-        options = [o.lower() for o in self.filter_groups]
-        try:
-            index = options.index(group)
-        except ValueError as err:
-            raise fangraphs.exceptions.InvalidFilterGroup(group) from err
-
-        css = f"div.fgBin.splits-bin-controller > div.fgButton:nth-child({index+1})"
-        return css
 
     @property
     def data(self) -> pd.DataFrame:

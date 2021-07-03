@@ -193,10 +193,11 @@ class FilterWidgets:
 
     def __init__(
             self, *,
+            pre_clicks: tuple[str] = (),
             table_size: Optional[str] = None,
-            expand_menu: Optional[str] = None,
+            menu_expansion: Optional[str] = None,
             quick_configure: Optional[str] = None,
-            submit_form: Optional[str] = None,
+            post_clicks: tuple[str] = (),
             **kwargs
     ):
         if self._widget_class is None:
@@ -206,20 +207,24 @@ class FilterWidgets:
 
         self.__play = sync_playwright().start()
         self.__browser = self.__play.chromium.launch()
-        self.page = self.__browser.new_page()
+        self.page = self.__browser.new_page(
+            accept_downloads=True
+        )
         self.page.goto(self.address, timeout=0)
 
         self.filter_widgets = self._widget_class(self.page)
-        if expand_menu is not None:
-            self.page.click(expand_menu)
+        for css in pre_clicks:
+            self.page.click(css)
         if table_size is not None:
             self.set_table_size(table_size)
+        if menu_expansion is not None:
+            self.expand_menu(menu_expansion)
         if quick_configure is not None:
             self.page.click(quick_configure)
         else:
             self.filter_widgets.configure(**kwargs)
-        if submit_form is not None:
-            self.page.click(submit_form)
+        for css in post_clicks:
+            self.page.click(css)
 
         self.soup = None
 
@@ -260,25 +265,51 @@ class FilterWidgets:
 
         return tuple(widgets)
 
-    def set_table_size(self, size: str) -> None:
+    @classmethod
+    def menu_expansions(cls) -> Optional[tuple[str]]:
         """
 
-        :param size:
+        :return:
         """
-        if "page_size_css" not in self._widget_class.__dict__:
+        try:
+            expansions = tuple(cls._widget_class.menu_expansion_css)
+            return expansions
+        except AttributeError:
+            return None
+
+    def expand_menu(self, menu_expansion: str) -> None:
+        """
+
+        :param menu_expansion:
+        """
+        if "menu_expansion_css" not in self._widget_class.__dict__:
             raise NotImplementedError
 
-        root_elem = self.soup.select_one(self._widget_class.page_size_css)
-        dropdown_elem = root_elem.select_one("select")
-        options = [
-            e.text for e in dropdown_elem.select("option")
-        ]
-        if (size := size.title()) not in options:
-            raise fangraphs.exceptions.InvalidFilterOption(size)
+        menu_expansion = menu_expansion.title()
+        css = self._widget_class.menu_expansion_css.get(menu_expansion)
+        if css is None:
+            raise fangraphs.exceptions.InvalidFilterOption(menu_expansion)
 
-        self.page.query_selector(
-            self._widget_class.page_size_css
-        ).query_selector("select").select_option(size)
+        self.page.click(css)
+
+    def set_table_size(self, table_size: str) -> None:
+        """
+
+        :param table_size:
+        """
+        if "table_size_css" not in self._widget_class.__dict__:
+            raise NotImplementedError
+
+        root_elem = self.page.query_selector(self._widget_class.table_size_css)
+        option_elems = root_elem.query_selector_all("option")
+
+        options = [
+            e.text_content() for e in option_elems
+        ]
+        if table_size.lower() not in (opts := [o.lower() for o in options]):
+            raise fangraphs.exceptions.InvalidFilterOption(table_size)
+        label = options[opts.index(table_size.lower())]
+        root_elem.select_option(label=label)
 
     def scrape_table(
             self, table: bs4.Tag, css_h: str = "thead > tr",
@@ -291,7 +322,7 @@ class FilterWidgets:
         :param css_r:
         :return:
         """
-        header_elems = table.select(css_h).select_one("th")
+        header_elems = table.select_one(css_h).select("th")
         row_elems = table.select(css_r)
 
         dataframe = pd.DataFrame(

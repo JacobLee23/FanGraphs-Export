@@ -216,7 +216,7 @@ class Dropdown:
             for desc in self.descendants:
                 if elems := root_elem.select(desc):
                     # Get options from texts of descendant elements
-                    options = [e.text_content() for e in elems]
+                    options = [e.text for e in elems]
                     self.desc_selector = desc
 
         self._options = tuple(options)
@@ -237,7 +237,7 @@ class Dropdown:
         option = ""
         root_elem = self.soup.select_one(self.root_selector)
 
-        if self.desc_selector in (self.descendants[0], self.descendants[2]):
+        if self.desc_selector == self.descendants[0]:
             if self.dropdown_selector is not None:
                 # Get current option from element 'value' attribute
                 option = root_elem.attrs.get("value")
@@ -253,7 +253,7 @@ class Dropdown:
             # Get current option from text of descendant element
             option = root_elem.select_one("span").text
 
-        elif self.desc_selector == self.descendants[3]:
+        elif self.desc_selector == self.descendants[2]:
             # Evaluate JavaScript on element to get current option
             option = self.page.eval_on_selector(
                 self.root_selector, "el => el.value"
