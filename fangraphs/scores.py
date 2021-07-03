@@ -1,17 +1,22 @@
-#! python3
+#! usr/bin/env python
 # fangraphs/scores.py
 
 """
 Scrapers for the webpages under the FanGraphs **Scores** tab.
 """
 
+import collections
 import datetime
 import re
+from typing import *
 
+import bs4
 import pandas as pd
 
+from fangraphs import FilterWidgets
 from fangraphs import ScrapingUtilities
-from fangraphs.selectors import scores_sel
+from fangraphs import PID_REGEX, PID_POS_REGEX
+from fangraphs.selectors import scores_
 
 
 def _scrape_sotg(page):
@@ -68,7 +73,6 @@ def _scrape_table(table):
     """
     dataframe = _scrape_table_headers(table)
 
-    href_regex = re.compile(r"statss.aspx\?playerid=(.*)&position=.*")
     rows = table.query_selector_all("tbody > tr")[:-1]
 
     for i, row in enumerate(rows):
@@ -76,7 +80,7 @@ def _scrape_table(table):
         items = [e.text_content() for e in elems]
 
         href = elems[0].query_selector("a").get_attribute("href")
-        player_id = href_regex.search(href).group(1)
+        player_id = PID_POS_REGEX.search(href).group(1)
 
         items.insert(1, player_id)
 
@@ -242,7 +246,7 @@ class Live(ScrapingUtilities):
         :param browser: A Playwright ``Browser`` object A Playwright ``Browser`` object
         :type browser: playwright.sync_api._generated.Browser
         """
-        ScrapingUtilities.__init__(self, browser, self.address, scores_sel.Live)
+        ScrapingUtilities.__init__(self, browser, self.address, scores_.Live)
 
     def export(self):
         """
@@ -292,7 +296,7 @@ class LiveLeaderboards(ScrapingUtilities):
     address = "https://fangraphs.com/scores/live-leaderboards"
 
     def __init__(self, browser):
-        ScrapingUtilities.__init__(self, browser, self.address, scores_sel.LiveLeaderboards)
+        ScrapingUtilities.__init__(self, browser, self.address, scores_.LiveLeaderboards)
 
     @staticmethod
     def _scrape_table_headers(table):
@@ -322,7 +326,6 @@ class LiveLeaderboards(ScrapingUtilities):
         """
         rows = table.query_selector_all("tbody > tr")
 
-        href_regex = re.compile(r"//www.fangraphs.com/statss.aspx\?playerid=(.*)")
         opp_regex = re.compile(r"(@)?(.*)(\d+-\d+ \((F|Top \d+|Bot \d+)\))")
 
         for i, row in enumerate(rows):
@@ -331,7 +334,7 @@ class LiveLeaderboards(ScrapingUtilities):
             data = [e.text_content() for e in elems]
 
             href = elems[0].query_selector("a").get_attribute("href")
-            player_id = href_regex.search(href).group(1)
+            player_id = PID_REGEX.search(href).group(1)
 
             home_away, opp, score, _ = opp_regex.search(data[2]).groups()
             home_away = "Away" if home_away is not None else "Home"
@@ -369,7 +372,7 @@ class Scoreboard(ScrapingUtilities):
     address = "https://fangraphs.com/scoreboard.aspx"
 
     def __init__(self, browser):
-        ScrapingUtilities.__init__(self, browser, self.address, scores_sel.Scoreboard)
+        ScrapingUtilities.__init__(self, browser, self.address, scores_.Scoreboard)
 
     def export(self):
         """
@@ -397,7 +400,7 @@ class GameGraphs(ScrapingUtilities):
     address = "https://fangraphs.com/wins.aspx"
 
     def __init__(self, browser):
-        ScrapingUtilities.__init__(self, browser, self.address, scores_sel.GameGraphs)
+        ScrapingUtilities.__init__(self, browser, self.address, scores_.GameGraphs)
 
     def export(self):
         """
@@ -435,7 +438,7 @@ class PlayLog(ScrapingUtilities):
     address = "https://fangraphs.com/plays.aspx"
 
     def __init__(self, browser):
-        ScrapingUtilities.__init__(self, browser, self.address, scores_sel.PlayLog)
+        ScrapingUtilities.__init__(self, browser, self.address, scores_.PlayLog)
 
     @staticmethod
     def _scrape_headers(table):
@@ -469,7 +472,6 @@ class PlayLog(ScrapingUtilities):
         rows = table.query_selector_all("tbody > tr")
 
         inning_regex = re.compile(r"([▲▼]) (\d+)")
-        href_regex = re.compile(r"//www\.fangraphs\.com/statss\.aspx\?playerid=(.*)")
 
         for row in rows:
             elems = row.query_selector_all("td")
@@ -484,7 +486,7 @@ class PlayLog(ScrapingUtilities):
                 continue
 
             batter_id, pitcher_id = [
-                href_regex.search(
+                PID_REGEX.search(
                     e.query_selector("a").get_attribute("href")
                 ).group(1) for e in elems[2:4]
             ]
@@ -515,3 +517,201 @@ class PlayLog(ScrapingUtilities):
         table = self.page.query_selector(".table-scroll > table")
         dataframe = self._scrape_table(table)
         return dataframe
+
+
+class BoxScore(FilterWidgets):
+    """
+    Scrapes the FanGraphs `Box Score`_ pages.
+
+    .. _Box Score: https://fangraphs.com/boxscore.aspx
+    """
+    _widget_class = scores_.BoxScore
+
+    address = "https://fangraphs.com/boxscore.aspx"
+
+    def __init__(self, **kwargs):
+        FilterWidgets.__init__(self, **kwargs)
+
+        self._tables = None
+
+        self.line_score = None
+        self.play_by_play = None
+        self.data_tables = None
+
+    @property
+    def _tables(self) -> bs4.ResultSet:
+        """
+
+        :return:
+        """
+        return self.__tables
+
+    @_tables.setter
+    def _tables(self, value) -> None:
+        """
+
+        """
+        if value is not None:
+            return
+        self.__tables = self.soup.select("div.RadGrid.RadGrid_FanGraphs")
+
+    @property
+    def line_score(self) -> pd.DataFrame:
+        """
+
+        :return:
+        """
+        return self._line_score
+
+    @line_score.setter
+    def line_score(self, value) -> None:
+        """
+
+        """
+        table = self.soup.select_one(
+            "div.scoreboard-wrapper > table.linescore"
+        )
+        header_elems = table.select(
+            "thead > tr.linescore-header > th"
+        )
+        headers = [e.text for e in header_elems][1:]
+        headers.insert(0, "Team")
+        dataframe = pd.DataFrame(columns=headers)
+
+        row_elems = table.select("tbody > tr.team")
+        for team, row in zip(("Away", "Home"), row_elems):
+            elems = row.select("td")
+            items = [e.text for e in elems]
+            dataframe.loc[team] = items
+
+        self._line_score = dataframe
+
+    @property
+    def play_by_play(self) -> pd.DataFrame:
+        """
+
+        :return:
+        """
+        return self._play_by_play
+
+    @play_by_play.setter
+    def play_by_play(self, value) -> None:
+        """
+
+        """
+        pbp_table = self._tables[4]
+        header_elems = pbp_table.select("thead > tr > th")
+        row_elems = pbp_table.select("tbody > tr")
+
+        dataframe = pd.DataFrame(
+            data=[
+                [e.text for e in r.select("td")]
+                for r in row_elems
+            ],
+            columns=[e.text for e in header_elems]
+        )
+        dataframe.drop(columns=dataframe.columns[-2:])
+
+        def pitch_sequence() -> list[list[str]]:
+            items = []
+            for row in row_elems:
+                elem = row.select_one("td:nth-child(7) a")
+                if elem is not None:
+                    pitches = elem.attrs.get("tooltip").split(",")
+                else:
+                    pitches = []
+                items.append(pitches)
+            return items
+
+        dataframe["Pitch Sequence"] = pitch_sequence()
+        dataframe["Player ID (Pitcher)"] = [
+            PID_POS_REGEX.search(
+                r.select_one("td:nth-child(1) a").attrs.get("href")
+            ).group(1) for r in row_elems
+        ]
+        dataframe["Player ID (PLayer)"] = [
+            PID_POS_REGEX.search(
+                r.select_one("td:nth-child(2) a").attrs.get("href")
+            ).group(1) for r in row_elems
+        ]
+
+        self._play_by_play = dataframe
+
+    @staticmethod
+    def _scrape_table(table: bs4.Tag) -> pd.DataFrame:
+        """
+
+        :param table:
+        :return:
+        """
+        header_elems = table.select("thead > tr > th.rgHeader")
+        row_elems = table.select("tbody > tr")
+        dataframe = pd.DataFrame(
+            data=[
+                [e.text for e in r.select("td")]
+                for r in row_elems
+            ],
+            columns=[e.text for e in header_elems]
+        )
+
+        def playerids_positions() -> [list[str], list[str]]:
+            player_ids, positions, = [], []
+            for row in row_elems:
+                elem = row.select_one("td:nth-child(1)")
+                if elem.text != "Total":
+                    pid, position = PID_POS_REGEX.search(
+                        elem.select_one("a").attrs.get("href")
+                    ).groups()
+                else:
+                    pid, position = "", ""
+                player_ids.append(pid)
+                positions.append(position)
+            return player_ids, positions
+
+        dataframe["Player ID"], dataframe["Position"] = playerids_positions()
+
+        return dataframe
+
+    @property
+    def data_tables(self) -> NamedTuple[NamedTuple]:
+        """
+
+        :return:
+        """
+        return self._data_tables
+
+    @data_tables.setter
+    def data_tables(self, value) -> None:
+        """
+
+        """
+
+        table_names = (
+            "box_score", "dashboard", "standard", "advanced", "batted_ball",
+            "more_batted_ball", "win_probability", "pitch_type",
+            "pitch_value", "plate_discipline"
+        )
+        stat_groups = (
+            "batting_away", "batting_home", "pitching_away", "pitching_home"
+        )
+        DataTables = collections.namedtuple("DataTables", table_names)
+        StatGroups = collections.namedtuple("StatGroups", stat_groups)
+
+        data = {a: {b: None for b in stat_groups} for a in table_names}
+
+        tables = self._tables[:4] + self._tables[5:]
+        table_groups = [
+            tables[i:(i+4)] for i in range(0, len(tables), 4)
+        ]
+        for dtables, tname in zip(table_groups, table_names):
+            for table, tstat in zip(dtables, stat_groups):
+                data[tname][tstat] = self._scrape_table(table)
+            self.__setattr__(tname, StatGroups(**data[tname]))
+
+        data_tables = DataTables(
+            **{a: StatGroups(
+                **{b: data[a][b] for b in stat_groups}
+            ) for a in table_names}
+        )
+
+        self._data_tables = data_tables

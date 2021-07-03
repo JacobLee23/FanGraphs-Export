@@ -60,6 +60,11 @@ def playlog_page():
     return TestPlayLog.address
 
 
+@pytest.fixture(scope="module")
+def boxscore_page():
+    return TestBoxScore.address
+
+
 def _test_scrape_sotg(page):
     """
     :py:func:`fangraphs.scores._scrape_sotg`
@@ -482,3 +487,147 @@ class TestPlayLog(BaseTests):
         ) == 1
         table = page.query_selector(".table-scroll > table")
         self._test_scrape_table(table)
+
+
+class TestBoxScore(BaseTests):
+    """
+    :py:class:`fangraphs.scores.BoxScore`
+    """
+    address = "https://www.fangraphs.com/boxscore.aspx"
+
+    @staticmethod
+    def _test_scrape_linescore_table(table):
+        """
+        :py:meth:`fangraphs.scores.BoxScore._scrape_linescore_table`
+
+        :param table:
+        :type table: playwright.sync_api._generated.ElementHandle
+        """
+        assert (header_elems := table.query_selector_all(
+            "thead > tr.linescore-header > th"
+        ))
+        assert all(e.text_content() for e in header_elems)
+
+        assert len(
+            e := table.query_selector_all("tbody > tr.team")
+        ) == 2
+        away, home = e
+        assert away.get_attribute("class") == "team away"\
+               and home.get_attribute("class") == "team home"
+
+        for team in (away, home):
+            assert (items := team.query_selector_all("td"))
+
+            name, innings, rhe = items[0], items[1:-3], items[-3:]
+            assert len(innings) >= 7\
+                   and all("inn" in e.get_attribute("class") for e in innings)
+            assert len(rhe) == 3\
+                   and [
+                       e.get_attribute("class") for e in rhe
+                   ] == ["runs", "hits", "errs"]
+
+            assert all(
+                (t := n.text_content()).isdecimal() or t in ("", "x")
+                for n in innings
+            )
+            assert all(n.text_content().isdecimal() for n in rhe)
+
+    @staticmethod
+    def _test_scrape_table(table):
+        """
+
+        :param table:
+        :type table: playwright.sync_api._generated.ElementHandle
+        """
+        assert (header_elems := table.query_selector_all(
+            "thead > tr > th.rgHeader"
+        ))
+        assert all(e.text_content() for e in header_elems)
+
+        rows = table.query_selector_all(
+            "tbody > tr"
+        )
+        assert rows
+
+        href_regex = re.compile(r"playerid=(.*)&position=(.*)")
+
+        for row in rows:
+            elems = row.query_selector_all("td")
+
+            assert all(e.text_content() for e in elems)
+
+            if elems[0].text_content() != "Total":
+                assert len(
+                    e := elems[0].query_selector_all("a")
+                ) == 1
+                assert (href := e[0].get_attribute("href")) is not None
+                assert href_regex.search(href) is not None, href
+                assert e[0].text_content() is not None
+
+    @staticmethod
+    def _test_scrape_playbyplay_table(table):
+        """
+        :py:meth:`fangraphs.scores.BoxScore._scrape_playbyplay_table`
+
+        :param table:
+        :type table: playwright.sync_api._generated.ElementHandle
+        """
+        assert table.get_attribute("id") == "WinsBox1_dgPlay"
+
+        assert (header_elems := table.query_selector_all(
+            "thead > tr > th"
+        ))
+        assert all(e.text_content() for e in header_elems)
+
+        rows = table.query_selector_all("tbody > tr")
+        assert rows
+
+        href_regex = re.compile(r"playerid=(.*)")
+
+        for row in rows:
+            elems = row.query_selector_all("td")[:-2]
+            assert len(elems) == 12, row.inner_html()
+
+            assert all(e.text_content() for e in elems)
+
+            assert elems[0].query_selector("a") is not None, elems[0].inner_html()
+            assert elems[1].query_selector("a") is not None, elems[1].inner_html()
+
+            hrefs = [
+                e.query_selector("a").get_attribute("href") for e in elems[0:2]
+            ]
+            assert all(href_regex.search(h) is not None for h in hrefs), hrefs
+
+            if e := elems[6].query_selector("a"):
+                assert e.get_attribute("tooltip") is not None
+            else:
+                assert elems[6].text_content() == elems[6].inner_html()
+
+    @pytest.mark.parametrize(
+        "page", ["boxscore_page"], indirect=True
+    )
+    def test_export(self, page):
+        """
+        :py:meth:`fangraphs.scores.BoxScore.export`
+
+        :type page: playwright.sync_api._generated.Page
+        :param page:
+        """
+        assert len(
+            e := page.query_selector_all(
+                "div.scoreboard-wrapper > table.linescore"
+            )
+        ) == 1
+        ls_table = e[0]
+        self._test_scrape_linescore_table(ls_table)
+
+        assert len(
+            tables := page.query_selector_all(
+                "div.RadGrid.RadGrid_FanGraphs"
+            )
+        ) == 41
+
+        self._test_scrape_playbyplay_table(tables.pop(4))
+
+        for table in tables:
+            self._test_scrape_table(table)

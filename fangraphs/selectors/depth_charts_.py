@@ -1,26 +1,25 @@
-#! python3
-# fangraphs/selectors/dcharts_sel.py
+#! usr/bin/env python
+# fangraphs/selectors/_depth_charts.py
 
 """
 CSS selectors for the classes in :py:mod:`fangraphs.depth_charts`.
 """
 
-from fangraphs import selectors
+from typing import *
+
+from . import widgets
 
 
-class DepthCharts:
+class DepthCharts(widgets.Selectors):
     """
-    CSS selectors for :py:class:`fangraphs.teams.DepthCharts`.
+    Widget handling for :py:class:`fangraphs.teams.DepthCharts`.
     """
-    __selections_type_1 = {
-        "view_type": "#tsPosition"
+    _selections = {
+        "table_type": {"root_selector": "#tsPosition"}
     }
-    waitfor = ""
-    export_data = ""
 
     def __init__(self, page):
-        for key, val in self.__selections_type_1.items():
-            self.__setattr__(key, selectors.SelectionsType1(page, val))
+        super().__init__(page)
 
 
 class Teams:
@@ -33,13 +32,12 @@ class Teams:
     ]
 
     @classmethod
-    def compile_selectors(cls, obj):
+    def compile_selectors(cls, obj) -> Generator[tuple[str, str], None, None]:
         """
         Compiles the full CSS selector for each of the items in the ``object`` class attribute.
 
         :param obj: An object
-        :return: The name and the full CSS selector for each attribute
-        :rtype: tuple[str, str]
+        :return: The attribute name and the full CSS selector for the attribute
         """
         for key, val in zip(obj.options, cls.__opt_sels):
             selector = f"{cls.__selector} > {obj.selector} > {val}"
