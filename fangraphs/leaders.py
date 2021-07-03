@@ -5,283 +5,284 @@
 Scrapers for the webpages under the FanGaphs **Leaders** tab.
 """
 
+from typing import *
+
 import pandas as pd
 
 import fangraphs.exceptions
-from fangraphs import ScrapingUtilities
+from fangraphs import FilterWidgets
 from fangraphs.selectors import leaders_
 
 
-class GameSpan(ScrapingUtilities):
+class GameSpan(FilterWidgets):
     """
     Scraper for the FanGraphs `60-Game Span Leaderboards`_ page.
 
     .. _60-Game Span Leaderboards: https://www.fangraphs.com/leaders/special/60-game-span
     """
-
+    _widget_class = leaders_.GameSpan
     address = "https://fangraphs.com/leaders/special/60-game-span"
 
-    def __init__(self, browser):
+    def __init__(self, **kwargs):
+        FilterWidgets.__init__(self, **kwargs)
+
+        self.data = None
+
+    @property
+    def data(self) -> pd.DataFrame:
         """
-        :param browser: A Playwright ``Browser`` object A Playwright ``Browser`` object
-        :type browser: playwright.sync_api._generated.Browser
+
+        :return:
         """
-        ScrapingUtilities.__init__(self, browser, self.address, leaders_.GameSpan)
+        return self._data
+
+    @data.setter
+    def data(self, value) -> None:
+        """
+
+        :return:
+        """
+        dataframe = self.export_data()
+        self._data = dataframe
 
 
-class International(ScrapingUtilities):
+class International(FilterWidgets):
     """
     Scraper for the FanGraphs `KBO Leaderboards`_ page.
 
     .. _KBO Leaderboards: https://www.fangraphs.com/leaders/international
     """
-
+    _widget_class = leaders_.International
     address = "https://www.fangraphs.com/leaders/international"
 
-    def __init__(self, browser):
+    def __init__(self, **kwargs):
         """
-        :param browser: A Playwright ``Browser`` object
-        :type browser: playwright.sync_api._generated.Browser
 
-        .. py:attribute:: browser
         """
-        ScrapingUtilities.__init__(self, browser, self.address, leaders_.International)
+        FilterWidgets.__init__(self, **kwargs)
+
+        self.data = None
+
+    @property
+    def data(self) -> pd.DataFrame:
+        """
+
+        :return:
+        """
+        return self._data
+
+    @data.setter
+    def data(self, value) -> None:
+        """
+
+        :return:
+        """
+        dataframe = self.export_data()
+        self._data = dataframe
 
 
-class MajorLeague(ScrapingUtilities):
+class MajorLeague(FilterWidgets):
     """
     Scraper for the FanGraphs `Major League Leaderboards`_ page.
 
-    Note that the Splits Leaderboard is not covered.
-    Instead, it is covered by :py:class:`SplitsLeaderboards`.
+    *Note: The Splits Leaderboards are covered by :py:class:`SplitsLeaderboards`.*
 
     .. _Major League Leaderboards: https://fangraphs.com/leaders.aspx
     """
-
+    _widget_class = leaders_.MajorLeague
     address = "https://fangraphs.com/leaders.aspx"
 
-    def __init__(self, browser):
+    def __init__(self, **kwargs):
         """
-        :param browser: A Playwright ``Browser`` object
-        :type browser: playwright.sync_api._generated.Browser
 
-        .. py:attribute:: browser
         """
-        ScrapingUtilities.__init__(self, browser, self.address, leaders_.MajorLeague)
+        FilterWidgets.__init__(self, **kwargs)
+
+        self.data = None
+
+    @property
+    def data(self) -> pd.DataFrame:
+        """
+
+        :return:
+        """
+        return self._data
+
+    @data.setter
+    def data(self, value) -> None:
+        """
+
+        :return:
+        """
+        dataframe = self.export_data()
+        self._data = dataframe
 
 
-class SeasonStat(ScrapingUtilities):
+class SeasonStat(FilterWidgets):
     """
     Scraper for the FanGraphs `Season Stat Grid`_ page.
 
     .. _Season Stat Grid: https://fangraphs.com/leaders/season-stat-grid
     """
-
+    _widget_class = leaders_.SeasonStat
     address = "https://fangraphs.com/leaders/season-stat-grid"
 
-    def __init__(self, browser):
+    def __init__(self, **kwargs):
         """
-        :param browser: A Playwright ``Browser`` object
-        :type browser: playwright.sync_api._generated.Browser
+
         """
-        ScrapingUtilities.__init__(self, browser, self.address, leaders_.SeasonStat)
+        FilterWidgets.__init__(self, table_size="Infinity", **kwargs)
 
-    def _write_table_headers(self):
+        self.data = None
+
+    @property
+    def data(self) -> pd.DataFrame:
         """
-        Initializes a new DataFrame with columns corresponding to the table headers.
 
-        :return: A DataFrame with columns set to the table headers
-        :rtype: pandas.DataFrame
+        :return:
         """
-        elems = self.page.query_selector_all(".table-scroll thead tr th")
-        headers = [e.text_content() for e in elems]
-        dataframe = pd.DataFrame(columns=headers[1:])
-        return dataframe
+        return self._data
 
-    def _write_table_rows(self, dataframe):
+    @data.setter
+    def data(self, value) -> None:
         """
-        Writes the data from each of the rows of each of the tables to the DataFrame.
 
-        :param dataframe: The DataFrame to modify
-        :type dataframe: pandas.DataFrame
-        :return: The DataFrame updated with all the table leaderboard data
-        :rtype: pandas.DataFrame
+        :return:
         """
-        total_pages = int(
-            self.page.query_selector(
-                ".table-page-control:nth-last-child(1) > .table-control-total"
-            ).text_content()
-        )
-        index = 0
-        for page in range(total_pages):
-            row_elems = self.page.query_selector_all(".table-scroll tbody tr")
-            for i, row in enumerate(row_elems):
-                elems = row.query_selector_all("td")
-                items = [e.text_content() for e in elems]
-                dataframe.loc[index+i] = items[1:]
-            index += len(row_elems)
-            self.page.click(".table-page-control:nth-last-child(1) > .next")
-        return dataframe
+        table = self.soup.select_one(".table-scroll")
+        table_data = self.scrape_table(table)
 
-    def export(self):
-        """
-        Exports the data in the current leaderboard as a DataFrame.
+        df = table_data.dataframe.copy()
+        df.drop(columns=df.columns[0])
 
-        :return: A DataFrame containing the table data
-        :rtype: pandas.DataFrame
-        """
-        self._close_ad()
-
-        dataframe = self._write_table_headers()
-        dataframe = self._write_table_rows(dataframe)
-
-        return dataframe
+        self._data = df
 
 
-class Splits(ScrapingUtilities):
+class Splits(FilterWidgets):
     """
     Scraper for the FanGraphs `Splits Leaderboards`_ page.
 
     .. _Splits Leaderboards: https://fangraphs.com/leaders/splits-leaderboards
     """
-
+    _widget_class = leaders_.Splits
     address = "https://fangraphs.com/leaders/splits-leaderboards"
 
-    def __init__(self, browser):
+    qsbatting = leaders_.QSBatting()
+    qspitching = leaders_.QSPitching()
+
+    def __init__(
+            self, *,
+            batting_qs: Optional[str] = None,
+            pitching_qs: Optional[str] = None,
+            filter_group: str = "Show All",
+            **kwargs
+    ):
         """
-        :param browser: A Playwright ``Browser`` object
-        :type browser: playwright.sync_api._generated.Browser
-
-        .. py:attribute:: qsbatting
-
-            Contains the CSS selectors for the batting-related quick splits.
-            Allows for the configuration of the Splits leaderboard to any batting quick split.
-
-            :type: fangraphs.leaders_sel.QuickSplits.Batting
-
-        .. py:attribute:: qspitching
-
-            Contains the CSS selectors for the pitching-related quick splits.
-            Allows for the configuration of the Splits leaderboard to any pitching quick split.
-
-            :type: fangraphs.leaders_sel.QuickSplits.Pitching
+        :param batting_qs:
+        :param pitching_qs:
         """
-        ScrapingUtilities.__init__(self, browser, self.address, leaders_.Splits)
-        self.qsbatting = leaders_.QuickSplits.Batting()
-        self.qspitching = leaders_.QuickSplits.Pitching()
+        assert not (batting_qs and pitching_qs)
+        if batting_qs:
+            assert batting_qs in self.qsbatting.__dict__["options"].values()
+            quick_configure = batting_qs
+        elif pitching_qs:
+            assert pitching_qs in self.qspitching.__dict__["options"].values()
+            quick_configure = pitching_qs
+        else:
+            quick_configure = None
 
-    def update(self):
-        """
-        Clicks the **Update** button of the page.
-        All configured filters are submitted and the page is refreshed.
+        self.filter_groups = None
+        expand_menu = self._get_filter_group(filter_group)
 
-        :raises FanGraphs.exceptions.FilterUpdateIncapability: No filter queries to update
-        :rtype: None
-        """
-        elem = self.page.query_selector("#button-update")
-        if elem is None:
-            raise fangraphs.exceptions.FilterUpdateIncapability()
-        self._close_ad()
-        elem.click()
+        FilterWidgets.__init__(
+            self,
+            expand_menu=expand_menu,
+            quick_configure=quick_configure,
+            submit_form="#button-update",
+            **kwargs
+        )
 
-    def list_filter_groups(self):
-        """
-        Lists the possible groups of filter queries which can be used.
+        self.data = None
 
-        :return: Names of the groups of filter queries
-        :rtype: list[str]
+    @property
+    def filter_groups(self) -> list[str]:
         """
-        elems = self.page.query_selector_all(".fgBin.splits-bin-controller div")
-        groups = [e.text_content() for e in elems]
-        return groups
 
-    def set_filter_group(self, group="Show All"):
+        :return:
         """
-        Configures the available filters to a specified group of filters.
+        return self._filter_groups
 
-        :param group: The name of the group of filters
-        :rtype: None
+    @filter_groups.setter
+    def filter_groups(self, value) -> None:
         """
-        options = [o.lower() for o in self.list_filter_groups()]
+
+        """
+        elems = self.soup.select(".fgBin.splits-bin-controller div")
+        options = [e.text for e in elems]
+        self._filter_groups = options
+
+    def _get_filter_group(self, group: str) -> str:
+        """
+
+        :param group:
+        :return:
+        """
+        options = [o.lower() for o in self.filter_groups]
         try:
             index = options.index(group)
         except ValueError as err:
             raise fangraphs.exceptions.InvalidFilterGroup(group) from err
-        self._close_ad()
-        elem = self.page.query_selector_all(
-            ".fgBin.splits-bin-controller div"
-        )[index]
-        elem.click()
 
-    def reset_filters(self):
+        css = f"div.fgBin.splits-bin-controller > div.fgButton:nth-child({index+1})"
+        return css
+
+    @property
+    def data(self) -> pd.DataFrame:
         """
-        Resets filters to the original option(s).
-        This does not affect the following filter queries:
 
-        - ``group``
-        - ``stat``
-        - ``type``
-        - ``groupby``
-        - ``preset_range``
-        - ``auto_pt``
-        - ``split_teams``
-
-        :rypte: None
+        :return:
         """
-        elem = self.page.query_selector(
-            "#stack-buttons .fgButton.small:nth-last-child(1)"
-        )
-        if elem is None:
-            return
-        self._close_ad()
-        elem.click()
+        return self._data
 
-    def list_quick_splits(self):
+    @data.setter
+    def data(self, value) -> None:
         """
-        Lists all the quick splits which can be used.
-        Quick splits allow for the configuration of multiple filter queries at once.
 
-        :return: All available quick splits
-        :rtype: list[str]
         """
-        quick_splits = []
-        quick_splits.extend(list(self.qsbatting.__dict__))
-        quick_splits.extend(list(self.qspitching.__dict__))
-        return quick_splits
-
-    def set_to_quick_split(self, quick_split_selector: str, autoupdate=True):
-        """
-        Invokes the configuration of a quick split.
-        All filter queries affected by :py:meth:`reset_filters` are reset prior to configuration.
-        This action is performed by the FanGraphs API and cannot be prevented.
-
-        The selectors which can be passed as ``quick_split_selector`` are stored as attributes of ``self``.
-        The batting quick splits are in :py:attr:`qsbatting`.
-        The pitching quick splits are in :py:attr:`qspitching`.
-        For example, to configure to **Batting: Home**, call ``self.set_to_quick_split(self.qsbatting.home)``.
-
-        :param quick_split_selector: The CSS selector which corresponds to the quick split
-        :param autoupdate: If ``True``, :py:meth:`reset_filters` will be called
-        :raises FanGraphs.exceptions.InvalidQuickSplits: Invalid argument ``quick_split``
-        :rtype: None
-        """
-        self.page.click(quick_split_selector)
-        if autoupdate:
-            self.update()
+        dataframe = self.export_data()
+        self._data = dataframe
 
 
-class WAR(ScrapingUtilities):
+class WAR(FilterWidgets):
     """
     Scraper for the FanGraphs `Combined WAR Leaderboards`_ page.
 
     .. _Combined WAR Leaderboards: https://www.fangraphs.com/warleaders.aspx
     """
-
+    _widget_class = leaders_.WAR
     address = "https://fangraphs.com/warleaders.aspx"
 
-    def __init__(self, browser):
+    def __init__(self, **kwargs):
         """
-        :param browser: A Playwright ``Browser`` object
-        :type browser: playwright.sync_api._generated.Browser
+
         """
-        ScrapingUtilities.__init__(self, browser, self.address, leaders_.WAR)
+        FilterWidgets.__init__(self, **kwargs)
+
+        self.data = None
+
+    @property
+    def data(self) -> pd.DataFrame:
+        """
+
+        :return:
+        """
+        return self._data
+
+    @data.setter
+    def data(self, value) -> None:
+        """
+
+        :return:
+        """
+        dataframe = self.export_data()
+        self._data = dataframe
