@@ -281,72 +281,91 @@ class QuickSplits:
     """
     CSS selectors for the quick splits available on the Splits leaderboard.
     """
-    selector = ".quick-splits"
+    _root_selector = ".quick-splits"
 
-    @classmethod
-    def compile(cls, obj):
-        """
-        Compiles the full CSS selector for each of the items in the ``object`` class attribute.
+    options: dict[str, str] = None
+    selector: str = None
 
-        :param obj: An object
-        :return: The name and the full CSS selector for each attribute
-        :rtype: tuple[str, str]
-        """
-        for key, val in obj.options.items():
-            selector = f"{cls.selector} > {obj.selector} > {val}"
-            yield key, selector
-
-    class Batting:
-        """
-        CSS selectors for batting-related quick splits.
+    def __init__(self):
         """
 
-        selector = "div:nth-child(1)"
-        options = {
-            "home": "div:nth-child(2) > .fgButton:nth-child(1)",
-            "away": "div:nth-child(2) > .fgButton:nth-child(2)",
-            "vs_lhp": "div:nth-child(3) > .fgButton:nth-child(1)",
-            "vs_lhp_home": "div:nth-child(3) > .fgButton:nth-child(2)",
-            "vs_lhp_away": "div:nth-child(3) > .fgButton:nth-child(3)",
-            "vs_lhp_as_lhh": "div:nth-child(3) > .fgButton:nth-child(4)",
-            "vs_lhp_as_rhh": ".div:nth-child(3) > .fgButton:nth-child(5)",
-            "vs_rhp": "div:nth-child(4) > .fgButton:nth-child(1)",
-            "vs_rhp_home": "div:nth-child(4) > .fgButton:nth-child(2)",
-            "vs_rhp_away": "div:nth-child(4) > .fgButton:nth-child(3)",
-            "vs_rhp_as_lhh": "div:nth-child(4) > .fgButton:nth-child(4)",
-            "vs_rhp_as_rhh": "div:nth-child(4) > .fgButton:nth-child(5)",
-        }
-
-        def __init__(self):
-            for key, selector in QuickSplits.compile(self):
-                self.__setattr__(key, selector)
-
-    class Pitching:
         """
-        CSS selectors for pitching-related quick splits.
+        if self.options is None:
+            raise NotImplementedError
+        if self.selector is None:
+            raise NotImplementedError
+
+        for key, val in self.options.items():
+            selector = f"{self._root_selector} > {self.selector} > {val}"
+            self.__setattr__(key, selector)
+
+        self.quick_splits = None
+
+    @property
+    def quick_splits(self) -> tuple[str]:
         """
 
-        selector = "div:nth-child(1)"
-        options = {
-            "as_sp": "div:nth-child(1) .fgButton:nth-child(1)",
-            "as_rp": "div:nth-child(1) .fgButton:nth-child(2)",
-            "home": "div:nth-child(2) > .fgButton:nth-child(1)",
-            "away": "div:nth-child(2) > .fgButton:nth-child(2)",
-            "vs_lhh": "div:nth-child(3) > .fgButton:nth-child(1)",
-            "vs_lhh_home": "div:nth-child(3) > .fgButton:nth-child(2)",
-            "vs_lhh_away": "div:nth-child(3) > .fgButton:nth-child(3)",
-            "vs_lhh_as_rhp": "div:nth-child(3) > .fgButton:nth-child(4)",
-            "vs_lhh_as_lhp": "div:nth-child(3) > .fgButton:nth-child(5)",
-            "vs_rhh": "div:nth-child(4) > .fgButton:nth-child(1)",
-            "vs_rhh_home": ".div:nth-child(4) > .fgButton:nth-child(1)",
-            "vs_rhh_away": "div:nth-child(4) > .fgButton:nth-child(1)",
-            "vs_rhh_as_rhp": "div:nth-child(4) > .fgButton:nth-child(1)",
-            "vs_rhh_as_lhp": "div:nth-child(4) > .fgButton:nth-child(1)"
-        }
+        :return:
+        """
+        return self._quick_splits
 
-        def __init__(self):
-            for key, selector in QuickSplits.compile(self):
-                self.__setattr__(key, selector)
+    @quick_splits.setter
+    def quick_splits(self, value) -> None:
+        """
+
+        """
+        options = list(self.options)
+        self._quick_splits = tuple(options)
+
+
+class QSBatting(QuickSplits):
+    """
+
+    """
+    selector = "div:nth-child(1)"
+    options = {
+        "home": "div:nth-child(2) > .fgButton:nth-child(1)",
+        "away": "div:nth-child(2) > .fgButton:nth-child(2)",
+        "vs_lhp": "div:nth-child(3) > .fgButton:nth-child(1)",
+        "vs_lhp_home": "div:nth-child(3) > .fgButton:nth-child(2)",
+        "vs_lhp_away": "div:nth-child(3) > .fgButton:nth-child(3)",
+        "vs_lhp_as_lhh": "div:nth-child(3) > .fgButton:nth-child(4)",
+        "vs_lhp_as_rhh": ".div:nth-child(3) > .fgButton:nth-child(5)",
+        "vs_rhp": "div:nth-child(4) > .fgButton:nth-child(1)",
+        "vs_rhp_home": "div:nth-child(4) > .fgButton:nth-child(2)",
+        "vs_rhp_away": "div:nth-child(4) > .fgButton:nth-child(3)",
+        "vs_rhp_as_lhh": "div:nth-child(4) > .fgButton:nth-child(4)",
+        "vs_rhp_as_rhh": "div:nth-child(4) > .fgButton:nth-child(5)",
+    }
+
+    def __init__(self):
+        super().__init__()
+
+
+class QSPitching(QuickSplits):
+    """
+
+    """
+    selector = "div:nth-child(1)"
+    options = {
+        "as_sp": "div:nth-child(1) .fgButton:nth-child(1)",
+        "as_rp": "div:nth-child(1) .fgButton:nth-child(2)",
+        "home": "div:nth-child(2) > .fgButton:nth-child(1)",
+        "away": "div:nth-child(2) > .fgButton:nth-child(2)",
+        "vs_lhh": "div:nth-child(3) > .fgButton:nth-child(1)",
+        "vs_lhh_home": "div:nth-child(3) > .fgButton:nth-child(2)",
+        "vs_lhh_away": "div:nth-child(3) > .fgButton:nth-child(3)",
+        "vs_lhh_as_rhp": "div:nth-child(3) > .fgButton:nth-child(4)",
+        "vs_lhh_as_lhp": "div:nth-child(3) > .fgButton:nth-child(5)",
+        "vs_rhh": "div:nth-child(4) > .fgButton:nth-child(1)",
+        "vs_rhh_home": ".div:nth-child(4) > .fgButton:nth-child(1)",
+        "vs_rhh_away": "div:nth-child(4) > .fgButton:nth-child(1)",
+        "vs_rhh_as_rhp": "div:nth-child(4) > .fgButton:nth-child(1)",
+        "vs_rhh_as_lhp": "div:nth-child(4) > .fgButton:nth-child(1)"
+    }
+
+    def __init__(self):
+        super().__init__()
 
 
 class WAR(widgets.Selectors):
