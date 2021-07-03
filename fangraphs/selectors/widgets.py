@@ -1,37 +1,11 @@
 #! usr/bin/env python
 # fangraphs/selectors/__init__.py
 
-import datetime
 from typing import *
 
 import bs4
 
 import fangraphs.exceptions
-
-
-class Selectors:
-    """
-
-    """
-    def __init__(self, page):
-        """
-        :type page: playwright.sync_api._generated.Page
-        """
-        self.page = page
-        self.soup = bs4.BeautifulSoup(page.content(), features="lxml")
-
-        if (d := self.__dict__.get("_selections")) is not None and isinstance(d, dict):
-            for attr, kwargs in d.items():
-                self.__setattr__(attr, Selection(self.page, self.soup, **kwargs))
-        if (d := self.__dict__.get("_dropdowns")) is not None and isinstance(d, dict):
-            for attr, kwargs in d.items():
-                self.__setattr__(attr, Dropdown(self.page, self.soup, **kwargs))
-        if (d := self.__dict__.get("_checkboxes")) is not None and isinstance(d, dict):
-            for attr, kwargs in d.items():
-                self.__setattr__(attr, Checkbox(self.page, self.soup, **kwargs))
-        if (d := self.__dict__.get("_switches")) is not None and isinstance(d, dict):
-            for attr, kwargs in d.items():
-                self.__setattr__(attr, Switch(self.page, self.soup, **kwargs))
 
 
 class __Selectors:
@@ -440,3 +414,65 @@ class Switch:
         """
         if option is not self.current:
             self.page.click(self.root_selector)
+
+
+WIDGET_TYPES = {
+    "_selections": Selection,
+    "_dropdowns": Dropdown,
+    "_checkboxes": Checkbox,
+    "_switches": Switch
+}
+
+
+class Selectors:
+    """
+
+    """
+
+    def __init__(self, page):
+        """
+        :type page: playwright.sync_api._generated.Page
+        """
+        self.page = page
+        self.soup = bs4.BeautifulSoup(page.content(), features="lxml")
+
+        for wname, wclass in WIDGET_TYPES.items():
+            if (d := self.__class__.__dict__.get(wname)) is not None:
+                if not isinstance(d, dict):
+                    raise TypeError
+                for attr, kwargs in d.items():
+                    self.__setattr__(attr, wclass(self.page, self.soup, **kwargs))
+
+        self.widgets = {}
+
+    @property
+    def widgets(self) -> dict[str, Any]:
+        """
+
+        """
+        return self._widgets
+
+    @widgets.setter
+    def widgets(self, value) -> None:
+        """
+
+        """
+        def get_widgets_by_type(w_type: str) -> Generator[tuple[str, Any], None, None]:
+            if (w_names := self.__class__.__dict__.get(w_type)) is not None:
+                for name in w_names:
+                    yield name, self.__dict__.get(name)
+
+        widgets = {}
+        for wtype in list(WIDGET_TYPES):
+            widgets.update(dict(get_widgets_by_type(wtype)))
+
+        self._widgets = widgets
+
+    def configure(self, **kwargs) -> None:
+        """
+
+        :param kwargs:
+        """
+        for wname, option in kwargs.items():
+            widget = self.widgets.get(wname)
+            widget.configure(option)
