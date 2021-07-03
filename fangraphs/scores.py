@@ -10,11 +10,11 @@ import datetime
 import re
 
 import pandas as pd
-from playwright.sync_api import sync_playwright
 
+from fangraphs import FilterWidgets
 from fangraphs import ScrapingUtilities
 from fangraphs import PID_REGEX, PID_POS_REGEX
-from fangraphs.selectors import scores_sel
+from fangraphs.selectors import scores_
 
 
 def _scrape_sotg(page):
@@ -244,7 +244,7 @@ class Live(ScrapingUtilities):
         :param browser: A Playwright ``Browser`` object A Playwright ``Browser`` object
         :type browser: playwright.sync_api._generated.Browser
         """
-        ScrapingUtilities.__init__(self, browser, self.address, scores_sel.Live)
+        ScrapingUtilities.__init__(self, browser, self.address, scores_.Live)
 
     def export(self):
         """
@@ -294,7 +294,7 @@ class LiveLeaderboards(ScrapingUtilities):
     address = "https://fangraphs.com/scores/live-leaderboards"
 
     def __init__(self, browser):
-        ScrapingUtilities.__init__(self, browser, self.address, scores_sel.LiveLeaderboards)
+        ScrapingUtilities.__init__(self, browser, self.address, scores_.LiveLeaderboards)
 
     @staticmethod
     def _scrape_table_headers(table):
@@ -370,7 +370,7 @@ class Scoreboard(ScrapingUtilities):
     address = "https://fangraphs.com/scoreboard.aspx"
 
     def __init__(self, browser):
-        ScrapingUtilities.__init__(self, browser, self.address, scores_sel.Scoreboard)
+        ScrapingUtilities.__init__(self, browser, self.address, scores_.Scoreboard)
 
     def export(self):
         """
@@ -398,7 +398,7 @@ class GameGraphs(ScrapingUtilities):
     address = "https://fangraphs.com/wins.aspx"
 
     def __init__(self, browser):
-        ScrapingUtilities.__init__(self, browser, self.address, scores_sel.GameGraphs)
+        ScrapingUtilities.__init__(self, browser, self.address, scores_.GameGraphs)
 
     def export(self):
         """
@@ -436,7 +436,7 @@ class PlayLog(ScrapingUtilities):
     address = "https://fangraphs.com/plays.aspx"
 
     def __init__(self, browser):
-        ScrapingUtilities.__init__(self, browser, self.address, scores_sel.PlayLog)
+        ScrapingUtilities.__init__(self, browser, self.address, scores_.PlayLog)
 
     @staticmethod
     def _scrape_headers(table):
@@ -517,23 +517,18 @@ class PlayLog(ScrapingUtilities):
         return dataframe
 
 
-class BoxScore(ScrapingUtilities):
+class BoxScore(FilterWidgets):
     """
     Scrapes the FanGraphs `Box Score`_ pages.
 
     .. _Box Score: https://fangraphs.com/boxscore.aspx
     """
+    _widget_class = scores_.BoxScore
+
     address = "https://fangraphs.com/boxscore.aspx"
 
-    def __init__(self, browser):
-        """
-        :type browser: playwright.sync_api._generated.Browser
-        """
-        # ScrapingUtilities.__init__(self, browser, self.address, scores_sel.BoxScore)
-        self.__play = sync_playwright().start()
-        self.__browser = self.__play.chromium.launch()
-        self.page = self.__browser.new_page()
-        self.page.goto(self.address, timeout=0)
+    def __init__(self, **kwargs):
+        FilterWidgets.__init__(self, **kwargs)
 
         self._tables = None
 
@@ -541,16 +536,12 @@ class BoxScore(ScrapingUtilities):
         self.play_by_play = None
         self.data_tables = None
 
-    def __del__(self):
-        self.__browser.close()
-        self.__play.stop()
-
     @property
     def _tables(self):
         """
 
         :return:
-        :rtype: list[playwright.sync_api._generated.ElementHandle]
+        :rtype: list[bs4.Tag]
         """
         return self.__tables
 
@@ -561,9 +552,7 @@ class BoxScore(ScrapingUtilities):
         """
         if value is not None:
             return
-        self.__tables = self.page.query_selector_all(
-            "div.RadGrid.RadGrid_FanGraphs"
-        )
+        self.__tables = self.soup.select("div.RadGrid.RadGrid_FanGraphs")
 
     @property
     def line_score(self):
@@ -582,20 +571,20 @@ class BoxScore(ScrapingUtilities):
         if value is not None:
             return
 
-        table = self.page.query_selector(
+        table = self.soup.select_one(
             "div.scoreboard-wrapper > table.linescore"
         )
-        header_elems = table.query_selector_all(
+        header_elems = table.select(
             "thead > tr.linescore-header > th"
         )
-        headers = [e.text_content() for e in header_elems][1:]
+        headers = [e.text for e in header_elems][1:]
         headers.insert(0, "Team")
         dataframe = pd.DataFrame(columns=headers)
 
-        row_elems = table.query_selector_all("tbody > tr.team")
+        row_elems = table.select("tbody > tr.team")
         for team, row in zip(("Away", "Home"), row_elems):
-            elems = row.query_selector_all("td")
-            items = [e.text_content() for e in elems]
+            elems = row.select("td")
+            items = [e.text for e in elems]
             dataframe.loc[team] = items
 
         self._line_score = dataframe
@@ -619,24 +608,24 @@ class BoxScore(ScrapingUtilities):
             return
 
         pbp_table = self._tables[4]
-        header_elems = pbp_table.query_selector_all("thead > tr > th")
-        row_elems = pbp_table.query_selector_all("tbody > tr")
+        header_elems = pbp_table.select("thead > tr > th")
+        row_elems = pbp_table.select("tbody > tr")
 
         dataframe = pd.DataFrame(
             data=[
-                [e.text_content() for e in r.query_selector_all("td")]
+                [e.text for e in r.select("td")]
                 for r in row_elems
             ],
-            columns=[e.text_content() for e in header_elems]
+            columns=[e.text for e in header_elems]
         )
         dataframe.drop(columns=dataframe.columns[-2:])
 
         def pitch_sequence() -> list[list[str]]:
             items = []
             for row in row_elems:
-                elem = row.query_selector("td:nth-child(7) a")
+                elem = row.select_one("td:nth-child(7) a")
                 if elem is not None:
-                    pitches = elem.get_attribute("tooltip").split(",")
+                    pitches = elem.attrs.get("tooltip").split(",")
                 else:
                     pitches = []
                 items.append(pitches)
@@ -645,12 +634,12 @@ class BoxScore(ScrapingUtilities):
         dataframe["Pitch Sequence"] = pitch_sequence()
         dataframe["Player ID (Pitcher)"] = [
             PID_POS_REGEX.search(
-                r.query_selector("td:nth-child(1) a").get_attribute("href")
+                r.select_one("td:nth-child(1) a").attrs.get("href")
             ).group(1) for r in row_elems
         ]
         dataframe["Player ID (PLayer)"] = [
             PID_POS_REGEX.search(
-                r.query_selector("td:nth-child(2) a").get_attribute("href")
+                r.select_one("td:nth-child(2) a").attrs.get("href")
             ).group(1) for r in row_elems
         ]
 
@@ -661,27 +650,27 @@ class BoxScore(ScrapingUtilities):
         """
 
         :param table:
-        :type table: playwright.sync_api._generated.ElementHandle
+        :type table: bs4.Tag
         :return:
         :rtype: pd.DataFrame
         """
-        header_elems = table.query_selector_all("thead > tr > th.rgHeader")
-        row_elems = table.query_selector_all("tbody > tr")
+        header_elems = table.select("thead > tr > th.rgHeader")
+        row_elems = table.select("tbody > tr")
         dataframe = pd.DataFrame(
             data=[
-                [e.text_content() for e in r.query_selector_all("td")]
+                [e.text for e in r.select("td")]
                 for r in row_elems
             ],
-            columns=[e.text_content() for e in header_elems]
+            columns=[e.text for e in header_elems]
         )
 
         def playerids_positions() -> [list[str], list[str]]:
             player_ids, positions, = [], []
             for row in row_elems:
-                elem = row.query_selector("td:nth-child(1)")
-                if elem.text_content() != "Total":
+                elem = row.select_one("td:nth-child(1)")
+                if elem.text != "Total":
                     pid, position = PID_POS_REGEX.search(
-                        elem.query_selector("a").get_attribute("href")
+                        elem.select_one("a").attrs.get("href")
                     ).groups()
                 else:
                     pid, position = "", ""
