@@ -28,10 +28,12 @@ This package contains modules for scraping and exporting data from each of the c
 
 ## Dependencies
 
-The `fangraphs` library requires Python version 3.6 or higher.
+The `fangraphs` library requires Python version 3.8 or higher.
 
 The following libraries along are required for the `fangraphs` library.
 
+- `bs4`
+- `lxml`
 - `pandas`
 - `playwright`
 - `pytest`
