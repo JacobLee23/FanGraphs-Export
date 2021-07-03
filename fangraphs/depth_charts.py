@@ -1,10 +1,10 @@
-#! python3
+#! usr/bin/env python
 # fangraphs/depth_charts.py
 
 import pandas as pd
 
 from fangraphs import ScrapingUtilities
-from fangraphs.selectors import dcharts_sel
+from fangraphs.selectors import depth_charts_
 
 
 class DepthCharts(ScrapingUtilities):
@@ -21,7 +21,7 @@ class DepthCharts(ScrapingUtilities):
         :param browser: A Playwright ``Browser`` object
         :type browser: playwright.sync_api._generated.Browser
         """
-        ScrapingUtilities.__init__(self, browser, self.address, dcharts_sel.DepthCharts)
+        ScrapingUtilities.__init__(self, browser, self.address, depth_charts_.DepthCharts)
 
     def _get_tables(self):
         """

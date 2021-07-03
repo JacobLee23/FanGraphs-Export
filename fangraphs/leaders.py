@@ -1,4 +1,4 @@
-#! python3
+#! usr/bin/env python
 # fangraphs/leaders.py
 
 """
@@ -9,7 +9,7 @@ import pandas as pd
 
 import fangraphs.exceptions
 from fangraphs import ScrapingUtilities
-from fangraphs.selectors import leaders_sel
+from fangraphs.selectors import leaders_
 
 
 class GameSpan(ScrapingUtilities):
@@ -26,7 +26,7 @@ class GameSpan(ScrapingUtilities):
         :param browser: A Playwright ``Browser`` object A Playwright ``Browser`` object
         :type browser: playwright.sync_api._generated.Browser
         """
-        ScrapingUtilities.__init__(self, browser, self.address, leaders_sel.GameSpan)
+        ScrapingUtilities.__init__(self, browser, self.address, leaders_.GameSpan)
 
 
 class International(ScrapingUtilities):
@@ -45,7 +45,7 @@ class International(ScrapingUtilities):
 
         .. py:attribute:: browser
         """
-        ScrapingUtilities.__init__(self, browser, self.address, leaders_sel.International)
+        ScrapingUtilities.__init__(self, browser, self.address, leaders_.International)
 
 
 class MajorLeague(ScrapingUtilities):
@@ -67,7 +67,7 @@ class MajorLeague(ScrapingUtilities):
 
         .. py:attribute:: browser
         """
-        ScrapingUtilities.__init__(self, browser, self.address, leaders_sel.MajorLeague)
+        ScrapingUtilities.__init__(self, browser, self.address, leaders_.MajorLeague)
 
 
 class SeasonStat(ScrapingUtilities):
@@ -84,7 +84,7 @@ class SeasonStat(ScrapingUtilities):
         :param browser: A Playwright ``Browser`` object
         :type browser: playwright.sync_api._generated.Browser
         """
-        ScrapingUtilities.__init__(self, browser, self.address, leaders_sel.SeasonStat)
+        ScrapingUtilities.__init__(self, browser, self.address, leaders_.SeasonStat)
 
     def _write_table_headers(self):
         """
@@ -166,9 +166,9 @@ class Splits(ScrapingUtilities):
 
             :type: fangraphs.leaders_sel.QuickSplits.Pitching
         """
-        ScrapingUtilities.__init__(self, browser, self.address, leaders_sel.Splits)
-        self.qsbatting = leaders_sel.QuickSplits.Batting()
-        self.qspitching = leaders_sel.QuickSplits.Pitching()
+        ScrapingUtilities.__init__(self, browser, self.address, leaders_.Splits)
+        self.qsbatting = leaders_.QuickSplits.Batting()
+        self.qspitching = leaders_.QuickSplits.Pitching()
 
     def update(self):
         """
@@ -284,4 +284,4 @@ class WAR(ScrapingUtilities):
         :param browser: A Playwright ``Browser`` object
         :type browser: playwright.sync_api._generated.Browser
         """
-        ScrapingUtilities.__init__(self, browser, self.address, leaders_sel.WAR)
+        ScrapingUtilities.__init__(self, browser, self.address, leaders_.WAR)

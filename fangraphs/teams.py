@@ -1,4 +1,4 @@
-#! python3
+#! usr/bin/env python
 # fangraphs/teams.py
 
 """
@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 
 from fangraphs import ScrapingUtilities
-from fangraphs.selectors import teams_sel
+from fangraphs.selectors import teams_
 
 
 def _get_table_headers(table, header_elem: str):
@@ -166,7 +166,7 @@ class Summary(ScrapingUtilities):
         :param browser: A Playwright ``Browser`` object A Playwright ``Browser`` object
         :type browser: playwright.sync_api._generated.Browser
         """
-        ScrapingUtilities.__init__(self, browser, self.address, teams_sel.Summary)
+        ScrapingUtilities.__init__(self, browser, self.address, teams_.Summary)
 
     def export(self):
         """
@@ -207,7 +207,7 @@ class Stats(ScrapingUtilities):
         :param browser: A Playwright ``Browser`` object
         :type browser: playwright.sync_api._generated.Browser
         """
-        ScrapingUtilities.__init__(self, browser, self.address, teams_sel.Stats)
+        ScrapingUtilities.__init__(self, browser, self.address, teams_.Stats)
 
     def export(self):
         """
@@ -245,7 +245,7 @@ class Schedule(ScrapingUtilities):
         :param browser: A Playwright ``Browser`` object
         :type browser: playwright.sync_api._generated.Browser
         """
-        ScrapingUtilities.__init__(self, browser, self.address, teams_sel.Schedule)
+        ScrapingUtilities.__init__(self, browser, self.address, teams_.Schedule)
 
     @staticmethod
     def get_table_headers(header_elem):
@@ -346,7 +346,7 @@ class PlayerUsage(ScrapingUtilities):
         :param browser: A Playwright ``Browser`` object
         :type browser: playwright.sync_api._generated.Browser
         """
-        ScrapingUtilities.__init__(self, browser, self.address, teams_sel.PlayerUsage)
+        ScrapingUtilities.__init__(self, browser, self.address, teams_.PlayerUsage)
 
     def _get_table_headers(self):
         """
@@ -409,7 +409,7 @@ class DepthChart(ScrapingUtilities):
     address = "https://fangraphs.com/teams/angels/depth-chart"
 
     def __init__(self, browser):
-        ScrapingUtilities.__init__(self, browser, self.address, teams_sel.DepthChart)
+        ScrapingUtilities.__init__(self, browser, self.address, teams_.DepthChart)
 
     @staticmethod
     def _get_table_headers(header_elem):
