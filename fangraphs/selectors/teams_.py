@@ -24,12 +24,6 @@ class Summary(widgets.Selectors):
         }
     }
 
-    __dropdowns_type_4 = {
-        "team": "select.select-change-team",
-        "position_players": ".select-container:nth-child(1) > select.pos-stat",
-        "pitchers": ".select-container:nth-child(2) > select.pos-stat"
-    }
-
     def __init__(self, page):
         super().__init__(page)
 

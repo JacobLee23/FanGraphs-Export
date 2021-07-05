@@ -147,12 +147,12 @@ class ScrapingUtilities:
 
     def export(self):
         """
-        Exports the data in the current leaderboard as a DataFrame.
+        Exports the data_tables in the current leaderboard as a DataFrame.
 
-        The **Export Data** button is clicked, downloading a CSV file containing the data.
-        The CSV is read and the data is stored in a DataFrame.
+        The **Export Data** button is clicked, downloading a CSV file containing the data_tables.
+        The CSV is read and the data_tables is stored in a DataFrame.
 
-        :return: The leaderboard data
+        :return: The leaderboard data_tables
         :rtype: pandas.DataFrame
         """
         self._close_ad()
@@ -320,7 +320,7 @@ class FilterWidgets:
     ) -> TableData:
         """
 
-        :param table
+        :param table:
         :param css_h:
         :param css_r:
         :return:
