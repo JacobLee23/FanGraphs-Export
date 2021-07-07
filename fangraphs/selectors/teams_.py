@@ -14,13 +14,13 @@ class Summary(widgets.Selectors):
     """
     _dropdowns = {
         "team": {
-            "root_selector": "select.select-change-team"
+            "root_selector": "div.team-select-change > select.select-change-team"
         },
         "position_players": {
-            "root_selector": ".select-container:nth-child(1) > select.pos-stat"
+            "root_selector": "div.depth-chart-select > div:nth-child(2) > select"
         },
         "pitchers": {
-            "root_selector": ".select-container:nth-child(2) > select.pos-stat"
+            "root_selector": "div.depth-chart-select > div:nth-child(3) > select"
         }
     }
 
@@ -34,7 +34,7 @@ class Stats(widgets.Selectors):
     """
     _dropdowns = {
         "team": {
-            "root_selector": "select.select-change-team"
+            "root_selector": "div.team-select-change > select.select-change-team"
         },
         "team_select": {
             "root_selector": ".team-stats-select-team > select"
@@ -54,10 +54,10 @@ class Schedule(widgets.Selectors):
     """
     _dropdowns = {
         "team": {
-            "root_selector": "select.select-change-team"
+            "root_selector": "div.team-select-change > select.select-change-team"
         },
         "select_season": {
-            "root_selector": ".team-stats-select-year > select"
+            "root_selector": "div.team-schedule-select-year > select"
         }
     }
 
@@ -71,18 +71,18 @@ class PlayerUsage(widgets.Selectors):
     """
     _selections = {
         "mode": {
-            "root_selector": "#root-team-lineup div:nth-child(1)"
+            "root_selector": "#root-team-lineup > div > div:nth-child(1)"
         },
         "handedness": {
-            "root_selector": "#root-team-lineup div:nth-child(2)"
+            "root_selector": "#root-team-lineup > div > div:nth-child(2)"
         }
     }
     _dropdowns = {
         "team": {
-            "root_selector": "select.select-change-team"
+            "root_selector": "div.team-select-change > select.select-change-team"
         },
         "season": {
-            "root_selector": "#root-team-lineup div:nth-child(3)"
+            "root_selector": "#root-team-lineup > div > div:nth-child(3)"
         }
     }
 
@@ -96,13 +96,13 @@ class DepthChart(widgets.Selectors):
     """
     _dropdowns = {
         "team": {
-            "root_selector": "select.select-change-team"
+            "root_selector": "div.team-select-change > select.select-change-team"
         },
         "position_players": {
-            "root_selector": ".select-container:nth-child(1) > select.pos-stat"
+            "root_selector": "div.depth-chart-select > div:nth-child(2) > select"
         },
         "pitchers": {
-            "root_selector": ".select-container:nth-child(2) > select.pos-stat"
+            "root_selector": "div.depth-chart-select > div:nth-child(3) > select"
         }
     }
 

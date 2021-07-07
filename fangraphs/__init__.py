@@ -315,8 +315,8 @@ class FilterWidgets:
         root_elem.select_option(label=label)
 
     def scrape_table(
-            self, table: bs4.Tag, css_h: str = "thead > tr",
-            css_r: str = "tbody > tr"
+            self, table: bs4.Tag,
+            css_h: str = "thead > tr", css_r: str = "tbody > tr"
     ) -> TableData:
         """
 

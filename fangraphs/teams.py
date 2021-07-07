@@ -9,7 +9,6 @@ Thus, the base URL always navigates to the stats concerning the Angels.
 """
 
 import datetime
-import re
 from typing import *
 
 import bs4
@@ -21,140 +20,22 @@ from fangraphs import FilterWidgets
 from fangraphs.selectors import teams_
 
 
-def _get_table_headers(table, header_elem: str):
-    """
-    Scrapes the table headers off of the stat leaders data_tables table.
+class TeamDepthChart(NamedTuple):
+    p_RP: pd.DataFrame
+    p_SP: pd.DataFrame
 
-    :param table: The data_tables table element
-    :type table: playwright.sync_api._generated.ElementHandle
-    :param header_elem: A table headers CSS selector
-    :return: An empty DataFrame with columns set to the table headers
-    :rtype: pd.DataFrame
-    """
-    headers = [
-        e.text_content() for e in table.query_selector_all(
-            header_elem
-        )
-    ]
-    headers.extend(["Player ID", "Position(s)"])
-    dataframe = pd.DataFrame(columns=headers)
-
-    return dataframe
+    p_C: pd.DataFrame
+    p_1B: pd.DataFrame
+    p_2B: pd.DataFrame
+    p_3B: pd.DataFrame
+    p_SS: pd.DataFrame
+    p_LF: pd.DataFrame
+    p_CF: pd.DataFrame
+    p_RF: pd.DataFrame
+    p_DH: pd.DataFrame
 
 
-def _scrape_data_table(table, header_elem="thead > tr > th"):
-    """
-    Scrapes the data_tables table.
-
-    :param table: The data_tables table element
-    :type table: playwright.sync_api._generated.ElementHandle
-    :param header_elem: A table headers CSS selector
-    :return: A DataFrame of the table data_tables.
-    :rtype: pd.DataFrame
-    """
-    dataframe = _get_table_headers(table, header_elem)
-
-    rows = table.query_selector_all("tbody > tr[role='row']")
-    href_regex = re.compile(r"/statss\.aspx\?playerid=(\d+)&position=(.*)")
-
-    for i, row in enumerate(rows):
-        data = [e.text_content() for e in row.query_selector_all("td")]
-
-        # Get player ID and position(s)
-        href = row.query_selector("td.frozen > a").get_attribute("href")
-        player_id, position = href_regex.search(href).groups()
-        data.extend([int(player_id), position])
-
-        # Update DataFrame
-        dataframe.loc[i] = data
-
-    # Get table totals
-    foot = table.query_selector("tfoot > tr[role='row']")
-    footer_row = [e.text_content() for e in foot.query_selector_all("td")]
-    footer_row.extend([np.NaN, ""])
-
-    # Update DataFrame
-    dataframe.loc["Total"] = footer_row
-
-    return dataframe
-
-
-def _scrape_positional_data(page, pos_num: int):
-    """
-    Scrapes the depth chart data_tables for the specified position.
-
-    :param page: A Playwright ``Page`` object
-    :type page: playwright.sync_api._generated.Page
-    :param pos_num: The positional number
-    :return: The position name and the zipped player names and stats
-    :rtype: tuple[
-        str, list[tuple[playwright.sync_api._generated.ElementHandle]]
-    ]
-    """
-    position = page.query_selector(f"#pos{pos_num}")
-
-    position_name = position.query_selector(
-        f"text#pos-label{pos_num}"
-    ).text_content()
-    player_stats = zip(
-        position.query_selector_all("text.player-name"),
-        position.query_selector_all("text.player-stat")
-    )
-    return position_name, player_stats
-
-
-def _scrape_depth_chart(page, pos_nums):
-    """
-    Scrapes the positional depth chart data_tables off of the depth chart diagrams.
-
-    **Position numbers**:
-
-    +---------------+---------------+---------------+---------------+
-    | ``0``: RP     | ``1``: SP     | ``2``: C      | ``3``: 1B     |
-    +---------------+---------------+---------------+---------------+
-    | ``4``: 2B     | ``5``: 3B     | ``6``: SS     | ``7``: LF     |
-    +---------------+---------------+---------------+---------------+
-    | ``8``: CF     | ``9``: RF     | ``10``: DH    |               |
-    +---------------+---------------+---------------+---------------+
-
-    :param page: A Playwright ``Page`` object
-    :type page: playwright.sync_api._generated.Page
-    :param pos_nums: A sequence of positional numbers to scrape
-    :return: A dictionary of positions to a DataFrame of positional depth chart data_tables
-    :rtype: dict[str, pd.DataFrame]
-    """
-    data = {}
-    href_regex = re.compile(r"^//www.fangraphs.com/statss.aspx\?playerid=(.*)")
-
-    for i in pos_nums:
-        # Initialize DataFrame
-        dataframe = pd.DataFrame(columns=("Name", "Stat", "Player ID"))
-
-        # Get position name and corresponding players
-        position_name, player_stats = _scrape_positional_data(page, i)
-
-        for j, (player, stat) in enumerate(player_stats):
-            player_name, stat_value = player.text_content(), stat.text_content()
-
-            # Get player ID
-            if not (player_name and stat_value):
-                continue
-            try:
-                href = player.query_selector("a").get_attribute("href")
-                player_id = href_regex.search(href).group(1)
-            except AttributeError:
-                player_id = np.NaN
-
-            # Update DataFrame
-            dataframe.loc[j] = (player_name, stat_value, player_id)
-
-        # Update dictionary with position and DataFrame
-        data.setdefault(position_name, dataframe)
-
-    return data
-
-
-def scrape_depth_chart(soup: bs4.BeautifulSoup) -> pd.Series[pd.DataFrame]:
+def scrape_depth_chart(soup: bs4.BeautifulSoup) -> TeamDepthChart:
     """
 
     :param soup:
@@ -164,7 +45,7 @@ def scrape_depth_chart(soup: bs4.BeautifulSoup) -> pd.Series[pd.DataFrame]:
 
     def get_player_id(elem: bs4.Tag) -> Optional[str]:
         match = PID_REGEX.search(
-            elem.select_one("a").attrs.get("href")
+            elem.select_one("a").attrs.get("xlink:href")
         )
         player_id = match.group(1) if match is not None else None
         return player_id
@@ -177,12 +58,13 @@ def scrape_depth_chart(soup: bs4.BeautifulSoup) -> pd.Series[pd.DataFrame]:
 
         player_name_elems = pos_elem.select("text.player-name")
         player_stat_elems = pos_elem.select("text.player-stat")
-        player_elems = zip(player_name_elems, player_stat_elems)
-
+        player_elems = [
+            (e1, e2) for (e1, e2) in zip(player_name_elems, player_stat_elems)
+            if (e1.text and e2.text)
+        ]
         players = [
             (e1.text, e2.text, get_player_id(e1))
             for (e1, e2) in player_elems
-            if (e1.text and e2.text)
         ]
 
         dataframe = pd.DataFrame(
@@ -192,9 +74,7 @@ def scrape_depth_chart(soup: bs4.BeautifulSoup) -> pd.Series[pd.DataFrame]:
             f"p_{position}", dataframe
         )
 
-    return pd.Series(
-        depth_chart_data
-    )
+    return TeamDepthChart(**depth_chart_data)
 
 
 class Summary(FilterWidgets):
@@ -208,38 +88,23 @@ class Summary(FilterWidgets):
     _widget_class = teams_.Summary
     address = "https://fangraphs.com/teams/angels"
 
-    class DataTables(NamedTuple):
-        batting_stats_leaders: pd.DataFrame
-        pitching_stats_leaders: pd.DataFrame
-        depth_chart: pd.Series[pd.DataFrame]
-
     def __init__(self, **kwargs):
         """
 
         """
         FilterWidgets.__init__(self)
 
-        self.data_tables = ()
+        self.standings = None
+        self.depth_chart = ()
+        self._stat_tables = ()
+        self.batting = None
+        self.pitching = None
 
-    @property
-    def data_tables(self) -> DataTables:
+    def _get_data_table(self, table: bs4.Tag) -> pd.DataFrame:
         """
 
         :return:
         """
-        return self._data_tables
-
-    @data_tables.setter
-    def data_tables(self, value) -> None:
-        """
-
-        """
-        table_elems = self.soup.select(".team-stats-table")
-        table_names = [
-            "".join(e.text.lower().split())
-            for e in self.soup.select("h2.team-header")
-        ]
-
         def player_id_positions(row_elems: bs4.ResultSet) -> Generator[
             tuple[str, str], None, None
         ]:
@@ -252,19 +117,117 @@ class Summary(FilterWidgets):
                 except AttributeError:
                     yield "", ""
 
-        data = {}
-        for table, tname in zip(table_elems, table_names):
-            table_data = self.scrape_table(table)
+        table_data = self.scrape_table(table)
 
-            dataframe = table_data.dataframe
-            dataframe["PlayerID"], dataframe["Positions"] = player_id_positions(
-                table_data.row_elems
+        dataframe = table_data.dataframe
+        dataframe = dataframe.join(
+            pd.DataFrame(
+                player_id_positions(table_data.row_elems),
+                columns=["PlayerID", "Positions"]
             )
-            data[tname] = dataframe
+        )
+        dataframe.replace("", np.NaN, inplace=True)
 
-        data["depth_chart"] = scrape_depth_chart(self.soup)
+        return dataframe
 
-        self._data_tables = self.DataTables(**data)
+    @property
+    def standings(self) -> pd.DataFrame:
+        """
+
+        :return:
+        """
+        return self._standings
+
+    @standings.setter
+    def standings(self, value) -> None:
+        """
+
+        """
+        table = self.soup.select_one("table.team-standings")
+
+        def revise_columns(df: pd.DataFrame) -> pd.DataFrame:
+            columns = list(df.columns)
+            columns[0] = "Team"
+            df.rename(columns=dict(zip(df.columns, columns)), inplace=True)
+            return df
+
+        table_data = self.scrape_table(
+            table,
+            css_h="tbody > tr:first-child", css_r="tbody > tr.team-row"
+        )
+
+        dataframe = revise_columns(table_data.dataframe)
+
+        self._standings = dataframe
+
+    @property
+    def depth_chart(self) -> TeamDepthChart:
+        """
+
+        :return:
+        """
+        return self._depth_chart
+
+    @depth_chart.setter
+    def depth_chart(self, value) -> None:
+        """
+
+        """
+        self._depth_chart = scrape_depth_chart(self.soup)
+
+    @property
+    def _stat_tables(self) -> dict[str, bs4.Tag]:
+        """
+
+        :return:
+        """
+        return self.__stat_tables
+
+    @_stat_tables.setter
+    def _stat_tables(self, value) -> None:
+        """
+
+        """
+        table_elems = self.soup.select(".team-stats-table")
+        table_names = [
+            e.text.title() for e in self.soup.select("h2.team-header")
+        ]
+
+        self.__stat_tables = dict(zip(table_names, table_elems))
+
+    @property
+    def batting(self) -> pd.DataFrame:
+        """
+
+        :return:
+        """
+        return self._batting
+
+    @batting.setter
+    def batting(self, value) -> None:
+        """
+
+        """
+        self._batting = self._get_data_table(
+            self._stat_tables["Batting Stats Leaders"]
+        )
+
+    @property
+    def pitching(self) -> pd.DataFrame:
+        """
+
+        :return:
+        """
+        return self._pitching
+
+    @pitching.setter
+    def pitching(self, value) -> None:
+        """
+
+        """
+        self._pitching = self._get_data_table(
+            self._stat_tables["Pitching Stats Leaders"]
+        )
 
 
 class Stats(FilterWidgets):
@@ -276,39 +239,25 @@ class Stats(FilterWidgets):
     _widget_class = teams_.Stats
     address = "https://fangraphs.com/teams/angels/stats"
 
-    class DataTables(NamedTuple):
-        batting_stat_leaders: pd.DataFrame
-        starting_pitching_stat_leaders: pd.DataFrame
-        relief_pitching_stat_leaders: pd.DataFrame
-        fielding_stat_leaders: pd.DataFrame
-
     def __init__(self, **kwargs):
         """
 
         """
         FilterWidgets.__init__(self, **kwargs)
 
-        self.data_tables = None
+        self.depth_chart = ()
 
-    @property
-    def data_tables(self) -> DataTables:
+        self._stat_tables = ()
+        self.batting = None
+        self.spitching = None
+        self.rpitching = None
+        self.fielding = None
+
+    def _get_data_table(self, table: bs4.Tag) -> pd.DataFrame:
         """
 
         :return:
         """
-        return self._data_tables
-
-    @data_tables.setter
-    def data_tables(self, value) -> None:
-        """
-
-        """
-        table_elems = self.soup.select(".team-stats-table")
-        table_names = [
-            "".join(e.text.lower().split())
-            for e in self.soup.select("h2.team-header")
-        ]
-
         def player_id_positions(row_elems: bs4.ResultSet) -> Generator[
             tuple[str, str], None, None
         ]:
@@ -321,17 +270,106 @@ class Stats(FilterWidgets):
                 except AttributeError:
                     yield "", ""
 
-        data = {}
-        for table, tname in zip(table_elems, table_names):
-            table_data = self.scrape_table(table)
+        table_data = self.scrape_table(table)
 
-            dataframe = table_data.dataframe
-            dataframe["PlayerID"], dataframe["Positions"] = player_id_positions(
-                table_data.row_elems
+        dataframe = table_data.dataframe
+        dataframe = dataframe.join(
+            pd.DataFrame(
+                player_id_positions(table_data.row_elems),
+                columns=["PlayerID", "Positions"]
             )
-            data[tname] = dataframe
+        )
+        dataframe.replace("", np.NaN, inplace=True)
 
-        self._data_tables = self.DataTables(**data)
+        return dataframe
+
+    @property
+    def _stat_tables(self) -> dict[str, bs4.Tag]:
+        """
+
+        :return:
+        """
+        return self.__stat_tables
+
+    @_stat_tables.setter
+    def _stat_tables(self, value) -> None:
+        """
+
+        """
+        table_elems = self.soup.select(".team-stats-table")
+        table_names = [
+            e.text.title() for e in self.soup.select("h2.team-header")
+        ]
+
+        self.__stat_tables = dict(zip(table_names, table_elems))
+
+    @property
+    def batting(self) -> pd.DataFrame:
+        """
+
+        :return:
+        """
+        return self._batting
+
+    @batting.setter
+    def batting(self, value) -> None:
+        """
+
+        """
+        self._batting = self._get_data_table(
+            self._stat_tables["Batting Stats Leaders"]
+        )
+
+    @property
+    def spitching(self) -> pd.DataFrame:
+        """
+
+        :return:
+        """
+        return self._spitching
+
+    @spitching.setter
+    def spitching(self, value) -> None:
+        """
+
+        """
+        self._spitching = self._get_data_table(
+            self._stat_tables["Starting Pitching Stats Leaders"]
+        )
+
+    @property
+    def rpitching(self) -> pd.DataFrame:
+        """
+
+        :return:
+        """
+        return self._rpitching
+
+    @rpitching.setter
+    def rpitching(self, value) -> None:
+        """
+
+        """
+        self._rpitching = self._get_data_table(
+            self._stat_tables["Relief Pitching Stats Leaders"]
+        )
+
+    @property
+    def fielding(self) -> pd.DataFrame:
+        """
+
+        :return:
+        """
+        return self._fielding
+
+    @fielding.setter
+    def fielding(self, value) -> None:
+        """
+
+        """
+        self._fielding = self._get_data_table(
+            self._stat_tables["Fielding Stats Leaders"]
+        )
 
 
 class Schedule(FilterWidgets):
@@ -364,10 +402,17 @@ class Schedule(FilterWidgets):
         """
 
         """
-        table_elem = self.soup.select_one("div.team-schedule-table > table")
+        table = self.soup.select_one("div.team-schedule-table > table")
+
+        def revise_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+            index = [
+                df.columns[3], df.columns[5], df.columns[6]
+            ]
+            df[index] = df[index].replace("", np.NaN)
+            return df
 
         def revise_columns(df: pd.DataFrame) -> pd.DataFrame:
-            columns = df.columns
+            columns = list(df.columns)
             columns[1] = "vs/at"
             df.rename(columns=dict(zip(df.columns, columns)), inplace=True)
             return df
@@ -376,9 +421,9 @@ class Schedule(FilterWidgets):
             datetime.datetime, None, None
         ]:
             for row in row_elems:
-                elem = row.select("td")[0].select_one("a > span.date-full")
+                elem = row.select("td")[0].select_one("span.date-full")
                 date = datetime.datetime.strptime(
-                    elem.text, "%b %m, %Y"
+                    elem.text, "%b %d, %Y"
                 )
                 yield date
 
@@ -386,26 +431,23 @@ class Schedule(FilterWidgets):
             tuple[str, str], None, None
         ]:
             for row in row_elems:
-                elems = (
-                    row.select("td")[-2].select_one("a"),
-                    row.select("td")[-1].select_one("a")
-                )
-                yield (
-                    PID_REGEX.search(elems[0].attrs.get("href").group(1)),
-                    PID_REGEX.serach(elems[1].attrs.get("href").group(1))
+                elems = (e.select_one("a") for e in row.select("td")[-2:])
+                yield tuple(
+                    PID_REGEX.search(e.attrs.get("href")).group(1)
+                    for e in elems
                 )
 
         table_data = self.scrape_table(
-            table_elem, css_h="tr:first-child", css_r="tr:not(tr:first-child)"
+            table, css_h="tr:first-child", css_r="tr:not(tr:first-child)"
         )
-        dataframe = table_data.dataframe
 
-        dataframe = revise_columns(dataframe)
-        dataframe["Date"] = revise_dates(table_data.row_elems)
-        pitchers = dataframe.columns[-2:]
-        (dataframe[f"{pitchers[0]} PlayerID"],
-         dataframe[f"{pitchers[1]} PlayerID"]) = get_player_id(
-            table_data.row_elems
+        dataframe = revise_dataframe(revise_columns(table_data.dataframe))
+        dataframe["Date"] = tuple(revise_dates(table_data.row_elems))
+        dataframe = dataframe.join(
+            pd.DataFrame(
+                get_player_id(table_data.row_elems),
+                columns=[f"{p} PlayerID" for p in dataframe.columns[-2:]]
+            )
         )
 
         self._data = dataframe
@@ -443,6 +485,12 @@ class PlayerUsage(FilterWidgets):
         """
         table = self.soup.select_one(".table-scroll")
 
+        def revise_columns(df: pd.DataFrame) -> pd.DataFrame:
+            columns = list(df.columns)
+            columns[2:11] = list(range(1, 10))
+            df.rename(columns=dict(zip(df.columns, columns)), inplace=True)
+            return df
+
         def revise_dates(row_elems: bs4.ResultSet) -> Generator[
             datetime.datetime, None, None
         ]:
@@ -457,14 +505,14 @@ class PlayerUsage(FilterWidgets):
             str, None, None
         ]:
             for row in row_elems:
-                elem = row.select("td")[0].select_one("a")
-                yield PID_REGEX.search(elem.attr.get("href").group(1))
+                elem = row.select("td")[1].select_one("a")
+                yield PID_REGEX.search(elem.attrs.get("href")).group(1)
 
         table_data = self.scrape_table(table)
 
-        dataframe = table_data.dataframe
-        dataframe["Game Date"] = revise_dates(table_data.row_elems)
-        dataframe["Opp SP PlayerID"] = get_player_id(table_data.row_elems)
+        dataframe = revise_columns(table_data.dataframe)
+        dataframe["Game Date"] = tuple(revise_dates(table_data.row_elems))
+        dataframe["Opp SP PlayerID"] = tuple(get_player_id(table_data.row_elems))
 
         self._data = dataframe
 
@@ -478,7 +526,7 @@ class DepthChart(FilterWidgets):
     _widget_class = teams_.DepthChart
     address = "https://fangraphs.com/teams/angels/depth-chart"
 
-    class DataTables(NamedTuple):
+    class DepthChartTables(NamedTuple):
         p_C: pd.DataFrame
         p_1B: pd.DataFrame
         p_2B: pd.DataFrame
@@ -488,13 +536,9 @@ class DepthChart(FilterWidgets):
         p_CF: pd.DataFrame
         p_RF: pd.DataFrame
         p_DH: pd.DataFrame
-        batting: pd.DataFrame
 
-        p_SP: pd.DataFrame
         p_RP: pd.DataFrame
-        pitching: pd.DataFrame
-
-        depth_chart: pd.Series[pd.DataFrame]
+        p_SP: pd.DataFrame
 
     def __init__(self, **kwargs):
         """
@@ -502,24 +546,19 @@ class DepthChart(FilterWidgets):
         """
         FilterWidgets.__init__(self, **kwargs)
 
-        self.data_tables = None
+        self.depth_chart = None
 
-    @property
-    def data_tables(self):
+        self._dchart_tables = ()
+        self.depth_chart_tables = ()
+        self.batting = None
+        self.pitching = None
+
+    def _get_data_table(self, table: bs4.Tag) -> pd.DataFrame:
         """
 
+        :param table:
         :return:
         """
-        return self._data_tables
-
-    @data_tables.setter
-    def data_tables(self, value) -> None:
-        """
-
-        """
-        batting_tables = self.soup.select(".team-depth-table-bat")
-        pitching_tables = self.soup.select(".team-depth-table-pit")
-
         def get_player_id(row_elems: bs4.ResultSet) -> Generator[
             str, None, None
         ]:
@@ -527,23 +566,173 @@ class DepthChart(FilterWidgets):
                 elem = row.select_one("td.frozen > a")
                 yield PID_REGEX.search(elem.attr.get("href").group(1))
 
+        table_data = self.scrape_table(table)
+
+        dataframe = table_data.dataframe
+        dataframe["PlayerID"] = tuple(get_player_id(table_data.row_elems))
+
+        return dataframe
+
+    def _get_dchart_table(self, table: bs4.Tag) -> pd.DataFrame:
+        """
+
+        :param table:
+        :return:
+        """
+        def get_player_id(row_elems: bs4.ResultSet) -> Generator[
+            str, None, None
+        ]:
+            for row in row_elems:
+                try:
+                    elem = row.select_one("td.frozen > a")
+                    yield PID_REGEX.search(elem.attrs.get("href")).group(1)
+                except AttributeError:
+                    yield ""
+
+        def get_injury(row_elems: bs4.ResultSet) -> Generator[
+            Optional[str], None, None
+        ]:
+            for row in row_elems:
+                elem = row.select_one("td.frozen > a > img.depth-table-injury")
+                try:
+                    yield elem.attrs.get("tooltip")
+                except AttributeError:
+                    yield None
+
+        table_data = self.scrape_table(
+            table,
+            css_h="tbody > tr:first-child",
+            css_r="tbody > tr:not(tr:first-child)"
+        )
+
+        dataframe = table_data.dataframe
+        dataframe["PlayerID"] = tuple(get_player_id(table_data.row_elems))
+        dataframe["Injury"] = tuple(get_injury(table_data.row_elems))
+
+        return dataframe
+
+    @property
+    def depth_chart(self) -> TeamDepthChart:
+        """
+
+        :return:
+        """
+        return self._depth_chart
+
+    @depth_chart.setter
+    def depth_chart(self, value) -> None:
+        """
+
+        """
+        self._depth_chart = scrape_depth_chart(self.soup)
+
+    @property
+    def _dchart_tables(self) -> dict[str, bs4.Tag]:
+        """
+
+        :return:
+        """
+        return self.__dchart_tables
+
+    @_dchart_tables.setter
+    def _dchart_tables(self, value) -> None:
+        """
+
+        """
+        batting = self.soup.select(".team-depth-table-bat")
+        batting_tnames = [
+            e.select_one("div.team-depth-table-pos.team-color-primary").text
+            for e in batting
+        ][:-1]
+        batting_tnames = (f"p_{pos}" for pos in batting_tnames)
+        batting_tables = [
+            e.select_one(
+                "div.team-stats-table > div.outer > div.inner > table"
+            ) for e in batting
+        ]
+        batting_dchart_tables = dict(zip(batting_tnames, batting_tables))
+
+        pitching = self.soup.select(".team-depth-table-pit")
+        pitching_tnames = [
+            e.select_one("div.team-depth-table-pos.team-color-primary").text
+            for e in pitching
+        ][:-1]
+        pitching_tnames = (f"p_{pos}" for pos in pitching_tnames)
+        pitching_tables = [
+            e.select_one(
+                "div.team-stats-table > div.outer > div.inner > table"
+            ) for e in pitching
+        ]
+        pitching_dchart_tables = dict(zip(pitching_tnames, pitching_tables))
+
+        depth_chart_tables = {
+            "Batting": batting_tables[-1], "Pitching": pitching_tables[-1]
+        }
+        depth_chart_tables.update(batting_dchart_tables)
+        depth_chart_tables.update(pitching_dchart_tables)
+
+        self.__dchart_tables = depth_chart_tables
+
+    @property
+    def depth_chart_tables(self) -> tuple:
+        """
+
+        :return:
+        """
+        return self._depth_chart_tables
+
+    @depth_chart_tables.setter
+    def depth_chart_tables(self, value) -> None:
+        """
+
+        """
+        dchart_tables = self._dchart_tables.copy()
+        del dchart_tables["Batting"], dchart_tables["Pitching"]
+
         data = {}
-        for table in (batting_tables+pitching_tables):
-            table_data = self.scrape_table(table)
+        for tname, table in dchart_tables.items():
+            data[tname] = self._get_dchart_table(table)
 
-            tname = table.select_one(
-                ".team-depth-table-pos.team-color-primary"
-            ).text
-            if tname == "ALL":
-                tname = "batting" if table in batting_tables else "pitching"
-            else:
-                tname = f"p_{tname}"
+        self._depth_chart_tables = self.DepthChartTables(**data)
 
-            dataframe = table_data.dataframe
-            dataframe["PlayerID"] = get_player_id(table_data.row_elems)
+    @property
+    def batting(self) -> pd.DataFrame:
+        """
 
-            data[tname] = dataframe
+        :return:
+        """
+        return self._batting
 
-        data["depth_chart"] = scrape_depth_chart(self.soup)
+    @batting.setter
+    def batting(self, value) -> None:
+        """
 
-        self._data_tables = self.DataTables(**data)
+        """
+        table = self._dchart_tables["Batting"]
+        table_data = self.scrape_table(
+            table,
+            css_h="tbody > tr:first-child",
+            css_r="tbody > tr:not(tr:first-child)"
+        )
+        self._batting = table_data.dataframe
+
+    @property
+    def pitching(self) -> pd.DataFrame:
+        """
+
+        :return:
+        """
+        return self._pitching
+
+    @pitching.setter
+    def pitching(self, value) -> None:
+        """
+
+        """
+        table = self._dchart_tables["Pitching"]
+        table_data = self.scrape_table(
+            table,
+            css_h="tbody > tr:first-child",
+            css_r="tbody > tr:not(tr:first-child)"
+        )
+        self._pitching = table_data.dataframe
