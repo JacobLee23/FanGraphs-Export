@@ -14,509 +14,570 @@ import bs4
 import pandas as pd
 
 from fangraphs import FilterWidgets
-from fangraphs import ScrapingUtilities
 from fangraphs import PID_REGEX, PID_POS_REGEX
 from fangraphs.selectors import scores_
 
 
-def _scrape_sotg(page):
-    """
-
-    :param page: A Playwright ``Page`` object
-    :type page: playwright.sync_api._generated.Page
-    :return: 
-    :rtype: pd.DataFrame
-    """
-    sotg_regex = re.compile(r"(.*) \((.*) / (.*)\)")
-
-    sotg_table = page.query_selector(
-        "#WinsGame1_ThreeStars1_ajaxPanel > #pan1"
-    )
-    sotgs = sotg_table.query_selector_all("tr > td:nth-child(1)")[1:]
-    stars_of_the_game = [e.text_content().strip() for e in sotgs]
-
-    dataframe = pd.DataFrame(columns=[1, 2, 3])
-    for i, player in enumerate(reversed(stars_of_the_game), 1):
-        data = [None, None, None]
-        match = sotg_regex.search(player)
-        if match is not None:
-            data = match.groups()
-
-        dataframe.loc[i] = data
-
-    return dataframe
-
-
-def _scrape_table_headers(table):
-    """
-
-    :param table:
-    :type table: playwright.sync_api._generated.ElementHandle
-    :return:
-    :rtype: pd.DataFrame
-    """
-    elems = table.query_selector_all("thead > tr > th")
-    headers = [e.text_content() for e in elems]
-    headers.insert(1, "Player ID")
-
-    dataframe = pd.DataFrame(columns=headers[1:])
-    return dataframe
-
-
-def _scrape_table(table):
-    """
-
-    :param table:
-    :type table: playwright.sync_api._generated.ElementHandle
-    :return:
-    :rtype: pd.DataFrame
-    """
-    dataframe = _scrape_table_headers(table)
-
-    rows = table.query_selector_all("tbody > tr")[:-1]
-
-    for i, row in enumerate(rows):
-        elems = row.query_selector_all("td")
-        items = [e.text_content() for e in elems]
-
-        href = elems[0].query_selector("a").get_attribute("href")
-        player_id = PID_POS_REGEX.search(href).group(1)
-
-        items.insert(1, player_id)
-
-        dataframe.loc[items[0]] = items[1:]
-
-    return dataframe
-
-
-def __refine_matchup_names(old):
-    """
-
-    :param old:
-    :type old: list[str]
-    :return:
-    :rtype: list[str]
-    """
-
-    counts = dict(zip(set(old), [0] * len(old)))
-    new = []
-
-    for matchup in old:
-        if list(old).count(matchup) > 1:
-            new.append(f"{matchup} ({counts[matchup]})")
-            counts[matchup] += 1
-        else:
-            new.append(matchup)
-
-    return new
-
-
-def _scrape_game_data(games):
-    """
-    Scrapes the matchup data for active games.
-
-    :param games:
-    :type games: list[playwright.sync_api._generated.ElementHandle
-    :return:
-    :rtype: pd.DataFrame
-    """
-    def get_hyperlink(elem):
-        href = elem.get_attribute("href")
-        hlink = href.replace(" ", "%20")
-        return f"https://fangraphs.com/{hlink}"
-
-    names, data = [], []
-    for game in games:
-        hyperlinks = dict(
-            [(e.text_content(), get_hyperlink(e)) for e in game.query_selector_all("xpath=./a")]
-        )
-        game_info = game.query_selector(
-            "div[id*='graph']:nth-child(1) > div > svg > text.highcharts-title > tspan"
-        )
-        game_info_regex = re.compile(r"(.*) - (.*)\((\d+)\) @ (.*)\((\d+)\)")
-        date, away_team, away_score, home_team, home_score = game_info_regex.search(
-            game_info.text_content()
-        ).groups()
-        date_dt = datetime.datetime.strptime(date, "%m/%d/%Y")
-
-        game_data = {
-            "Date": date_dt,
-            "Away Team": away_team,
-            "Home Team": home_team,
-            "Score": f"{away_score} - {home_score}",
-        }
-        game_data.update(hyperlinks)
-
-        names.append(f"{away_team} @ {home_team}")
-        data.append(game_data)
-
-    names = __refine_matchup_names(names)
-
-    dataframe = pd.DataFrame(
-        dict(zip(names, data)),
-        index=[
-            "Date", "Away Team", "Home Team", "Score", "Box Score",
-            "Win Probability", "Play Log"
-        ]
-    )
-
-    return dataframe
-
-
-def _scrape_preview_data(previews):
-    """
-    Scrapes the matchup data for game previews
-
-    :param previews: The matchup element
-    :type previews: list[playwright.sync_api._generated.ElementHandle]
-    :return:
-    :rtype:
-    """
-    time_regex = re.compile(r"\d+:\d+ ET")
-    pplayer_regex = re.compile(r"(\d+)\. (.*?) \((.*?)\)")
-
-    names, data = [], []
-    for preview in previews:
-        time_dt = datetime.datetime.strptime(
-            time_regex.search(preview.text_content()).group(), "%H:%M ET"
-        )
-
-        away_team, home_team = [
-            e.text_content() for e in preview.query_selector_all("b > a")
-        ]
-
-        away_sp, home_sp, away_lineup, home_lineup = [
-            e for e in preview.query_selector_all(
-                "center > table.lineup tr > td"
-            )
-        ]
-        away_sp, home_sp = (
-            away_sp.text_content().split(": ")[1], home_sp.text_content().split(": ")[1]
-        )
-
-        away_lineup = {
-            g[0]: {"Name": g[1], "Position": g[2]} for g in pplayer_regex.findall(
-                away_lineup.text_content()
-            )
-        }
-        home_lineup = {
-            g[0]: {"Name": g[1], "Position": g[2]} for g in pplayer_regex.findall(
-                home_lineup.text_content()
-            )
-        }
-
-        preview_data = {
-            "Time": time_dt,
-            "Away Team": away_team,
-            "Home Team": home_team,
-            "Away Starting Pitcher": away_sp,
-            "Home Starting Pitcher": home_sp,
-            "Away Starting Lineup": pd.DataFrame(away_lineup),
-            "Home Starting Lineup": pd.DataFrame(home_lineup)
-        }
-
-        names.append(f"{away_team} @ {home_team}")
-        data.append(preview_data)
-
-    names = __refine_matchup_names(names)
-
-    dataframe = pd.DataFrame(
-        dict(zip(names, data)),
-        index=[
-            "Time", "Away Team", "Home Team", "Away Starting Pitcher",
-            "Home Starting Pitcher", "Away Starting Lineup",
-            "Away Starting Lineup", "Home Starting Lineup"
-        ]
-    )
-
-    return dataframe
-
-
-class Live(ScrapingUtilities):
+class LiveScoreboard(FilterWidgets):
     """
     Scraper for the FanGraphs `Live Scoreboard`_ page.
 
     .. _Live Scoreboard: https://www.fangraphs.com/livescoreboard.aspx
     """
-
+    _widget_class = scores_.LiveScoreboard
     address = "https://www.fangraphs.com/livescoreboard.aspx"
 
-    def __init__(self, browser):
+    def __init__(self, **kwargs):
         """
-        :param browser: A Playwright ``Browser`` object A Playwright ``Browser`` object
-        :type browser: playwright.sync_api._generated.Browser
+
         """
-        ScrapingUtilities.__init__(self, browser, self.address, scores_.Live)
+        FilterWidgets.__init__(self, **kwargs)
 
-    def export(self):
+        self._matchup_tables = {}
+        self.games = None
+        self.previews = None
+
+    @staticmethod
+    def _scrape_game_data(match_table: bs4.Tag) -> pd.Series:
         """
-        Scrapes the matchup data for each matchup scheduled for the current date.
 
-        The **Game Flow** and **Leverage Index** graph data are not scraped.
-        For that data, use :py:class:`fangraphs.scores.WinProbability`.
+        :param match_table:
+        :return:
+        """
 
-        _Note: A '*' following the matchup name denotes a game preview._
+        def get_hyperlink(elem: bs4.Tag) -> str:
+            href = elem.get_attribute("href")
+            hlink = href.replace(" ", "%20")
+            return f"https://fangraphs.com/{hlink}"
+
+        hyperlinks = dict(
+            (e.text, get_hyperlink(e))
+            for e in match_table.select(
+                "a:nth-last-child(3),a:nth-last-child(2),a:nth-last-child(1)"
+            )
+        )
+
+        game_info = match_table.select_one(
+            "div[id*='graph']:first-child > div > svg > text.highcharts-title > tspan"
+        )
+        date, away_team, away_score, home_team, home_score = re.search(
+            r"(.*) - (.*)\((\d+)\) @ (.*)\((\d+)\)", game_info.text
+        )
+
+        game_data = {
+            "Matchup": f"{away_team} @ {home_team}",
+            "Date": datetime.datetime.strptime(date, "%m/%d/%Y"),
+            "Away Team": away_team, "Home Team": home_team,
+            "Score": f"{away_score} - {home_score}",
+            **hyperlinks
+        }
+
+        return pd.Series(game_data)
+
+    @staticmethod
+    def _scrape_preview_data(match_table: bs4.Tag) -> pd.Series:
+        """
+
+        :param match_table:
+        :return:
+        """
+        def get_lineup(elem: bs4.Tag) -> dict[str, Union[str, pd.DataFrame]]:
+            away_sp, home_sp, away_lineup, home_lineup = [
+                e for e in elem.select("center > table.lineup tr > td")
+            ]
+            away_sp = away_sp.text.split(": ")[1]
+            home_sp = home_sp.text.split(": ")[1]
+            away_lineup = pd.DataFrame({
+                g[0]: {"Name": g[1], "Position": g[2]} for g in re.findall(
+                    r"(\d+)\. (.*?) \((.*?)\)", away_lineup.text
+                )
+            })
+            home_lineup = pd.DataFrame({
+                g[0]: {"Name": g[1], "Position": g[2]} for g in re.findall(
+                    r"(\d+)\. (.*?) \((.*?)\)", home_lineup.text
+                )
+            })
+            lineup = {
+                "Away Starting Pitcher": away_sp,
+                "Home Starting Pitcher": home_sp,
+                "Away Starting Lineup": away_lineup,
+                "Home Starting Lineup": home_lineup
+            }
+            return lineup
+
+        time = re.search(r"\d+:\d+ ET", match_table.text).group()
+        lineup_data = get_lineup(match_table)
+        away_team, home_team = [
+            e.text for e in match_table.select("b > a")
+        ]
+
+        preview_data = {
+            "Matchup": f"{away_team} @ {home_team}",
+            "Time": datetime.datetime.strptime(time, "%H:%M ET"),
+            "Away Team": away_team, "Home Team": home_team,
+            **lineup_data
+        }
+
+        return pd.Series(preview_data)
+
+    @staticmethod
+    def __refine_matchup_names(old: list[str]) -> list[str]:
+        """
+
+        :param old:
+        :return:
+        """
+
+        counts = {x: 0 for x in old}
+        new = []
+
+        for matchup in old:
+            if list(old).count(matchup) > 1:
+                new.append(f"{matchup} ({counts[matchup]})")
+                counts[matchup] += 1
+            else:
+                new.append(matchup)
+
+        return new
+
+    @property
+    def _matchup_tables(self) -> dict[str, list[bs4.Tag]]:
+        """
 
         :return:
-        :rtype: dict[str, pd.DataFrame]
         """
-        table_body = self.page.query_selector(
-            "#LiveBoard1_LiveBoard1_litGamesPanel > table:nth-last-child(1) > tbody"
+        return self.__matchup_tables
+
+    @_matchup_tables.setter
+    def _matchup_tables(self, value) -> None:
+        table = self.soup.select_one(
+            "#LiveBoard1_LiveBoard1_litGamesPanel > table:last-child"
         )
-        matches = table_body.query_selector_all(
-            "td[style*='border-bottom:1px dotted black;']"
+        matches = table.select(
+            "tbody > td[style*='border-bottom:1px dotted black;']"
         )
 
-        games, previews = [], []
+        game_tables = {"Games": [], "Previews": []}
         for match in matches:
             if (
                     len(match.query_selector_all("xpath=./div")) == 2
                     and len(match.query_selector_all("xpath=./a")) == 3
             ):
-                games.append(match)
+                game_tables["Games"].append(match)
             elif (
                     len(match.query_selector_all("xpath=./b")) == 2
                     and len(match.query_selector_all("xpath=./center")) == 1
             ):
-                previews.append(match)
+                game_tables["Previews"].append(match)
 
-        games_df = _scrape_game_data(games)
-        previews_df = _scrape_preview_data(previews)
-        data = {"Games": games_df, "Previews": previews_df}
+        self.__matchup_tables = game_tables
 
-        return data
+    @property
+    def games(self) -> pd.DataFrame:
+        """
+
+        :return:
+        """
+        return self._games
+
+    @games.setter
+    def games(self, value) -> None:
+        game_series = []
+
+        for gtable in self._matchup_tables["Games"]:
+            game_series.append(self._scrape_game_data(gtable))
+
+        matchup_names = self.__refine_matchup_names(
+            [s["Matchup"] for s in game_series]
+        )
+        for gseries, mname in zip(game_series, matchup_names):
+            gseries["Matchup"] = mname
+
+        self._games = pd.DataFrame(game_series)
+
+    @property
+    def previews(self) -> pd.DataFrame:
+        """
+
+        :return:
+        """
+        return self._previews
+
+    @previews.setter
+    def previews(self, value) -> None:
+        preview_series = []
+
+        for ptable in self._matchup_tables["Previews"]:
+            preview_series.append(self._scrape_preview_data(ptable))
+
+        matchup_names = self.__refine_matchup_names(
+            [s["Matchup"] for s in preview_series]
+        )
+        for pseries, mname in zip(preview_series, matchup_names):
+            pseries["Matchup"] = mname
+
+        self._previews = pd.DataFrame(preview_series)
 
 
-class LiveLeaderboards(ScrapingUtilities):
+class LiveLeaderboards(FilterWidgets):
     """
     Scraper for the FanGraphs `Live Daily Leaderboards`_ page.
 
     .. _Live Daily Leaderboards: https://fangraphs.com/scores/live-leaderboards
     """
+    _widget_class = scores_.LiveLeaderboards
     address = "https://fangraphs.com/scores/live-leaderboards"
 
-    def __init__(self, browser):
-        ScrapingUtilities.__init__(self, browser, self.address, scores_.LiveLeaderboards)
-
-    @staticmethod
-    def _scrape_table_headers(table):
+    def __init__(self, *, table_size="Infinity", **kwargs):
         """
 
-        :param table:
-        :type table: playwright.sync_api._generated.ElementHandle
-        :return:
-        :rtype: list[str]
         """
-        header_elems = table.query_selector_all("thead > tr > th")[1:]
-        headers = [e.text_content() for e in header_elems]
-        headers.insert(3, "Score")
-        headers.insert(2, "Home/Away")
-        headers.insert(1, "Player ID")
+        FilterWidgets.__init__(self, table_size=table_size, **kwargs)
 
-        return headers
+        self.data = None
 
-    @staticmethod
-    def _scrape_table_rows(table):
-        """
-
-        :param table:
-        :type table: playwright.sync_api._generated.ElementHandle
-        :return:
-        :rtype: list[str]
-        """
-        rows = table.query_selector_all("tbody > tr")
-
-        opp_regex = re.compile(r"(@)?(.*)(\d+-\d+ \((F|Top \d+|Bot \d+)\))")
-
-        for i, row in enumerate(rows):
-            elems = row.query_selector_all("td")[1:]
-
-            data = [e.text_content() for e in elems]
-
-            href = elems[0].query_selector("a").get_attribute("href")
-            player_id = PID_REGEX.search(href).group(1)
-
-            home_away, opp, score, _ = opp_regex.search(data[2]).groups()
-            home_away = "Away" if home_away is not None else "Home"
-            data[2] = opp
-
-            data.insert(3, score)
-            data.insert(2, home_away)
-            data.insert(1, player_id)
-
-            yield data
-
-    def export(self):
+    @property
+    def data(self) -> pd.DataFrame:
         """
 
         :return:
-        :rtype: pd.DataFrame
         """
-        table = self.page.query_selector(".table-fixed > table")
-        headers = self._scrape_table_headers(table)
-        rows = self._scrape_table_rows(table)
+        return self._data
 
-        dataframe = pd.DataFrame(columns=headers)
-        for i, row in enumerate(rows):
-            dataframe.loc()[i] = row
+    @data.setter
+    def data(self, value) -> None:
+        table = self.soup.select_one(".table-fixed > table")
 
-        return dataframe
+        def get_team_homeaway(row_elems: bs4.ResultSet) -> Generator[
+            str, None, None
+        ]:
+            for row in row_elems:
+                elem = row.select_one(
+                    "td[data-stat='Opp'] > div.game-desc > a"
+                )
+                yield "Away" if "@" in elem.text else "Home"
+
+        def get_score(row_elems: bs4.ResultSet) -> Generator[
+            tuple[int, int], None, None
+        ]:
+            for row in row_elems:
+                elem = row.select_one(
+                    "td[data-stat='Opp'] > div.game-desc > div.game-info"
+                )
+                yield re.search(r"(\d+-\d+)", elem.text).group()
+
+        def get_final(row_elems: bs4.ResultSet) -> Generator[
+            bool, None, None
+        ]:
+            for row in row_elems:
+                elem = row.select_one(
+                    "td[data-stat='Opp'] > div.game-desc > div.game-info"
+                )
+                yield True if "(F)" in elem.text else False
+
+        def get_player_id(row_elems: bs4.ResultSet) -> Generator[
+            str, None, None
+        ]:
+            for row in row_elems:
+                elem = row.select_one("td[data-stat='Name'] > a")
+                yield PID_REGEX.search(
+                    elem.attrs.get("href")
+                ).group(1)
+
+        table_data = self.scrape_table(table)
+
+        dataframe = table_data.dataframe
+        dataframe.drop(columns=dataframe.columns[0], inplace=True)
+        dataframe["Home/Away"] = tuple(get_team_homeaway(table_data.row_elems))
+        dataframe["Score"] = tuple(get_score(table_data.row_elems))
+        dataframe["Final"] = tuple(get_final(table_data.row_elems))
+        dataframe["PlayerID"] = tuple(get_player_id(table_data.row_elems))
+
+        self._data = dataframe
 
 
-class Scoreboard(ScrapingUtilities):
+class Scoreboard(FilterWidgets):
     """
     Scraper for the FanGraphs `Scoreboard`_ page.
 
     .. _Scoreboard: https://fangraphs.com/scoreboard.aspx
     """
+    _widget_class = scores_.Scoreboard
     address = "https://fangraphs.com/scoreboard.aspx"
 
-    def __init__(self, browser):
-        ScrapingUtilities.__init__(self, browser, self.address, scores_.Scoreboard)
+    def __init__(self, **kwargs):
+        """
 
-    def export(self):
+        """
+        FilterWidgets.__init__(self, **kwargs)
+
+        self.data = None
+
+    @staticmethod
+    def _scrape_matchup_data(match_table: bs4.Tag) -> pd.Series:
+        """
+
+        :param match_table:
+        :return:
+        """
+
+        def get_hyperlink(elem: bs4.Tag) -> str:
+            href = elem.get_attribute("href")
+            hlink = href.replace(" ", "%20")
+            return f"https://fangraphs.com/{hlink}"
+
+        hyperlinks = dict(
+            (e.text, get_hyperlink(e))
+            for e in match_table.select(
+                "a:nth-last-child(3),a:nth-last-child(2),a:nth-last-child(1)"
+            )
+        )
+
+        game_info = match_table.select_one(
+            "div[id*='graph']:first-child > div > svg > text.highcharts-title > tspan"
+        )
+        date, away_team, away_score, home_team, home_score = re.search(
+            r"(.*) - (.*)\((\d+)\) @ (.*)\((\d+)\)", game_info.text
+        )
+
+        game_data = {
+            "Matchup": f"{away_team} @ {home_team}",
+            "Date": datetime.datetime.strptime(date, "%m/%d/%Y"),
+            "Away Team": away_team, "Home Team": home_team,
+            "Score": f"{away_score} - {home_score}",
+            **hyperlinks
+        }
+
+        return pd.Series(game_data)
+
+    @staticmethod
+    def __refine_matchup_names(old: list[str]) -> list[str]:
+        """
+
+        :param old:
+        :return:
+        """
+
+        counts = {x: 0 for x in old}
+        new = []
+
+        for matchup in old:
+            if list(old).count(matchup) > 1:
+                new.append(f"{matchup} ({counts[matchup]})")
+                counts[matchup] += 1
+            else:
+                new.append(matchup)
+
+        return new
+
+    @property
+    def data(self) -> pd.DataFrame:
         """
 
         :return:
-        :rtype: dict[str, pd.DataFrame]
         """
-        table_body = self.page.query_selector(
-            "#content > table > tbody > tr > td > table:nth-last-child(1) > tbody"
+        return self._data
+
+    @data.setter
+    def data(self, value) -> None:
+        table = self.soup.select_one(
+            "#content > table > tbody > tr > td > table:last-child"
         )
-        matches = table_body.query_selector_all(
-            "td[style*='border-bottom:1px dotted black;']"
+        matches = table.select(
+            "tbody > td[style*='border-bottom:1px dotted black;']"
         )
 
-        games_dataframe = _scrape_game_data(matches)
-        return games_dataframe
+        matchup_series = []
+        for mtable in matches:
+            matchup_series.append(self._scrape_matchup_data(mtable))
+
+        matchup_names = self.__refine_matchup_names(
+            [s["Matchup"] for s in matchup_series]
+        )
+        for gseries, mname in zip(matchup_series, matchup_names):
+            gseries["Matchup"] = mname
+
+        self._data = pd.DataFrame(matchup_series)
 
 
-class GameGraphs(ScrapingUtilities):
+class GameGraphs(FilterWidgets):
     """
     Scraper for the FanGraphs `Game Graphs`_ tab of the game pages.
 
     .. _Game Graphs: https://fangraphs.com/wins.aspx
     """
+    _widget_class = scores_.GameGraphs
     address = "https://fangraphs.com/wins.aspx"
 
-    def __init__(self, browser):
-        ScrapingUtilities.__init__(self, browser, self.address, scores_.GameGraphs)
+    class BoxScore(NamedTuple):
+        away_batting: pd.DataFrame
+        home_batting: pd.DataFrame
+        away_pitching: pd.DataFrame
+        home_pitching: pd.DataFrame
 
-    def export(self):
+    def __init__(self, **kwargs):
         """
 
-        :return: 
-        :rtype: dict[str, pd.DataFrame]
         """
-        stars_of_the_game = _scrape_sotg(self.page)
+        FilterWidgets.__init__(self, **kwargs)
 
-        table_names = (
-            "Away Pitching",
-            "Home Pitching",
-            "Away Batting",
-            "Home Batting"
+        self.stars_of_the_game = None
+        self.box_score = ()
+
+    @property
+    def stars_of_the_game(self) -> pd.Series:
+        """
+
+        :return:
+        """
+        return self._stars_of_the_game
+
+    @stars_of_the_game.setter
+    def stars_of_the_game(self, value) -> None:
+        table = self.soup.select_one(
+            "#WinsGame1_ThreeStars1_ajaxPanel > #pan1"
         )
-        table_data = []
-        tables = self.page.query_selector_all(
+        sotgs = [
+            e.text.strip() for e in table.select("tr > td:first-child")[1:]
+        ]
+
+        data = {1: None, 2: None, 3: None}
+        for i, player in enumerate(reversed(sotgs), 1):
+            if (m := re.search(r"(.*) \((.*) / (.*)\)", player)) is not None:
+                data[i] = m.groups()
+
+        self._stars_of_the_game = pd.Series(data)
+
+    @property
+    def box_score(self) -> BoxScore:
+        """
+
+        :return:
+        """
+        return self._box_score
+
+    @box_score.setter
+    def box_score(self, value) -> None:
+        tables = self.soup.select(
             "div.RadGrid.RadGrid_FanGraphs > table.rgMasterTable"
         )
-        for table in tables:
-            table_data.append(_scrape_table(table))
-        
-        data = dict(zip(table_names, table_data))
-        data.update({"Stars of the Game": stars_of_the_game})
+        table_names = (
+            "Away Pitching", "Home Pitching", "Away Batting", "Home Batting"
+        )
 
-        return data
+        data = {}
+        for table, tname in zip(tables, table_names):
+            table_data = self.scrape_table(table)
+            data["_".join(tname.lower().split())] = table_data.dataframe
+
+        self._box_score = self.BoxScore(**data)
 
 
-class PlayLog(ScrapingUtilities):
+class PlayLog(FilterWidgets):
     """
     Scraper for the FanGraphs `Play Log`_ tab of the game pages.
 
     .. _Play Log: https://fangraphs.com/plays.aspx
     """
+    _widget_class = scores_.PlayLog
     address = "https://fangraphs.com/plays.aspx"
 
-    def __init__(self, browser):
-        ScrapingUtilities.__init__(self, browser, self.address, scores_.PlayLog)
-
-    @staticmethod
-    def _scrape_headers(table):
+    def __init__(self, **kwargs):
         """
 
-        :param table:
-        :type table: playwright.sync_api._generated.ElementHandle
-        :return:
-        :rtype: pd.DataFrame
         """
-        elems = table.query_selector_all("thead > tr > th")
-        headers = [e.text_content() for e in elems]
-        headers.insert(8, "Pitch Sequence")
-        headers.insert(4, "Pitcher Player ID")
-        headers.insert(3, "Batter Player ID")
-        headers.insert(2, "Top/Bot")
-        headers.insert(2, "Inning")
+        FilterWidgets.__init__(self, **kwargs)
 
-        dataframe = pd.DataFrame(columns=headers[1:])
-        return dataframe
+        self.data = None
 
-    def _scrape_table(self, table):
+    @property
+    def data(self) -> pd.DataFrame:
         """
 
-        :param table:
-        :type table: playwright.sync_api._generated.ElementHandle
         :return:
         """
-        dataframe = self._scrape_headers(table)
+        return self._data
 
-        rows = table.query_selector_all("tbody > tr")
+    @data.setter
+    def data(self, value) -> None:
+        table = self.soup.select_one(".table-scroll > table")
 
-        inning_regex = re.compile(r"([▲▼]) (\d+)")
+        def get_inning(row_elems: bs4.ResultSet) -> Generator[
+            tuple[int, str], None, None
+        ]:
+            for row in row_elems:
+                elem = row.select("td")[1]
+                yield re.search(r"\d+", elem.text).group()
 
-        for row in rows:
-            elems = row.query_selector_all("td")
-            items = [e.text_content() for e in elems]
+        def get_topbottom(row_elems: bs4.ResultSet) -> Generator[
+            str, None, None
+        ]:
+            for row in row_elems:
+                elem = row.select("td")[1]
+                yield re.search(r"[▲▼]", elem.text).group()
 
-            top_bot, inning = inning_regex.search(items[1]).groups()
-            if top_bot.encode() == b'\xe2\x96\xb2':
-                inn_half = "Top"
-            elif top_bot.encode() == b'\xe2\x96\xbc':
-                inn_half = "Bot"
-            else:
-                continue
+        def get_batter_player_id(row_elems: bs4.ResultSet) -> Generator[
+            str, None, None
+        ]:
+            for row in row_elems:
+                elem = row.select("td")[2].select_one("a")
+                yield PID_REGEX.search(
+                    elem.attrs.get("href")
+                ).group(1)
 
-            batter_id, pitcher_id = [
-                PID_REGEX.search(
-                    e.query_selector("a").get_attribute("href")
-                ).group(1) for e in elems[2:4]
-            ]
+        def get_pitcher_player_id(row_elems: bs4.ResultSet) -> Generator[
+            str, None, None
+        ]:
+            for row in row_elems:
+                elem = row.select("td")[3].select_one("a")
+                yield PID_REGEX.search(
+                    elem.attrs.get("href")
+                ).group(1)
 
-            items[7] = elems[7].query_selector(
-                ".play-desc-text"
-            ).text_content()
-            pitch_seq = elems[7].query_selector(
-                ".play-desc-pitch-seq"
+        def get_play(row_elems: bs4.ResultSet) -> Generator[
+            str, None, None
+        ]:
+            for row in row_elems:
+                elem = row.select("td")[7].select_one(".play-desc-text")
+                yield elem.text
+
+        def get_pitch_sequence(row_elems: bs4.ResultSet) -> Generator[
+            Optional[str], None, None
+        ]:
+            for row in row_elems:
+                elem = row.select("td")[7].select_one(".play-desc-pitch-seq")
+                yield tuple(elem.text.split(", ")) if elem is not None else None
+
+        table_data = self.scrape_table(table)
+
+        dataframe = table_data.dataframe
+        dataframe.drop(columns=dataframe.columns[0], inplace=True)
+        dataframe.insert(
+            loc=8, column="Pitch Sequence", value=tuple(
+                get_pitch_sequence(table_data.row_elems)
             )
-            pitch_sequence = pitch_seq.text_content() if pitch_seq is not None else None
+        )
+        dataframe.insert(
+            loc=2, column="Top/Bottom", value=tuple(
+                get_topbottom(table_data.row_elems)
+            )
+        )
+        dataframe.insert(
+            loc=2, column="Inning", value=tuple(
+                get_inning(table_data.row_elems)
+            )
+        )
+        dataframe["Batter PlayerID"] = tuple(
+            get_batter_player_id(table_data.row_elems)
+        )
+        dataframe["Pitcher PlayerID"] = tuple(
+            get_pitcher_player_id(table_data.row_elems)
+        )
+        dataframe["Play"] = tuple(
+            get_play(table_data.row_elems)
+        )
 
-            items.insert(8, pitch_sequence)
-            items.insert(4, pitcher_id)
-            items.insert(3, batter_id)
-            items.insert(2, inn_half)
-            items.insert(2, inning)
-
-            dataframe.loc[int(items[0])] = items[1:]
-
-        return dataframe
-
-    def export(self):
-        """
-
-        :return: pd.DataFrame
-        """
-        table = self.page.query_selector(".table-scroll > table")
-        dataframe = self._scrape_table(table)
-        return dataframe
+        self._data = dataframe
 
 
 class BoxScore(FilterWidgets):
@@ -673,7 +734,7 @@ class BoxScore(FilterWidgets):
         return dataframe
 
     @property
-    def data_tables(self) -> NamedTuple[NamedTuple]:
+    def data_tables(self) -> NamedTuple:
         """
 
         :return:

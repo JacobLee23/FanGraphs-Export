@@ -1,16 +1,16 @@
 #! usr/bin/env python
-# fangraphs/selectors/_scores.py
+# fangraphs/selectors/scores_.py
 
 """
-CSS selectors for the classes in :py:mod:`fangraphs.leaders`.
+CSS selectors for the classes in :py:mod:`fangraphs.scores`.
 """
 
 from . import widgets
 
 
-class Live(widgets.Selectors):
+class LiveScoreboard(widgets.Selectors):
     """
-    Widget handling for :py:class:`fangraphs.scores.Live`
+    Widget handling for :py:class:`fangraphs.scores.LiveScoreboard`
     """
 
     def __init__(self, page):
@@ -27,6 +27,8 @@ class LiveLeaderboards(widgets.Selectors):
         "stat_type": {"root_selector": ".stattypes"}
     }
 
+    table_size_css = ".page-item-control > select"
+
     def __init__(self, page):
         super().__init__(page)
 
@@ -37,8 +39,8 @@ class Scoreboard(widgets.Selectors):
     """
     _dropdowns = {
         "season": {
-            "root_selector": "#LiveBoard1_rcbSeason",
-            "dropdown_selector": "#LiveBoard1_rcbSeason_DropDown"
+            "root_selector": "#WinsBoard1_rcbSeason",
+            "dropdown_selector": "#WinsBoard1_rcbSeason_DropDown"
         }
     }
 
