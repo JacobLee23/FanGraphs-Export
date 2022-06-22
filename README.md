@@ -1,5 +1,7 @@
 # FanGraphs-Export
 
+_This package is planned to be integrated into the [SABRmetrics](https://github.com/JacobLee23/SABRmetrics) package._
+
 ![FanGraphs logo](https://user-images.githubusercontent.com/72679601/112188979-c335d980-8bc0-11eb-8ab9-992663e9e0e6.png)
 
 ![Last Commit: master](https://img.shields.io/github/last-commit/JLpython-py/FanGraphs-export/master)
